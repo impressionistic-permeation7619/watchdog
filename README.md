@@ -176,7 +176,7 @@ packages/
 ├── policy/               Accept gates and custody rules, pure and DB-free
 ├── db/                   Drizzle schema + repos (the only SQL)
 ├── core/                 Jobs, graph patching, evidence, export sync
-├── caps/                 63 Cap implementations + playbooks
+├── caps/                 Cap implementations + playbooks
 ├── cap-sdk/              Cap SPI: defineCapability, CapContext
 ├── tools/                Dumb fetch/parse helpers, no Graph types
 ├── api/                  oRPC router, Zod procedures
@@ -220,13 +220,12 @@ Integration and end-to-end runs need their own databases first: `just test-db`.
 
 Third design, first one that ships. A vault-plus-Python-pipeline version and a broad platform spec both got frozen before this; [`docs/PRODUCT.md`](docs/PRODUCT.md) records what each one taught and what not to resurrect.
 
-Today: **63 Caps**, **14 packages**, **433 unit and property tests** green. The solo-investigator loop runs end to end: authenticate, create a case, dump evidence, run Caps, accept proposals, export the package. [`ROADMAP.md`](ROADMAP.md) scores every surface honestly, including the half-built ones.
+Today: **63 Caps**, **14 packages**, **433 unit and property tests** green. The solo-investigator loop runs end to end: authenticate, create a case, dump evidence, run Caps, accept proposals, export the package.
 
 Not there yet, worth knowing before you invest time:
 
 - **MCP server.** Not built. Agents use the OpenAPI surface today.
 - **Playbooks** are linear chains, with no branching and no conditionals.
-- **Corpus and scrape import** is out of scope on purpose. This reasons over a case; it does not crawl the internet for you.
 - **Multi-user collaboration** is thin. Auth and API keys work; team workflows aren't designed yet.
 - **End-to-end coverage** is two Playwright flows on top of the unit and integration tiers.
 
@@ -237,7 +236,7 @@ Investigation content (corpus, entity notes, mirrors) lives in a separate privat
 Some gaps are permanent, and they explain decisions that would otherwise look like oversights:
 
 - No percentage confidence scores. Three tiers a person can defend beat a number implying false precision.
-- No second source of truth. The markdown export is derived and disposable.
+- No corpus or scrape import. This reasons over a case; it does not crawl the internet for you.
 - No collection so autonomous that nobody can say where a claim came from.
 
 ## Docs
