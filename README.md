@@ -26,7 +26,17 @@
 > [!WARNING]
 > **Pre-1.0 and under active development.** Schemas, Cap ids, and API shapes change without notice, and several surfaces in [`ROADMAP.md`](ROADMAP.md) are half-built. It is built for solo and small-team use and has not been hardened for multi-tenant or production deployment.
 
-Automated collection is fast, and it fills case files with things nobody checked. Watchdog keeps the automation and puts a person at the point where anything enters the case graph.
+## Why
+
+Small-team OSINT usually runs on general-purpose tools: a chat thread for coordination, a growing document for the case file, an assistant for summarizing, and ad-hoc scripts for collection. That works until the case gets big enough to hit the same failures every time.
+
+- Summaries get treated as fact, with no evidence chain behind them.
+- The system of record becomes the chat log, and separate copies of the case file diverge.
+- Catching up means reading scrollback instead of reading the case.
+- Identity links rest on a matching handle, a shared mailbox, or a coincidence.
+- More collection produces less clarity rather than more.
+
+Watchdog exists for the opposite: one case graph of claims and evidence you can defend, built while collection stays fast. Every claim carries its evidence, a person accepts each one before it lands, and the whole case exports as a package you can hand to someone else.
 
 ```mermaid
 flowchart LR
