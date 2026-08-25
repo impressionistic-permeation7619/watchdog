@@ -1,0 +1,115 @@
+import { Resolver } from "node:dns/promises";
+
+import { z } from "zod";
+
+import {
+  abortedToolsError,
+  validationToolsError,
+} from "../errors/tools-error";
+
+export const cymruMhrLookupSnapshotSchema = z.object({
+  hash: z.string().min(1),
+  queriedAt: z.string().min(1),
+  source: z.literal("hash.cymru.com"),
+  found: z.boolean(),
+  lastSeenEpoch: z.number().int().nullable(),
+  detectionPct: z.number().nullable(),
+});
+
+export type CymruMhrLookupSnapshot = z.infer<
+  typeof cymruMhrLookupSnapshotSchema
+>;
+
+/** Normalize + validate a hex hash string for MHR (MD5/SHA1/SHA256 only). */
+export function normalizeCymruMhrHash(raw: string): string {
+  const hash = raw.trim().toLowerCase();
+  if (!/^[a-f0-9]+$/.test(hash)) {
+    throw validationToolsError(`Invalid hex hash: ${raw}`);
+  }
+  return hash;
+}
+
+/** DNS query name labels — SHA256 splits into two 32-char labels (DNS limits). */
+function labelsForHash(hash: string): string {
+  switch (hash.length) {
+    case 32:
+    case 40: {
+      return hash;
+    }
+    case 64: {
+      return `${hash.slice(0, 32)}.${hash.slice(32)}`;
+    }
+    default: {
+      throw validationToolsError(
+        `Unsupported hash length ${hash.length} for Team Cymru MHR (expected MD5/SHA1/SHA256)`
+      );
+    }
+  }
+}
+
+/** TXT body is `"<unix-epoch> <av-hit-percent>"`. */
+export function parseTxtAnswer(records: string[][]): {
+  lastSeenEpoch: number | null;
+  detectionPct: number | null;
+} {
+  const joined = records
+    .map((parts) => parts.join(""))
+    .join(" ")
+    .trim();
+  const match = /^(\d+)\s+(\d+)$/.exec(joined);
+  const epochRaw = match?.[1];
+  const pctRaw = match?.[2];
+  if (epochRaw === undefined || pctRaw === undefined) {
+    return { lastSeenEpoch: null, detectionPct: null };
+  }
+  return {
+    lastSeenEpoch: Math.trunc(Number(epochRaw)),
+    detectionPct: Math.trunc(Number(pctRaw)),
+  };
+}
+
+/**
+ * Team Cymru Malware Hash Registry — DNS TXT lookup.
+ * `dig +short {labels}.hash.cymru.com TXT` — NXDOMAIN/no-answer = not known malware.
+ * @see https://hash.cymru.com/docs_dns
+ */
+export async function fetchCymruMhrLookup(
+  hashRaw: string,
+  signal: AbortSignal
+): Promise<CymruMhrLookupSnapshot> {
+  const hash = normalizeCymruMhrHash(hashRaw);
+  const domain = `${labelsForHash(hash)}.hash.cymru.com`;
+
+  const resolver = new Resolver();
+  const onAbort = () => {
+    try {
+      resolver.cancel();
+    } catch {
+      // already cancelled / idle
+    }
+  };
+  if (signal.aborted) {
+    onAbort();
+    throw abortedToolsError("Team Cymru MHR lookup aborted");
+  }
+  signal.addEventListener("abort", onAbort, { once: true });
+
+  try {
+    const answers = await resolver
+      .resolveTxt(domain)
+      .catch(() => [] as string[][]);
+    if (signal.aborted) throw abortedToolsError("Team Cymru MHR lookup aborted");
+
+    const { lastSeenEpoch, detectionPct } = parseTxtAnswer(answers);
+    return cymruMhrLookupSnapshotSchema.parse({
+      hash,
+      queriedAt: new Date().toISOString(),
+      source: "hash.cymru.com",
+      found: answers.length > 0,
+      lastSeenEpoch,
+      detectionPct,
+    });
+  } finally {
+    signal.removeEventListener("abort", onAbort);
+  }
+}
