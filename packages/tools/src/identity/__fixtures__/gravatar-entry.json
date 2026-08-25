@@ -1,0 +1,19 @@
+{
+  "entry": [
+    {
+      "displayName": "Gravatar",
+      "preferredUsername": "gravatar",
+      "profileUrl": "https://gravatar.com/gravatar",
+      "currentLocation": "San Francisco",
+      "aboutMe": "avatars",
+      "emails": [{ "value": "support@gravatar.com" }, "photos@gravatar.com"],
+      "accounts": [
+        {
+          "shortname": "twitter",
+          "url": "https://twitter.com/gravatar",
+          "username": "gravatar"
+        }
+      ]
+    }
+  ]
+}
