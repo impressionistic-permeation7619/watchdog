@@ -23,7 +23,7 @@
 </div>
 
 > [!WARNING]
-> **Pre-1.0 and under active development.** Schemas, Cap ids, and API shapes change without notice, and several surfaces in [`ROADMAP.md`](ROADMAP.md) are half-built. Built for solo and small-team use — it has not been hardened for multi-tenant or production deployment.
+> **Pre-1.0 and under active development.** Schemas, Cap ids, and API shapes change without notice, and several surfaces in [`ROADMAP.md`](ROADMAP.md) are half-built. It is built for solo and small-team use and has not been hardened for multi-tenant or production deployment.
 
 ```
 web:    http://127.0.0.1:3000
@@ -59,7 +59,7 @@ flowchart LR
 
 ## The custody rule, in code
 
-This isn't documentation you have to trust. A Cap physically cannot assign confidence to a claim — the schema rejects it:
+This isn't documentation you have to trust. A Cap physically cannot assign confidence to a claim, because the schema rejects it:
 
 ```ts
 // packages/schemas/src/patch.ts
@@ -73,7 +73,7 @@ if (CONFIDENCE_GATED_RESOURCES.has(op.resource) && "confidence" in op.data) {
 }
 ```
 
-Confidence is a decision, so it belongs to whoever makes it. Claims land as `unverified`; a human moves them to `possible` or `confirmed` at Accept. An agent can force a direct graph write, but it takes an explicit override flag, still lands at `unverified`, and is recorded in `graph_writes`.
+Deciding how far to trust a claim is a judgment call, so it stays with the person making it. Claims land as `unverified`; a human moves them to `possible` or `confirmed` at Accept. An agent can force a direct graph write, but it takes an explicit override flag, still lands at `unverified`, and is recorded in `graph_writes`.
 
 ## Quick start
 
@@ -95,29 +95,36 @@ pnpm dev:web
 
 Signup is closed by default. For your first account set `BETTER_AUTH_ALLOW_SIGNUP=1`, restart, register at `/auth/sign-up`, then set it back to `0`.
 
-Everything binds to loopback — web on `:3000`, Postgres on `:5432`, MinIO on `:9100` with its console on `:9101`.
+Everything binds to loopback: web on `:3000`, Postgres on `:5432`, MinIO on `:9100` with its console on `:9101`.
 
 **pnpm only.** Version is pinned in `package.json`; npm and yarn will produce a broken workspace.
 
 ## Environment
 
-Validated by `@watchdog/env` at boot, so a bad `.env` fails immediately rather than at first query. Copying `env.example` gives you working local defaults for everything except the two secrets.
+`@watchdog/env` validates these at boot, so a bad `.env` fails immediately rather than at first query. Copying `env.example` gives you working local defaults for everything except the two secrets.
 
-| Variable | Required | Description |
-| --- | :---: | --- |
-| `DATABASE_URL` | ✅ | Postgres connection string |
-| `BETTER_AUTH_SECRET` | ✅ | Session signing key, 32+ chars |
-| `WD_MASTER_VAULT_KEY` | ✅ | Encrypts Cap credentials at rest — 32-byte base64 or 64-char hex |
-| `S3_ENDPOINT` · `S3_ACCESS_KEY` · `S3_SECRET_KEY` · `S3_BUCKET` | ✅ | Evidence and artifact storage |
-| `DATABASE_URL_MIGRATE` | — | Superuser URL for migrations; falls back to `DATABASE_URL` |
-| `BETTER_AUTH_URL` | — | Default `http://127.0.0.1:3000` |
-| `BETTER_AUTH_ALLOW_SIGNUP` | — | Open registration; default off |
-| `BETTER_AUTH_TRUSTED_ORIGINS` | — | Comma-separated extra origins |
-| `S3_REGION` | — | Default `us-east-1` |
-| `WD_EXPORT_DIR` | — | Markdown shadow location; default `<repo>/export` |
-| `NODE_ENV` | — | `development` · `production` · `test` |
+**Required**
 
-The CLI reads its own pair: `WD_API_URL` and `WD_API_KEY`, the latter created in Settings → API Keys. **Cap API keys never go here** — they live in the encrypted vault.
+| Variable | Description |
+| --- | --- |
+| `DATABASE_URL` | Postgres connection string |
+| `BETTER_AUTH_SECRET` | Session signing key, 32+ chars |
+| `WD_MASTER_VAULT_KEY` | Encrypts Cap credentials at rest; 32-byte base64 or 64-char hex |
+| `S3_ENDPOINT` · `S3_ACCESS_KEY` · `S3_SECRET_KEY` · `S3_BUCKET` | Evidence and artifact storage |
+
+**Optional**
+
+| Variable | Description |
+| --- | --- |
+| `DATABASE_URL_MIGRATE` | Superuser URL for migrations; falls back to `DATABASE_URL` |
+| `BETTER_AUTH_URL` | Default `http://127.0.0.1:3000` |
+| `BETTER_AUTH_ALLOW_SIGNUP` | Open registration; default off |
+| `BETTER_AUTH_TRUSTED_ORIGINS` | Comma-separated extra origins |
+| `S3_REGION` | Default `us-east-1` |
+| `WD_EXPORT_DIR` | Markdown shadow location; default `<repo>/export` |
+| `NODE_ENV` | `development` · `production` · `test` |
+
+The CLI reads its own pair: `WD_API_URL` and `WD_API_KEY`, the latter created in Settings → API Keys. **Cap API keys never go here.** They live in the encrypted vault.
 
 ## A case, end to end
 
@@ -129,7 +136,7 @@ wd jobs start -c 0b8f… --cap network.dns.lookup -i '{"host":"example.com"}'
 # {"id":"3c21…","status":"queued","capabilityId":"network.dns.lookup"}
 
 wd proposals list -c 0b8f…
-# 1 proposal: 4 identifiers, 1 claim — from job 3c21…
+# 1 proposal: 4 identifiers, 1 claim (job 3c21…)
 
 wd proposals accept -c 0b8f… 4d90… --confidence possible
 wd export zip -c 0b8f…
@@ -143,7 +150,7 @@ wd jobs playbook -c 0b8f… --id host-footprint --host example.com
 
 ## Capabilities
 
-Each Cap is a folder under `packages/caps/src/` named for its id — `network/dns.lookup/` — with a `run` that collects and a **pure** `interpret` that maps the report to proposed operations. Keeping `interpret` pure means it tests against recorded fixtures with no network.
+Each Cap is a folder under `packages/caps/src/` named for its id, such as `network/dns.lookup/`, holding a `run` that collects and a pure `interpret` that maps the report to proposed operations. Keeping `interpret` pure means it tests against recorded fixtures with no network.
 
 | Category | Count | Examples |
 | --- | --- | --- |
@@ -155,7 +162,7 @@ Each Cap is a folder under `packages/caps/src/` named for its id — `network/dn
 | `evidence` | 4 | Deterministic harvest, AI extraction, file and `.eml` analysis |
 | `web` | 3 | URL unshortening, page enrichment |
 
-Every Cap declares its egress — 29 make no third-party call at all — and tags itself `Passive` or `Active`, so you know before running one whether it touches the target. Credentials come from an encrypted vault at runtime via `ctx.getCredential`, never from environment variables or job input. Run `pnpm generate:caps` after adding one.
+Every Cap declares its egress (29 make no third-party call at all) and tags itself `Passive` or `Active`, so you know before running one whether it touches the target. Credentials come from an encrypted vault at runtime via `ctx.getCredential`, never from environment variables or job input. Run `pnpm generate:caps` after adding one.
 
 ## Architecture
 
@@ -164,20 +171,20 @@ apps/
 ├── web/                  TanStack Start UI + oRPC handlers (RPC + OpenAPI)
 └── worker/               pg-boss consumer that executes Cap jobs
 packages/
-├── env/                  T3 Env boot secrets — depends on nothing
+├── env/                  T3 Env boot secrets, depends on nothing
 ├── schemas/              Zod contracts, PatchOp, vocabulary
-├── policy/               Accept gates and custody rules — pure, DB-free
+├── policy/               Accept gates and custody rules, pure and DB-free
 ├── db/                   Drizzle schema + repos (the only SQL)
 ├── core/                 Jobs, graph patching, evidence, export sync
 ├── caps/                 63 Cap implementations + playbooks
-├── cap-sdk/              Cap SPI — defineCapability, CapContext
+├── cap-sdk/              Cap SPI: defineCapability, CapContext
 ├── tools/                Dumb fetch/parse helpers, no Graph types
-├── api/                  oRPC router — Zod procedures
+├── api/                  oRPC router, Zod procedures
 ├── client/               Typed SDK for /api/v1, generated from OpenAPI
-├── cli/                  The `wd` binary — every noun the API exposes
-├── ai/                   LLM providers + structuredExtract — never writes Graph
+├── cli/                  The `wd` binary, every noun the API exposes
+├── ai/                   LLM providers + structuredExtract, never writes Graph
 ├── log/                  evlog process logging, NDJSON + stdout
-└── test-kit/             Fixtures, Postgres harness, MSW — dev-only
+└── test-kit/             Dev-only fixtures, Postgres harness, MSW
 ```
 
 Dependencies flow one direction and the boundaries are enforced, not suggested: `caps` cannot import `db`, `api` cannot reach past `core` to SQL, and only `core` touches repos. Full matrix in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
@@ -190,7 +197,7 @@ A job's path: `enqueueCapJob` → the `watchdog.cap-jobs` queue → worker runs 
 | **API** | oRPC (RPC for the app, OpenAPI for agents) · Zod |
 | **Data** | Postgres 16 · Drizzle ORM · MinIO/S3 |
 | **Jobs** | pg-boss · dedicated worker process |
-| **Auth** | Better Auth — sessions, API keys |
+| **Auth** | Better Auth (sessions, API keys) |
 | **Observability** | evlog structured wide events |
 | **Tooling** | pnpm · Nix · just · Vitest · Playwright · oxlint · oxfmt |
 
@@ -213,24 +220,24 @@ Integration and end-to-end runs need their own databases first: `just test-db`.
 
 Third design, first one that ships. A vault-plus-Python-pipeline version and a broad platform spec both got frozen before this; [`docs/PRODUCT.md`](docs/PRODUCT.md) records what each one taught and what not to resurrect.
 
-Today: **63 Caps**, **14 packages**, **433 unit and property tests** green. The solo-investigator loop runs end to end — authenticate, create a case, dump evidence, run Caps, accept proposals, export the package. [`ROADMAP.md`](ROADMAP.md) scores every surface honestly, including the half-built ones.
+Today: **63 Caps**, **14 packages**, **433 unit and property tests** green. The solo-investigator loop runs end to end: authenticate, create a case, dump evidence, run Caps, accept proposals, export the package. [`ROADMAP.md`](ROADMAP.md) scores every surface honestly, including the half-built ones.
 
 Not there yet, worth knowing before you invest time:
 
-- **MCP server** — not built. Agents use the OpenAPI surface today.
-- **Playbooks** are linear chains. No branching, no conditionals.
+- **MCP server.** Not built. Agents use the OpenAPI surface today.
+- **Playbooks** are linear chains, with no branching and no conditionals.
 - **Corpus and scrape import** is out of scope on purpose. This reasons over a case; it does not crawl the internet for you.
 - **Multi-user collaboration** is thin. Auth and API keys work; team workflows aren't designed yet.
 - **End-to-end coverage** is two Playwright flows on top of the unit and integration tiers.
 
-Investigation content — corpus, entity notes, mirrors — lives in a separate private repo and never enters this one.
+Investigation content (corpus, entity notes, mirrors) lives in a separate private repo and never enters this one.
 
 ## What it refuses to do
 
 Some gaps are permanent, and they explain decisions that would otherwise look like oversights:
 
-- No machine-set `confirmed`. Ever.
-- No percentage confidence scores — three tiers a person can defend, not a number implying false precision.
+- No machine ever sets `confirmed`.
+- No percentage confidence scores. Three tiers a person can defend beat a number implying false precision.
 - No second source of truth. The markdown export is derived and disposable.
 - No collection so autonomous that nobody can say where a claim came from.
 
