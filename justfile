@@ -32,4 +32,4 @@ bootstrap-hint:
     @echo "1. Set BETTER_AUTH_ALLOW_SIGNUP=1 in .env"
     @echo "2. pnpm dev:web → http://127.0.0.1:3000/auth/sign-up"
     @echo "3. Create the first admin account"
-    @echo "4. Set BETTER_AUTH_ALLOW_SIGNUP=0"
+    @echo "4. Set BETTER_AUTH_ALLOW_SIGNUP=0, then restart pnpm dev:web"

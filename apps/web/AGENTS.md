@@ -45,7 +45,7 @@ TanStack Start UI for Watchdog. Web UI contracts live in [`docs/`](docs/README.m
 ## Gotchas
 
 - Env: repo-root `.env` via Vite `envDir: "../../"`; schema in [`@watchdog/env`](../../packages/env/AGENTS.md). Cap secrets = vault, not env.
-- Solo signup: `BETTER_AUTH_ALLOW_SIGNUP=1` → `/login` → set back to `0`.
+- Solo signup: no account is seeded. `BETTER_AUTH_ALLOW_SIGNUP=1` → restart web → register at `/auth/sign-up` → set back to `0`. There is no `/login` route; Better Auth views are `/auth/$path`.
 - Prefer [`docs/GOTCHAS.md`](docs/GOTCHAS.md) for Router/Query/SSE/hydration traps.
 - **Jobs:** queue grouping uses `playbookRunStatus` + recipe length (`lib/status.ts`); waiting chrome is the next recipe step, not Job `blocked`. Playbook seeds include ip/email/hash/handle (`lib/playbook-seed-view.ts`).
 - **Tasks:** DnD math in `lib/task-board-dnd.ts`. Cross-column drop changes status; within-column drop calls `reorderTasks` (`position`). `use-task-workspace` owns `handleCommitDrop`.

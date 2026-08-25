@@ -32,6 +32,7 @@ T3 Env + Zod for deploy/boot secrets. Schemas composed per entrypoint — CLI do
 - Incomplete `.env` fails on first `/server` import; `/cli` validates on first `loadCliEnv()` / `env.FOO` access (not on import). Unit tests pin that `@watchdog/env/cli` does not call `createEnv` at import.
 - **`drizzle.config.ts` exception:** kit cannot resolve `@watchdog/env` — loads repo-root `.env` via dotenv (see [`packages/db/AGENTS.md`](../db/AGENTS.md)).
 - `loadRepoEnv` is internal (not a public export).
+- `BETTER_AUTH_ALLOW_SIGNUP` defaults to `false`, so omitting it also closes registration. A fresh DB seeds no account — set it to `1`, restart the web process (`.env` is read at boot, not watched), register at `/auth/sign-up`, then set it back.
 
 ## See also / External References
 

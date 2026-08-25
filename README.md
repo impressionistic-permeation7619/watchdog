@@ -77,7 +77,7 @@ pnpm dev:web
 pnpm dev:worker             # second terminal; jobs stay queued without it
 ```
 
-Signup is closed by default. For your first account set `BETTER_AUTH_ALLOW_SIGNUP=1`, restart, register at `/auth/sign-up`, then set it back to `0`.
+No account is seeded and registration is closed by default, so a fresh install cannot sign in until you bootstrap one. Set `BETTER_AUTH_ALLOW_SIGNUP=1`, restart the web process, register at `/auth/sign-up`, then set it back to `0`.
 
 Everything binds to loopback: web on `:3000`, Postgres on `:5432`, MinIO on `:9100` with its console on `:9101`. Agents get the same API at `/api/v1` with an `x-api-key` header, and the OpenAPI spec is served at `/api/v1/spec.json`.
 
