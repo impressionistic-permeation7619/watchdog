@@ -26,14 +26,6 @@
 > [!WARNING]
 > **Pre-1.0 and under active development.** Schemas, Cap ids, and API shapes change without notice, and several surfaces in [`ROADMAP.md`](ROADMAP.md) are half-built. It is built for solo and small-team use and has not been hardened for multi-tenant or production deployment.
 
-```
-web:    http://127.0.0.1:3000
-api:    http://127.0.0.1:3000/api/v1        OpenAPI, x-api-key
-spec:   http://127.0.0.1:3000/api/v1/spec.json
-cli:    wd cases list
-worker: pnpm dev:worker                     required to run jobs
-```
-
 Automated collection is fast, and it fills case files with things nobody checked. Watchdog keeps the automation and puts a person at the point where anything enters the case graph.
 
 ```mermaid
@@ -63,11 +55,13 @@ just up && just minio-init  # Postgres 16 + MinIO
 pnpm install
 pnpm db:migrate
 pnpm dev:web
+
+pnpm dev:worker             # second terminal; jobs stay queued without it
 ```
 
 Signup is closed by default. For your first account set `BETTER_AUTH_ALLOW_SIGNUP=1`, restart, register at `/auth/sign-up`, then set it back to `0`.
 
-Everything binds to loopback: web on `:3000`, Postgres on `:5432`, MinIO on `:9100` with its console on `:9101`.
+Everything binds to loopback: web on `:3000`, Postgres on `:5432`, MinIO on `:9100` with its console on `:9101`. Agents get the same API at `/api/v1` with an `x-api-key` header, and the OpenAPI spec is served at `/api/v1/spec.json`.
 
 **pnpm only.** Version is pinned in `package.json`; npm and yarn will produce a broken workspace.
 
