@@ -173,8 +173,11 @@ packages/
 ├── cap-sdk/              Cap SPI — defineCapability, CapContext
 ├── tools/                Dumb fetch/parse helpers, no Graph types
 ├── api/                  oRPC router — Zod procedures
-├── client/ · cli/        Typed SDK and the `wd` CLI
-└── ai/ · log/ · test-kit
+├── client/               Typed SDK for /api/v1, generated from OpenAPI
+├── cli/                  The `wd` binary — every noun the API exposes
+├── ai/                   LLM providers + structuredExtract — never writes Graph
+├── log/                  evlog process logging, NDJSON + stdout
+└── test-kit/             Fixtures, Postgres harness, MSW — dev-only
 ```
 
 Dependencies flow one direction and the boundaries are enforced, not suggested: `caps` cannot import `db`, `api` cannot reach past `core` to SQL, and only `core` touches repos. Full matrix in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
