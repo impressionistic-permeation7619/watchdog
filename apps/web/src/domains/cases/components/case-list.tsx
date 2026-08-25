@@ -1,0 +1,499 @@
+import { useForm } from "@tanstack/react-form";
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
+import { BriefcaseIcon, CheckIcon, DownloadIcon, PlusIcon } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
+
+import {
+  createCaseFn,
+  setActiveCaseIdFn,
+} from "@/domains/cases/cases.functions";
+import { DeleteCaseDialog } from "@/domains/cases/components/delete-case-dialog";
+import { notifyCasesChanged } from "@/domains/cases/lib/active-case";
+import { casesContextQuery } from "@/domains/cases/queries";
+import type { CaseRecord } from "@/domains/cases/types";
+import { cn, errMessage, nextAutoSlug, slugifyName } from "@/lib/utils";
+import { Page, PageHeader } from "@/shared/layout/page";
+import { PageToolbar } from "@/shared/layout/page-toolbar";
+import { invalidateAfterCaseSwitch } from "@/shared/lib/query-invalidation";
+import { DetailStatusChip } from "@/shared/ui/detail-status-chip";
+import { EmptyState } from "@/shared/ui/empty-state";
+import { FormInlineError } from "@/shared/ui/form-inline-message";
+import { ACCENT_CARD_SURFACE } from "@/shared/ui/form-section";
+import { RowActionsMenu } from "@/shared/ui/row-actions-menu";
+import { SearchField } from "@/shared/ui/search-field";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+} from "@/shared/ui/shadcn/alert-dialog";
+import { Button } from "@/shared/ui/shadcn/button";
+import { DropdownMenuItem } from "@/shared/ui/shadcn/dropdown-menu";
+import { Field, FieldLabel } from "@/shared/ui/shadcn/field";
+import { Input } from "@/shared/ui/shadcn/input";
+import { Spinner } from "@/shared/ui/shadcn/spinner";
+import { Textarea } from "@/shared/ui/shadcn/textarea";
+
+function caseMatchesSearch(c: CaseRecord, query: string): boolean {
+  const q = query.toLowerCase().trim();
+  if (!q) return true;
+  return (
+    c.name.toLowerCase().includes(q) ||
+    c.slug.toLowerCase().includes(q) ||
+    (c.description ?? "").toLowerCase().includes(q)
+  );
+}
+
+function CaseCard({
+  caseRow,
+  isActive,
+  selecting,
+  onSelect,
+  onOpen,
+  onDelete,
+}: {
+  caseRow: CaseRecord;
+  isActive: boolean;
+  selecting: boolean;
+  onSelect: () => void;
+  onOpen: () => void;
+  onDelete: () => void;
+}) {
+  return (
+    <div
+      className={cn(
+        ACCENT_CARD_SURFACE,
+        "group flex h-full min-h-36 flex-col gap-3 rounded-lg p-5 ring-1",
+        isActive && "ring-foreground/25 dark:ring-foreground/30"
+      )}
+    >
+      <div className="flex items-start gap-2">
+        <div className="min-w-0 flex-1 space-y-0.5">
+          <p className="truncate text-sm leading-tight font-medium">
+            {caseRow.name}
+          </p>
+          <p className="text-muted-foreground text-label-mono-sm truncate">
+            {caseRow.slug}
+          </p>
+        </div>
+        {isActive ? (
+          <DetailStatusChip size="sm" className="shrink-0 gap-0.5">
+            <CheckIcon className="size-2.5" />
+            Active
+          </DetailStatusChip>
+        ) : (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-6 shrink-0 text-xs"
+            disabled={selecting}
+            onClick={onSelect}
+          >
+            Select
+          </Button>
+        )}
+        <RowActionsMenu label="Case actions" className="opacity-100">
+          <DropdownMenuItem className="text-destructive" onClick={onDelete}>
+            Delete
+          </DropdownMenuItem>
+        </RowActionsMenu>
+      </div>
+
+      {caseRow.description ? (
+        <p className="text-muted-foreground line-clamp-2 min-w-0 text-xs leading-snug">
+          {caseRow.description}
+        </p>
+      ) : (
+        <p className="text-muted-foreground/70 text-xs italic">
+          No description
+        </p>
+      )}
+
+      <Button
+        variant="link"
+        size="xs"
+        className="text-muted-foreground hover:text-foreground mt-auto h-auto self-start p-0"
+        type="button"
+        disabled={selecting}
+        onClick={onOpen}
+      >
+        Open
+      </Button>
+    </div>
+  );
+}
+
+function NewCaseCard({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "text-muted-foreground hover:text-foreground border-border/60 flex h-full min-h-36 flex-col items-center justify-center gap-2 rounded-lg border border-dashed p-5 transition-colors",
+        "hover:border-border hover:bg-muted/10 focus-visible:border-ring focus-visible:ring-ring/40 focus-visible:ring-2 focus-visible:outline-none"
+      )}
+    >
+      <PlusIcon className="size-5" />
+      <span className="text-sm font-medium">New Case</span>
+    </button>
+  );
+}
+
+function CaseSlotGhost() {
+  return (
+    <div
+      aria-hidden
+      className="h-full min-h-36 rounded-lg bg-[color-mix(in_oklab,var(--muted)_3%,transparent)]"
+    />
+  );
+}
+
+function caseGridGhostCount(occupied: number, minRows = 4, cols = 3): number {
+  const minSlots = minRows * cols;
+  if (occupied >= minSlots) {
+    const rem = occupied % cols;
+    return rem === 0 ? cols : cols - rem;
+  }
+  return minSlots - occupied;
+}
+
+function CreateCaseDialog({
+  open,
+  onOpenChange,
+  onCreated,
+  onError,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onCreated: () => void;
+  onError: (message: string) => void;
+}) {
+  const lastNameRef = useRef("");
+
+  const form = useForm({
+    defaultValues: { name: "", slug: "", description: "" },
+    onSubmit: async ({ value }) => {
+      const nextName = value.name.trim();
+      if (!nextName) return;
+      try {
+        await createCaseFn({
+          data: {
+            name: nextName,
+            slug: (value.slug || slugifyName(nextName)).trim(),
+            description: value.description.trim() || undefined,
+          },
+        });
+        form.reset();
+        lastNameRef.current = "";
+        onOpenChange(false);
+        onCreated();
+      } catch (error) {
+        onError(errMessage(error, "Create failed"));
+      }
+    },
+  });
+
+  function handleOpenChange(next: boolean) {
+    if (!next) {
+      form.reset();
+      lastNameRef.current = "";
+    }
+    onOpenChange(next);
+  }
+
+  return (
+    <AlertDialog open={open} onOpenChange={handleOpenChange}>
+      <AlertDialogContent className="data-[size=default]:sm:max-w-md">
+        <form
+          className="flex flex-col gap-6"
+          autoComplete="off"
+          data-1p-ignore
+          data-lpignore="true"
+          onSubmit={(e) => {
+            e.preventDefault();
+            void form.handleSubmit();
+          }}
+        >
+          <AlertDialogHeader>
+            <AlertDialogMedia>
+              <BriefcaseIcon />
+            </AlertDialogMedia>
+            <AlertDialogTitle>New Case</AlertDialogTitle>
+            <AlertDialogDescription>
+              Create a Case to scope graph, intake, and Cap runs.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <form.Field
+            name="name"
+            validators={{
+              onSubmit: ({ value }) =>
+                value.trim() ? undefined : "Enter a case name",
+            }}
+            listeners={{
+              onChange: ({ value }) => {
+                const auto = nextAutoSlug(
+                  lastNameRef.current,
+                  form.getFieldValue("slug"),
+                  value
+                );
+                lastNameRef.current = value;
+                if (auto !== null) form.setFieldValue("slug", auto);
+              },
+            }}
+          >
+            {(field) => (
+              <Field data-invalid={!!field.state.meta.errors[0]}>
+                <FieldLabel htmlFor="new-case-title">Case name</FieldLabel>
+                <Input
+                  id="new-case-title"
+                  autoFocus
+                  autoComplete="off"
+                  data-1p-ignore
+                  data-lpignore="true"
+                  data-form-type="other"
+                  placeholder="Case name…"
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => {
+                    field.handleChange(e.target.value);
+                  }}
+                  disabled={form.state.isSubmitting}
+                  aria-invalid={!!field.state.meta.errors[0]}
+                />
+                <FormInlineError>{field.state.meta.errors[0]}</FormInlineError>
+              </Field>
+            )}
+          </form.Field>
+
+          <form.Field name="description">
+            {(field) => (
+              <Field>
+                <FieldLabel htmlFor="case-description">Description</FieldLabel>
+                <Textarea
+                  id="case-description"
+                  placeholder="Optional description…"
+                  rows={3}
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => {
+                    field.handleChange(e.target.value);
+                  }}
+                  disabled={form.state.isSubmitting}
+                />
+              </Field>
+            )}
+          </form.Field>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={form.state.isSubmitting}>
+              Cancel
+            </AlertDialogCancel>
+            <form.Subscribe
+              selector={(state) => ({
+                canSubmit: state.canSubmit,
+                isSubmitting: state.isSubmitting,
+                name: state.values.name,
+              })}
+            >
+              {({ canSubmit, isSubmitting, name }) => (
+                <Button
+                  type="submit"
+                  disabled={isSubmitting || !canSubmit || !name.trim()}
+                >
+                  {isSubmitting ? <Spinner /> : null}
+                  Create
+                </Button>
+              )}
+            </form.Subscribe>
+          </AlertDialogFooter>
+        </form>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
+export function CaseList() {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { data: casesCtx } = useSuspenseQuery(casesContextQuery());
+  const cases = casesCtx.cases;
+  const activeId = casesCtx.active?.id ?? "";
+
+  const [search, setSearch] = useState("");
+  const [createOpen, setCreateOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<CaseRecord | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const filtered = useMemo(
+    () =>
+      [...cases]
+        .filter((c) => caseMatchesSearch(c, search))
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    [cases, search]
+  );
+
+  const selectMutation = useMutation({
+    mutationFn: async (id: string) =>
+      setActiveCaseIdFn({ data: { caseId: id } }),
+    onSuccess: async () => {
+      await invalidateAfterCaseSwitch(queryClient);
+      notifyCasesChanged();
+    },
+    onError: (err) => {
+      setSubmitError(errMessage(err, "Failed to switch case"));
+    },
+  });
+
+  function selectCase(id: string) {
+    setSubmitError(null);
+    selectMutation.mutate(id);
+  }
+
+  async function openCase(caseRow: CaseRecord) {
+    setSubmitError(null);
+    try {
+      if (caseRow.id !== activeId) {
+        await selectMutation.mutateAsync(caseRow.id);
+      }
+      await navigate({
+        to: "/cases/$caseSlug",
+        params: { caseSlug: caseRow.slug },
+      });
+    } catch (error) {
+      setSubmitError(errMessage(error, "Failed to open case"));
+    }
+  }
+
+  function openCreate() {
+    setSubmitError(null);
+    setCreateOpen(true);
+  }
+
+  const occupiedSlots = filtered.length + 1;
+  const ghostCount =
+    cases.length > 0 && filtered.length === 0
+      ? 0
+      : caseGridGhostCount(occupiedSlots);
+
+  return (
+    <Page className="min-h-0 gap-4 overflow-hidden">
+      <PageHeader
+        actions={
+          <div className="flex items-center gap-2">
+            {activeId ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const a = document.createElement("a");
+                  a.href = `/api/v1/cases/${activeId}/export.zip`;
+                  a.click();
+                }}
+              >
+                <DownloadIcon className="size-3.5" />
+                Export
+              </Button>
+            ) : null}
+            <Button type="button" size="sm" onClick={openCreate}>
+              <PlusIcon className="size-3.5" />
+              New Case
+            </Button>
+          </div>
+        }
+      />
+
+      <FormInlineError>{submitError}</FormInlineError>
+
+      <PageToolbar
+        center={
+          <SearchField
+            value={search}
+            onValueChange={setSearch}
+            placeholder="Search cases…"
+            aria-label="Search cases"
+            className="max-w-md min-w-[12rem]"
+          />
+        }
+      />
+
+      {cases.length > 0 && filtered.length === 0 ? (
+        <EmptyState
+          intent="no-results"
+          items="cases"
+          query={search}
+          onClearFilters={() => {
+            setSearch("");
+          }}
+          className="min-h-0 flex-1"
+        />
+      ) : (
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <div className="grid h-full min-h-full auto-rows-[minmax(9rem,1fr)] grid-cols-1 gap-3 p-px sm:grid-cols-2 xl:grid-cols-3">
+            {filtered.map((caseRow) => (
+              <CaseCard
+                key={caseRow.id}
+                caseRow={caseRow}
+                isActive={caseRow.id === activeId}
+                selecting={selectMutation.isPending}
+                onSelect={() => {
+                  selectCase(caseRow.id);
+                }}
+                onOpen={() => {
+                  void openCase(caseRow);
+                }}
+                onDelete={() => {
+                  setSubmitError(null);
+                  setDeleteTarget(caseRow);
+                }}
+              />
+            ))}
+            <NewCaseCard onClick={openCreate} />
+            {Array.from({ length: ghostCount }, (_, i) => (
+              <CaseSlotGhost key={`ghost-${i}`} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      <CreateCaseDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        onCreated={() => {
+          void (async () => {
+            setSubmitError(null);
+            toast.success("Case created");
+            await invalidateAfterCaseSwitch(queryClient);
+            notifyCasesChanged();
+          })();
+        }}
+        onError={(message) => {
+          setSubmitError(message);
+        }}
+      />
+
+      <DeleteCaseDialog
+        caseRow={deleteTarget}
+        open={deleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+        onDeleted={() => {
+          toast.success("Case deleted");
+        }}
+      />
+    </Page>
+  );
+}
