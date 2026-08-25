@@ -1,0 +1,4505 @@
+[
+  {
+    "id": "network.dns.lookup",
+    "version": "1",
+    "title": "DNS lookup",
+    "egress": "none",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Host"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "host"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Host"
+        }
+      },
+      "required": [
+        "host"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Resolve A/AAAA/MX/TXT/NS for a host — baseline footprint before WHOIS, mail config, or CT.",
+    "dataSource": "system resolver",
+    "kind": "collect",
+    "consumes": [
+      {
+        "kind": "host"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 30000,
+    "jobPolicy": {
+      "cacheTtlMs": 600000
+    }
+  },
+  {
+    "id": "network.dns.reverse",
+    "version": "1",
+    "title": "Reverse DNS",
+    "egress": "none",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "ip": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IPv4 or IPv6"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "ip"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "ip": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IPv4 or IPv6"
+        }
+      },
+      "required": [
+        "ip"
+      ],
+      "additionalProperties": false
+    },
+    "description": "PTR hostnames for an IP. Names only — not ownership or definitive co-hosting.",
+    "dataSource": "system resolver",
+    "kind": "collect",
+    "consumes": [
+      {
+        "kind": "ip"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 30000,
+    "jobPolicy": {
+      "cacheTtlMs": 1800000
+    }
+  },
+  {
+    "id": "network.ip.lookup",
+    "version": "1",
+    "title": "IP lookup",
+    "egress": "none",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "ip": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IPv4 or IPv6"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "ip"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "ip": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IPv4 or IPv6"
+        }
+      },
+      "required": [
+        "ip"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Team Cymru DNS IP→ASN and RIR-assigned country code. Country here is not GeoIP; use for routing context.",
+    "dataSource": "Team Cymru DNS (origin.asn.cymru.com)",
+    "kind": "collect",
+    "consumes": [
+      {
+        "kind": "ip"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 30000,
+    "jobPolicy": {
+      "cacheTtlMs": 3600000
+    }
+  },
+  {
+    "id": "network.ipctl.lookup",
+    "version": "1",
+    "title": "ipctl IP lookup",
+    "egress": "none",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "ip": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IPv4 or IPv6"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "ip"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "ip": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IPv4 or IPv6"
+        }
+      },
+      "required": [
+        "ip"
+      ],
+      "additionalProperties": false
+    },
+    "description": "IP→BGP context (ASN, prefix, RPKI) with GeoIP labeled separately — modern BGPView-style footprint.",
+    "dataSource": "api.ipctl.io",
+    "kind": "collect",
+    "consumes": [
+      {
+        "kind": "ip"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      },
+      {
+        "kind": "identifier",
+        "type": "ip"
+      },
+      {
+        "kind": "identifier",
+        "type": "domain"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 30000,
+    "jobPolicy": {
+      "cacheTtlMs": 3600000
+    }
+  },
+  {
+    "id": "network.ipinfo.lookup",
+    "version": "1",
+    "title": "IPinfo lookup",
+    "egress": "third_party",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "ip": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IP address"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "ip"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "ip": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IP address"
+        }
+      },
+      "required": [
+        "ip"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Geo and org context for an IP (city/region/country, ASN org string). Complements Team Cymru ASN with GeoIP-style labels — not ownership.",
+    "dataSource": "ipinfo.io",
+    "kind": "collect",
+    "flags": [
+      "needs_key",
+      "third_party"
+    ],
+    "consumes": [
+      {
+        "kind": "ip"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      },
+      {
+        "kind": "identifier",
+        "type": "ip"
+      },
+      {
+        "kind": "identifier",
+        "type": "domain"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 30000,
+    "jobPolicy": {
+      "cacheTtlMs": 3600000
+    },
+    "credentials": [
+      {
+        "name": "IPINFO_API_TOKEN"
+      }
+    ]
+  },
+  {
+    "id": "network.whois.lookup",
+    "version": "1",
+    "title": "WHOIS lookup",
+    "egress": "none",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Domain"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "host"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Domain"
+        }
+      },
+      "required": [
+        "host"
+      ],
+      "additionalProperties": false
+    },
+    "description": "RDAP registration record for a hostname — registrar, dates, nameservers (free public path).",
+    "dataSource": "RDAP",
+    "kind": "collect",
+    "consumes": [
+      {
+        "kind": "host"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 45000,
+    "jobPolicy": {
+      "cacheTtlMs": 3600000
+    }
+  },
+  {
+    "id": "network.whoisxml.lookup",
+    "version": "1",
+    "title": "WhoisXML lookup",
+    "egress": "third_party",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Domain"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "host"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Domain"
+        }
+      },
+      "required": [
+        "host"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Commercial WHOIS for a hostname when RDAP is thin or you need WhoisXML’s normalized fields.",
+    "dataSource": "WhoisXML",
+    "kind": "collect",
+    "flags": [
+      "needs_key",
+      "third_party"
+    ],
+    "consumes": [
+      {
+        "kind": "host"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 45000,
+    "jobPolicy": {
+      "cacheTtlMs": 3600000
+    },
+    "credentials": [
+      {
+        "name": "WHOIS_API_KEY"
+      }
+    ]
+  },
+  {
+    "id": "network.whoxy.lookup",
+    "version": "1",
+    "title": "Whoxy lookup",
+    "egress": "third_party",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Domain"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "host"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Domain"
+        }
+      },
+      "required": [
+        "host"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Commercial live WHOIS for a hostname — alternate paid registrar/contact view beside WhoisXML.",
+    "dataSource": "api.whoxy.com",
+    "kind": "collect",
+    "flags": [
+      "needs_key",
+      "third_party"
+    ],
+    "consumes": [
+      {
+        "kind": "host"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 45000,
+    "jobPolicy": {
+      "cacheTtlMs": 3600000
+    },
+    "credentials": [
+      {
+        "name": "WHOXY_API_KEY"
+      }
+    ]
+  },
+  {
+    "id": "network.ct.lookup",
+    "version": "1",
+    "title": "Certificate transparency",
+    "egress": "none",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Host"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200
+        }
+      },
+      "required": [
+        "host"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Host"
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200
+        }
+      },
+      "required": [
+        "host"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Certificate Transparency hostnames related to a domain (crt.sh). Primary passive subdomain / SAN discovery.",
+    "dataSource": "crt.sh",
+    "kind": "collect",
+    "consumes": [
+      {
+        "kind": "host"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      },
+      {
+        "kind": "identifier",
+        "type": "domain"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 60000,
+    "jobPolicy": {
+      "cacheTtlMs": 1800000
+    }
+  },
+  {
+    "id": "network.certspotter.lookup",
+    "version": "1",
+    "title": "Cert Spotter",
+    "egress": "none",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Domain"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "host"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Domain"
+        }
+      },
+      "required": [
+        "host"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Certificate Transparency issuances via Cert Spotter — second CT source beside crt.sh when you want another feed.",
+    "dataSource": "api.certspotter.com/v1/issuances",
+    "kind": "collect",
+    "consumes": [
+      {
+        "kind": "host"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      },
+      {
+        "kind": "identifier",
+        "type": "domain"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 60000,
+    "jobPolicy": {
+      "cacheTtlMs": 1800000
+    }
+  },
+  {
+    "id": "network.c99.lookup",
+    "version": "1",
+    "title": "C99 subdomain finder",
+    "egress": "third_party",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Domain"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "realtime": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "host"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Domain"
+        }
+      },
+      "required": [
+        "host"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Paid subdomain finder for a domain — single commercial source, not a multi-engine enumerate.",
+    "dataSource": "api.c99.nl/subdomainfinder",
+    "kind": "collect",
+    "flags": [
+      "needs_key",
+      "third_party",
+      "slow"
+    ],
+    "consumes": [
+      {
+        "kind": "host"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      },
+      {
+        "kind": "identifier",
+        "type": "domain"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 120000,
+    "jobPolicy": {
+      "cacheTtlMs": 3600000
+    },
+    "credentials": [
+      {
+        "name": "C99_API_KEY"
+      }
+    ]
+  },
+  {
+    "id": "network.hackertarget.lookup",
+    "version": "1",
+    "title": "HackerTarget reverse IP",
+    "egress": "none",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "ip": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IPv4 or IPv6"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "ip"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "ip": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IPv4 or IPv6"
+        }
+      },
+      "required": [
+        "ip"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Reverse-IP co-hostnames for an IP — cheap shared-hosting / neighbor discovery.",
+    "dataSource": "api.hackertarget.com/reverseiplookup",
+    "kind": "collect",
+    "consumes": [
+      {
+        "kind": "ip"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      },
+      {
+        "kind": "identifier",
+        "type": "domain"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 45000,
+    "jobPolicy": {
+      "cacheTtlMs": 3600000
+    }
+  },
+  {
+    "id": "network.mnemonic.lookup",
+    "version": "1",
+    "title": "Mnemonic PassiveDNS",
+    "egress": "none",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IP or domain"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IP or domain"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Historical PassiveDNS for an IP or domain. Past resolutions are not ownership.",
+    "dataSource": "api.mnemonic.no/pdns/v3",
+    "kind": "collect",
+    "consumes": [
+      {
+        "kind": "ip"
+      },
+      {
+        "kind": "host"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      },
+      {
+        "kind": "identifier",
+        "type": "domain"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 45000,
+    "jobPolicy": {
+      "cacheTtlMs": 3600000
+    }
+  },
+  {
+    "id": "network.urlscan.lookup",
+    "version": "1",
+    "title": "URLScan search",
+    "egress": "none",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Domain"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "host"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Domain"
+        }
+      },
+      "required": [
+        "host"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Search past public urlscan.io scans for a domain — not a live submit. Good for historical page/DOM fingerprints.",
+    "dataSource": "urlscan.io/api/v1/search",
+    "kind": "collect",
+    "consumes": [
+      {
+        "kind": "host"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      },
+      {
+        "kind": "identifier",
+        "type": "url"
+      },
+      {
+        "kind": "identifier",
+        "type": "domain"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 45000,
+    "jobPolicy": {
+      "cacheTtlMs": 3600000
+    }
+  },
+  {
+    "id": "network.urlscan.submit",
+    "version": "1",
+    "title": "URLScan submit",
+    "egress": "third_party",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL to scan"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "visibility": {
+          "type": "string",
+          "enum": [
+            "public",
+            "unlisted",
+            "private"
+          ]
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL to scan"
+        },
+        "visibility": {
+          "type": "string",
+          "enum": [
+            "public",
+            "unlisted",
+            "private"
+          ]
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Submit a URL for a live urlscan.io browser scan. Default visibility is unlisted — public scans can leak investigation interest.",
+    "dataSource": "urlscan.io/api/v1/scan",
+    "kind": "act",
+    "flags": [
+      "needs_key",
+      "third_party",
+      "invasive"
+    ],
+    "consumes": [
+      {
+        "kind": "url"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Active"
+    ],
+    "timeoutMs": 30000,
+    "credentials": [
+      {
+        "name": "URLSCAN_API_KEY"
+      }
+    ]
+  },
+  {
+    "id": "network.domain.mail_config",
+    "version": "1",
+    "title": "Mail config",
+    "egress": "none",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Host"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "host"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Host"
+        }
+      },
+      "required": [
+        "host"
+      ],
+      "additionalProperties": false
+    },
+    "description": "MX / SPF / DMARC / common-selector DKIM posture for a hostname — how mail is supposed to be authenticated for this domain.",
+    "dataSource": "system resolver",
+    "kind": "collect",
+    "consumes": [
+      {
+        "kind": "host"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 45000,
+    "jobPolicy": {
+      "cacheTtlMs": 1800000
+    }
+  },
+  {
+    "id": "network.domain.txt_inventory",
+    "version": "1",
+    "title": "TXT inventory",
+    "egress": "none",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Domain"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "host"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Domain"
+        }
+      },
+      "required": [
+        "host"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Classify apex TXT into verification tokens, SaaS tenants, and mail-related hints — who claimed this domain in DNS.",
+    "dataSource": "system resolver",
+    "kind": "collect",
+    "consumes": [
+      {
+        "kind": "host"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 30000,
+    "jobPolicy": {
+      "cacheTtlMs": 1800000
+    }
+  },
+  {
+    "id": "network.host.tls_audit",
+    "version": "1",
+    "title": "TLS audit",
+    "egress": "none",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Host"
+        },
+        "port": {
+          "description": "Port",
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "host"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Host"
+        }
+      },
+      "required": [
+        "host"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Active TLS handshake against a host (default :443) — protocol, cert subject/issuer, and authorization result.",
+    "dataSource": "TLS handshake",
+    "kind": "collect",
+    "flags": [
+      "invasive"
+    ],
+    "consumes": [
+      {
+        "kind": "host"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Active",
+      "Footprint"
+    ],
+    "timeoutMs": 30000,
+    "jobPolicy": {
+      "cacheTtlMs": 900000
+    }
+  },
+  {
+    "id": "network.host.http_probe",
+    "version": "1",
+    "title": "HTTP surface",
+    "egress": "none",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Host"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "host"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Host"
+        }
+      },
+      "required": [
+        "host"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Active HTTP posture for a host: security headers, security.txt, favicon hash, CDN/WAF hints. One Cap for the origin surface.",
+    "dataSource": "HTTP GET/HEAD",
+    "kind": "collect",
+    "flags": [
+      "invasive"
+    ],
+    "consumes": [
+      {
+        "kind": "host"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Active",
+      "Footprint"
+    ],
+    "timeoutMs": 45000,
+    "jobPolicy": {
+      "cacheTtlMs": 900000
+    }
+  },
+  {
+    "id": "network.shodan.lookup",
+    "version": "1",
+    "title": "Shodan lookup",
+    "egress": "third_party",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "ip": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IPv4 or IPv6"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "ip"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "ip": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IPv4 or IPv6"
+        }
+      },
+      "required": [
+        "ip"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Internet-wide host metadata for an IP (ports, banners, hostnames). Complements Censys / http_probe.",
+    "dataSource": "api.shodan.io",
+    "kind": "collect",
+    "flags": [
+      "needs_key",
+      "third_party"
+    ],
+    "consumes": [
+      {
+        "kind": "ip"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 30000,
+    "jobPolicy": {
+      "cacheTtlMs": 1800000
+    },
+    "credentials": [
+      {
+        "name": "SHODAN_API_KEY"
+      }
+    ]
+  },
+  {
+    "id": "network.censys.lookup",
+    "version": "1",
+    "title": "Censys lookup",
+    "egress": "third_party",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "ip": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IPv4 or IPv6"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "ip"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "ip": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IPv4 or IPv6"
+        }
+      },
+      "required": [
+        "ip"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Internet-wide host view for an IP (services, certs, location labels). Complements Shodan with a different scan corpus.",
+    "dataSource": "search.censys.io Legacy Search API v2",
+    "kind": "collect",
+    "flags": [
+      "needs_key",
+      "third_party"
+    ],
+    "consumes": [
+      {
+        "kind": "ip"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 30000,
+    "jobPolicy": {
+      "cacheTtlMs": 1800000
+    },
+    "credentials": [
+      {
+        "name": "CENSYS_API_ID"
+      },
+      {
+        "name": "CENSYS_API_SECRET"
+      }
+    ]
+  },
+  {
+    "id": "network.leakix.lookup",
+    "version": "1",
+    "title": "LeakIX lookup",
+    "egress": "third_party",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IP or host"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IP or host"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Indexed exposed services and leak findings for an IP or host — open ports, misconfigs, and published leak hits.",
+    "dataSource": "leakix.net",
+    "kind": "collect",
+    "flags": [
+      "needs_key",
+      "third_party"
+    ],
+    "consumes": [
+      {
+        "kind": "ip"
+      },
+      {
+        "kind": "host"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 30000,
+    "jobPolicy": {
+      "cacheTtlMs": 1800000
+    },
+    "credentials": [
+      {
+        "name": "LEAKIX_API_KEY"
+      }
+    ]
+  },
+  {
+    "id": "network.tor_exit.lookup",
+    "version": "1",
+    "title": "Tor exit-node check",
+    "egress": "none",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "ip": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IPv4 or IPv6"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "ip"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "ip": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IPv4 or IPv6"
+        }
+      },
+      "required": [
+        "ip"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Whether an IP currently appears on the Tor Project exit-address list — useful for noise vs. exit-node traffic.",
+    "dataSource": "check.torproject.org/exit-addresses",
+    "kind": "collect",
+    "consumes": [
+      {
+        "kind": "ip"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 30000,
+    "jobPolicy": {
+      "cacheTtlMs": 1800000
+    }
+  },
+  {
+    "id": "network.tranco.lookup",
+    "version": "1",
+    "title": "Tranco top-sites rank",
+    "egress": "none",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Domain"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "host"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Domain"
+        }
+      },
+      "required": [
+        "host"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Research-grade top-sites popularity rank for a domain. Popularity context only — not ownership or malice.",
+    "dataSource": "tranco-list.eu/api",
+    "kind": "collect",
+    "consumes": [
+      {
+        "kind": "host"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 30000,
+    "jobPolicy": {
+      "cacheTtlMs": 86400000
+    }
+  },
+  {
+    "id": "network.url.enrich",
+    "version": "1",
+    "title": "Enrich URL",
+    "egress": "none",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL to enrich"
+        },
+        "sourceEvidenceId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL to enrich"
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Intake path for a URL seed: live fetch (prefer markdown) plus Wayback into Job Output. Process Caps turn that into Proposals.",
+    "dataSource": "live fetch + Wayback CDX",
+    "kind": "enrich",
+    "flags": [
+      "slow"
+    ],
+    "consumes": [
+      {
+        "kind": "url"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "url_archive"
+      }
+    ],
+    "timeoutMs": 180000,
+    "jobPolicy": {
+      "linkEvidenceFromInput": [
+        "sourceEvidenceId",
+        "evidenceId"
+      ]
+    }
+  },
+  {
+    "id": "archive.wayback.lookup",
+    "version": "1",
+    "title": "Wayback history",
+    "egress": "none",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "minLength": 1,
+          "description": "URL"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "limit": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 100
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "minLength": 1,
+          "description": "URL"
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "additionalProperties": false
+    },
+    "description": "List Wayback Machine snapshot timestamps for a URL — first pass for “was this page up then?” before fetching a body.",
+    "dataSource": "web.archive.org/cdx",
+    "kind": "collect",
+    "consumes": [
+      {
+        "kind": "url"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 45000,
+    "jobPolicy": {
+      "cacheTtlMs": 3600000
+    }
+  },
+  {
+    "id": "archive.wayback.fetch",
+    "version": "1",
+    "title": "Wayback fetch",
+    "egress": "none",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "minLength": 1,
+          "description": "URL"
+        },
+        "timestamp": {
+          "type": "string",
+          "minLength": 1
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "minLength": 1,
+          "description": "URL"
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Pull the body of a Wayback snapshot for a URL (closest CDX hit when no timestamp). Use after Wayback history to inspect what the page actually said.",
+    "dataSource": "web.archive.org",
+    "kind": "collect",
+    "consumes": [
+      {
+        "kind": "url"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Passive"
+    ],
+    "timeoutMs": 90000,
+    "jobPolicy": {
+      "cacheTtlMs": 3600000
+    }
+  },
+  {
+    "id": "archive.url.submit",
+    "version": "1",
+    "title": "Submit to archives",
+    "egress": "third_party",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "minLength": 1,
+          "description": "URL to archive"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "minLength": 1,
+          "description": "URL to archive"
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Request Wayback Save Page Now for a URL. Creates a public archive record attributable to this Case — use when you need a fresh snapshot on the public web.",
+    "dataSource": "web.archive.org/save",
+    "kind": "act",
+    "flags": [
+      "third_party",
+      "invasive"
+    ],
+    "consumes": [
+      {
+        "kind": "url"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Active"
+    ],
+    "timeoutMs": 90000
+  },
+  {
+    "id": "archive.commoncrawl.lookup",
+    "version": "1",
+    "title": "Common Crawl",
+    "egress": "none",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Domain"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "host"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Domain"
+        }
+      },
+      "required": [
+        "host"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Search recent Common Crawl indexes for URLs under a domain — different corpus than Wayback; useful when archive.org is thin.",
+    "dataSource": "index.commoncrawl.org",
+    "kind": "collect",
+    "flags": [
+      "slow"
+    ],
+    "consumes": [
+      {
+        "kind": "host"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      },
+      {
+        "kind": "identifier",
+        "type": "url"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 120000,
+    "jobPolicy": {
+      "cacheTtlMs": 3600000
+    }
+  },
+  {
+    "id": "web.url.unshorten",
+    "version": "1",
+    "title": "Unshorten URL",
+    "egress": "none",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "minLength": 1,
+          "description": "URL"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "minLength": 1,
+          "description": "URL"
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Follow shortener redirect chains and record the hop path — reveals the final destination behind a short link.",
+    "dataSource": "HTTP redirects",
+    "kind": "collect",
+    "flags": [
+      "invasive"
+    ],
+    "consumes": [
+      {
+        "kind": "url"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Active"
+    ],
+    "timeoutMs": 30000,
+    "jobPolicy": {
+      "cacheTtlMs": 600000
+    }
+  },
+  {
+    "id": "web.page.enrich",
+    "version": "1",
+    "title": "Page enrich",
+    "egress": "none",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "minLength": 1,
+          "description": "URL"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "minLength": 1,
+          "description": "URL"
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Live HTML title, social/meta tags, and common tracker script hints — what the page claims about itself right now.",
+    "dataSource": "live HTML",
+    "kind": "collect",
+    "flags": [
+      "invasive"
+    ],
+    "consumes": [
+      {
+        "kind": "url"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Active"
+    ],
+    "timeoutMs": 45000,
+    "jobPolicy": {
+      "cacheTtlMs": 900000
+    }
+  },
+  {
+    "id": "web.media.oembed",
+    "version": "1",
+    "title": "Media oEmbed",
+    "egress": "third_party",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Media URL"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Media URL"
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Public oEmbed JSON for a media URL (YouTube, Vimeo, Flickr, SoundCloud, TikTok, Spotify) — author name/URL without scraping the page.",
+    "dataSource": "vendor oEmbed endpoints",
+    "kind": "collect",
+    "flags": [
+      "third_party"
+    ],
+    "consumes": [
+      {
+        "kind": "url"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      },
+      {
+        "kind": "identifier",
+        "type": "handle"
+      },
+      {
+        "kind": "identifier",
+        "type": "url"
+      }
+    ],
+    "useCases": [
+      "Passive"
+    ],
+    "timeoutMs": 30000,
+    "jobPolicy": {
+      "cacheTtlMs": 1800000
+    }
+  },
+  {
+    "id": "identity.email.lookup",
+    "version": "1",
+    "title": "Email lookup",
+    "egress": "none",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Email"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "email"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Email"
+        }
+      },
+      "required": [
+        "email"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Email-seed pivot: mailbox-domain MX, SPF/DMARC presence, and provider hint. Lighter than full Mail config; seeds domain Identifiers from the address.",
+    "dataSource": "system resolver",
+    "kind": "collect",
+    "consumes": [
+      {
+        "kind": "identifier",
+        "type": "email"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 30000,
+    "jobPolicy": {
+      "cacheTtlMs": 1800000
+    }
+  },
+  {
+    "id": "identity.emailrep.lookup",
+    "version": "1",
+    "title": "EmailRep lookup",
+    "egress": "third_party",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Email"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "email"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Email"
+        }
+      },
+      "required": [
+        "email"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Aggregated reputation / suspiciousness signal for an email address (disposable, breach-adjacent, etc.). Context only — not proof of ownership.",
+    "dataSource": "emailrep.io",
+    "kind": "collect",
+    "flags": [
+      "needs_key",
+      "third_party"
+    ],
+    "consumes": [
+      {
+        "kind": "identifier",
+        "type": "email"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      },
+      {
+        "kind": "identifier",
+        "type": "email"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 30000,
+    "jobPolicy": {
+      "cacheTtlMs": 1800000
+    },
+    "credentials": [
+      {
+        "name": "EMAILREP_API_KEY"
+      }
+    ]
+  },
+  {
+    "id": "identity.pgp.lookup",
+    "version": "1",
+    "title": "PGP lookup",
+    "egress": "third_party",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Email, fingerprint, or key id"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Email, fingerprint, or key id"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "additionalProperties": false
+    },
+    "description": "HKP keyserver search by email, fingerprint, or key id. Useful for linking mailboxes to published keys.",
+    "dataSource": "keys.openpgp.org / keyserver.ubuntu.com",
+    "kind": "collect",
+    "flags": [
+      "third_party"
+    ],
+    "consumes": [
+      {
+        "kind": "identifier",
+        "type": "email"
+      },
+      {
+        "kind": "identifier",
+        "type": "pgp"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 45000,
+    "jobPolicy": {
+      "cacheTtlMs": 3600000
+    }
+  },
+  {
+    "id": "identity.github.lookup",
+    "version": "1",
+    "title": "GitHub lookup",
+    "egress": "third_party",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "handle": {
+          "type": "string",
+          "minLength": 1,
+          "description": "GitHub handle"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "handle"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "handle": {
+          "type": "string",
+          "minLength": 1,
+          "description": "GitHub handle"
+        }
+      },
+      "required": [
+        "handle"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Public GitHub user profile for a handle — display name, bio, and account metadata for identity linking.",
+    "dataSource": "api.github.com",
+    "kind": "collect",
+    "flags": [
+      "third_party"
+    ],
+    "consumes": [
+      {
+        "kind": "identifier",
+        "type": "handle"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 30000,
+    "jobPolicy": {
+      "cacheTtlMs": 1800000
+    },
+    "credentials": [
+      {
+        "name": "GITHUB_TOKEN",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "id": "identity.keybase.lookup",
+    "version": "1",
+    "title": "Keybase lookup",
+    "egress": "none",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Keybase username or domain"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Keybase username or domain"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Keybase username or domain-proof lookup — cross-platform proofs and PGP/crypto tips for identity graphing.",
+    "dataSource": "keybase.io/_/api/1.0/user/lookup",
+    "kind": "collect",
+    "consumes": [
+      {
+        "kind": "identifier",
+        "type": "handle"
+      },
+      {
+        "kind": "host"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      },
+      {
+        "kind": "identifier",
+        "type": "handle"
+      },
+      {
+        "kind": "identifier",
+        "type": "url"
+      },
+      {
+        "kind": "identifier",
+        "type": "domain"
+      },
+      {
+        "kind": "identifier",
+        "type": "pgp"
+      },
+      {
+        "kind": "identifier",
+        "type": "crypto"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 30000,
+    "jobPolicy": {
+      "cacheTtlMs": 3600000
+    }
+  },
+  {
+    "id": "identity.gravatar.lookup",
+    "version": "1",
+    "title": "Gravatar lookup",
+    "egress": "none",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Email"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "email"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Email"
+        }
+      },
+      "required": [
+        "email"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Public Gravatar profile for an email (MD5 hash). Confirms a published avatar/profile exists; may surface a display-name handle.",
+    "dataSource": "secure.gravatar.com",
+    "kind": "collect",
+    "consumes": [
+      {
+        "kind": "identifier",
+        "type": "email"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      },
+      {
+        "kind": "identifier",
+        "type": "email"
+      },
+      {
+        "kind": "identifier",
+        "type": "handle"
+      },
+      {
+        "kind": "identifier",
+        "type": "url"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 30000,
+    "jobPolicy": {
+      "cacheTtlMs": 3600000
+    }
+  },
+  {
+    "id": "breach.hibp.lookup",
+    "version": "1",
+    "title": "HIBP lookup",
+    "egress": "third_party",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Email"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "email"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Email"
+        }
+      },
+      "required": [
+        "email"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Have I Been Pwned breached-account metadata for an email. A hit means the address appeared in a breach dump — not proof of who controls it today.",
+    "dataSource": "haveibeenpwned.com",
+    "kind": "collect",
+    "flags": [
+      "needs_key",
+      "third_party"
+    ],
+    "consumes": [
+      {
+        "kind": "identifier",
+        "type": "email"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Passive"
+    ],
+    "timeoutMs": 30000,
+    "jobPolicy": {
+      "cacheTtlMs": 3600000
+    },
+    "credentials": [
+      {
+        "name": "HIBP_API_KEY"
+      }
+    ]
+  },
+  {
+    "id": "breach.hudsonrock.lookup",
+    "version": "1",
+    "title": "Hudson Rock lookup",
+    "egress": "third_party",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Email, IP, or domain"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Email, IP, or domain"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Infostealer exposure for an email, IP, or domain: hit counts and newest compromise date. Does not return plaintext passwords or cookies.",
+    "dataSource": "api.hudsonrock.com",
+    "kind": "collect",
+    "flags": [
+      "needs_key",
+      "third_party"
+    ],
+    "consumes": [
+      {
+        "kind": "ip"
+      },
+      {
+        "kind": "host"
+      },
+      {
+        "kind": "identifier",
+        "type": "email"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Passive"
+    ],
+    "timeoutMs": 30000,
+    "jobPolicy": {
+      "cacheTtlMs": 3600000
+    },
+    "credentials": [
+      {
+        "name": "HUDSONROCK_API_KEY"
+      }
+    ]
+  },
+  {
+    "id": "breach.dehashed.lookup",
+    "version": "1",
+    "title": "DeHashed lookup",
+    "egress": "third_party",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Email, IP, domain, username, or freeform query"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Email, IP, domain, username, or freeform query"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Paid breach-corpus search for an email, IP, domain, username, or freeform query. Evidence stores recovered emails, usernames, passwords, and hashes (capped sample); Claim summarizes a short sample for Accept.",
+    "dataSource": "api.dehashed.com",
+    "kind": "collect",
+    "flags": [
+      "needs_key",
+      "third_party"
+    ],
+    "consumes": [
+      {
+        "kind": "ip"
+      },
+      {
+        "kind": "host"
+      },
+      {
+        "kind": "identifier",
+        "type": "email"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Passive"
+    ],
+    "timeoutMs": 30000,
+    "jobPolicy": {
+      "cacheTtlMs": 3600000
+    },
+    "credentials": [
+      {
+        "name": "DEHASHED_API_KEY"
+      }
+    ]
+  },
+  {
+    "id": "breach.snusbase.lookup",
+    "version": "1",
+    "title": "Snusbase lookup",
+    "egress": "third_party",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Email, IP, domain, or username"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Email, IP, domain, or username"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Paid breach/combolist corpus search for an email, IP, domain, or username (Snusbase). Evidence stores recovered emails, usernames, passwords, and hashes (capped sample); Claim summarizes a short sample for Accept.",
+    "dataSource": "api.snusbase.com",
+    "kind": "collect",
+    "flags": [
+      "needs_key",
+      "third_party"
+    ],
+    "consumes": [
+      {
+        "kind": "ip"
+      },
+      {
+        "kind": "host"
+      },
+      {
+        "kind": "identifier",
+        "type": "email"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Passive"
+    ],
+    "timeoutMs": 30000,
+    "jobPolicy": {
+      "cacheTtlMs": 3600000
+    },
+    "credentials": [
+      {
+        "name": "SNUSBASE_API_KEY"
+      }
+    ]
+  },
+  {
+    "id": "threat.virustotal.lookup",
+    "version": "1",
+    "title": "VirusTotal lookup",
+    "egress": "third_party",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IP or domain"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IP or domain"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Multi-engine reputation for an IP or domain. Aggregation signal — not identity proof.",
+    "dataSource": "virustotal.com API v3",
+    "kind": "collect",
+    "flags": [
+      "needs_key",
+      "third_party"
+    ],
+    "consumes": [
+      {
+        "kind": "ip"
+      },
+      {
+        "kind": "host"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 30000,
+    "jobPolicy": {
+      "cacheTtlMs": 1800000
+    },
+    "credentials": [
+      {
+        "name": "VIRUSTOTAL_API_KEY"
+      }
+    ]
+  },
+  {
+    "id": "threat.abuseipdb.lookup",
+    "version": "1",
+    "title": "AbuseIPDB lookup",
+    "egress": "third_party",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "ip": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IPv4 or IPv6"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "ip"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "ip": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IPv4 or IPv6"
+        }
+      },
+      "required": [
+        "ip"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Community abuse reports and confidence for an IP. Reputation signal only — not ownership or definitive malice.",
+    "dataSource": "api.abuseipdb.com",
+    "kind": "collect",
+    "flags": [
+      "needs_key",
+      "third_party"
+    ],
+    "consumes": [
+      {
+        "kind": "ip"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 30000,
+    "jobPolicy": {
+      "cacheTtlMs": 1800000
+    },
+    "credentials": [
+      {
+        "name": "ABUSEIPDB_API_KEY"
+      }
+    ]
+  },
+  {
+    "id": "threat.threatfox.lookup",
+    "version": "1",
+    "title": "ThreatFox lookup",
+    "egress": "third_party",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IP, domain, or IOC string"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IP, domain, or IOC string"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Malware C2 and payload IOC search for an IP or domain. Distinct from AbuseIPDB IP reputation.",
+    "dataSource": "threatfox-api.abuse.ch",
+    "kind": "collect",
+    "flags": [
+      "needs_key",
+      "third_party"
+    ],
+    "consumes": [
+      {
+        "kind": "ip"
+      },
+      {
+        "kind": "host"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 30000,
+    "jobPolicy": {
+      "cacheTtlMs": 1800000
+    },
+    "credentials": [
+      {
+        "name": "THREATFOX_API_KEY"
+      }
+    ]
+  },
+  {
+    "id": "threat.urlhaus.lookup",
+    "version": "1",
+    "title": "URLhaus lookup",
+    "egress": "third_party",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "minLength": 1,
+          "description": "URL, host, or file hash (MD5/SHA256)"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "minLength": 1,
+          "description": "URL, host, or file hash (MD5/SHA256)"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Whether a URL, host, or payload hash is listed as a malware distribution site / sample on URLhaus.",
+    "dataSource": "urlhaus-api.abuse.ch",
+    "kind": "collect",
+    "flags": [
+      "needs_key",
+      "third_party"
+    ],
+    "consumes": [
+      {
+        "kind": "url"
+      },
+      {
+        "kind": "host"
+      },
+      {
+        "kind": "ip"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 30000,
+    "jobPolicy": {
+      "cacheTtlMs": 1800000
+    },
+    "credentials": [
+      {
+        "name": "THREATFOX_API_KEY"
+      }
+    ]
+  },
+  {
+    "id": "threat.malwarebazaar.lookup",
+    "version": "1",
+    "title": "MalwareBazaar lookup",
+    "egress": "third_party",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "hash": {
+          "type": "string",
+          "minLength": 1,
+          "description": "MD5 or SHA256 file hash"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "hash"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "hash": {
+          "type": "string",
+          "minLength": 1,
+          "description": "MD5 or SHA256 file hash"
+        }
+      },
+      "required": [
+        "hash"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Malware sample metadata for a file hash (family/signature/tags). Lookup only — does not download samples.",
+    "dataSource": "mb-api.abuse.ch",
+    "kind": "collect",
+    "flags": [
+      "needs_key",
+      "third_party"
+    ],
+    "consumes": [
+      {
+        "kind": "hash"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 30000,
+    "jobPolicy": {
+      "cacheTtlMs": 1800000
+    },
+    "credentials": [
+      {
+        "name": "THREATFOX_API_KEY"
+      }
+    ]
+  },
+  {
+    "id": "threat.feodo.lookup",
+    "version": "1",
+    "title": "Feodo Tracker lookup",
+    "egress": "third_party",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "ip": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IPv4 or IPv6"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "ip"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "ip": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IPv4 or IPv6"
+        }
+      },
+      "required": [
+        "ip"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Whether an IP is on Feodo Tracker’s recommended botnet C2 blocklist (Emotet/Dridex/QakBot-class). Membership only.",
+    "dataSource": "feodotracker.abuse.ch",
+    "kind": "collect",
+    "flags": [
+      "third_party"
+    ],
+    "consumes": [
+      {
+        "kind": "ip"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 30000,
+    "jobPolicy": {
+      "cacheTtlMs": 3600000
+    },
+    "credentials": [
+      {
+        "name": "THREATFOX_API_KEY",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "id": "threat.greynoise.lookup",
+    "version": "1",
+    "title": "GreyNoise Community",
+    "egress": "third_party",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "ip": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IPv4 or IPv6"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "ip"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "ip": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IPv4 or IPv6"
+        }
+      },
+      "required": [
+        "ip"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Whether an IP is internet background noise and/or a known benign service (RIOT). Helps filter scanner chatter from targeted traffic.",
+    "dataSource": "api.greynoise.io/v3/community",
+    "kind": "collect",
+    "flags": [
+      "third_party"
+    ],
+    "consumes": [
+      {
+        "kind": "ip"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 30000,
+    "jobPolicy": {
+      "cacheTtlMs": 1800000
+    },
+    "credentials": [
+      {
+        "name": "GREYNOISE_API_KEY",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "id": "threat.hashlookup.lookup",
+    "version": "1",
+    "title": "CIRCL hashlookup",
+    "egress": "third_party",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "hash": {
+          "type": "string",
+          "minLength": 1,
+          "description": "MD5, SHA-1, SHA-256, or SHA-512 hex hash"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "hash"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "hash": {
+          "type": "string",
+          "minLength": 1,
+          "description": "MD5, SHA-1, SHA-256, or SHA-512 hex hash"
+        }
+      },
+      "required": [
+        "hash"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Known-file corpus check (NSRL-derived). A hit means “seen as known software,” not a malware verdict.",
+    "dataSource": "hashlookup.circl.lu",
+    "kind": "collect",
+    "flags": [
+      "third_party"
+    ],
+    "consumes": [
+      {
+        "kind": "hash"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 30000,
+    "jobPolicy": {
+      "cacheTtlMs": 3600000
+    }
+  },
+  {
+    "id": "threat.bgpranking.lookup",
+    "version": "1",
+    "title": "CIRCL BGP Ranking",
+    "egress": "third_party",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "ip": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IPv4 or IPv6"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "ip"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "ip": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IPv4 or IPv6"
+        }
+      },
+      "required": [
+        "ip"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Malicious-activity rank for an IP’s origin ASN (CIRCL). Useful when judging how noisy the whole ASN is.",
+    "dataSource": "bgpranking-ng.circl.lu",
+    "kind": "collect",
+    "flags": [
+      "third_party"
+    ],
+    "consumes": [
+      {
+        "kind": "ip"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 30000,
+    "jobPolicy": {
+      "cacheTtlMs": 3600000
+    }
+  },
+  {
+    "id": "threat.dshield.lookup",
+    "version": "1",
+    "title": "SANS ISC DShield",
+    "egress": "third_party",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "ip": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IPv4 or IPv6"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "ip"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "ip": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IPv4 or IPv6"
+        }
+      },
+      "required": [
+        "ip"
+      ],
+      "additionalProperties": false
+    },
+    "description": "SANS ISC / DShield honeypot sightings for an IP — how often scanners/sensors have seen it attacking.",
+    "dataSource": "isc.sans.edu/api",
+    "kind": "collect",
+    "flags": [
+      "third_party"
+    ],
+    "consumes": [
+      {
+        "kind": "ip"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 30000,
+    "jobPolicy": {
+      "cacheTtlMs": 1800000
+    }
+  },
+  {
+    "id": "threat.cymru_mhr.lookup",
+    "version": "1",
+    "title": "Team Cymru Malware Hash Registry",
+    "egress": "third_party",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "hash": {
+          "type": "string",
+          "minLength": 1,
+          "description": "MD5, SHA-1, or SHA-256 hex hash"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "hash"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "hash": {
+          "type": "string",
+          "minLength": 1,
+          "description": "MD5, SHA-1, or SHA-256 hex hash"
+        }
+      },
+      "required": [
+        "hash"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Malware Hash Registry: last-seen time and AV detection % for a file hash. Complements VirusTotal with a DNS-native check.",
+    "dataSource": "hash.cymru.com (DNS)",
+    "kind": "collect",
+    "flags": [
+      "third_party"
+    ],
+    "consumes": [
+      {
+        "kind": "hash"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 15000,
+    "jobPolicy": {
+      "cacheTtlMs": 3600000
+    }
+  },
+  {
+    "id": "threat.firehol.lookup",
+    "version": "1",
+    "title": "FireHOL level1 blocklist",
+    "egress": "none",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "ip": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IPv4 or IPv6"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "ip"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "ip": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IPv4 or IPv6"
+        }
+      },
+      "required": [
+        "ip"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Whether an IP is in FireHOL level1 (composite of dshield, feodo, bogons, spamhaus_drop, etc.). Broad blocklist membership check.",
+    "dataSource": "iplists.firehol.org/files/firehol_level1.netset",
+    "kind": "collect",
+    "consumes": [
+      {
+        "kind": "ip"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 30000,
+    "jobPolicy": {
+      "cacheTtlMs": 3600000
+    }
+  },
+  {
+    "id": "threat.otx.lookup",
+    "version": "1",
+    "title": "OTX lookup",
+    "egress": "third_party",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IP, domain, URL, or file hash"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IP, domain, URL, or file hash"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Pulse membership and malware-family names for an IP, domain, URL, or hash from the OTX community.",
+    "dataSource": "otx.alienvault.com",
+    "kind": "collect",
+    "flags": [
+      "needs_key",
+      "third_party"
+    ],
+    "consumes": [
+      {
+        "kind": "ip"
+      },
+      {
+        "kind": "host"
+      },
+      {
+        "kind": "url"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 30000,
+    "jobPolicy": {
+      "cacheTtlMs": 1800000
+    },
+    "credentials": [
+      {
+        "name": "OTX_API_KEY"
+      }
+    ]
+  },
+  {
+    "id": "threat.safebrowsing.lookup",
+    "version": "1",
+    "title": "Google Safe Browsing lookup",
+    "egress": "third_party",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "minLength": 1,
+          "description": "URL"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "minLength": 1,
+          "description": "URL"
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Whether a URL hits Google’s malware / social-engineering / unwanted-software lists.",
+    "dataSource": "safebrowsing.googleapis.com",
+    "kind": "collect",
+    "flags": [
+      "needs_key",
+      "third_party"
+    ],
+    "consumes": [
+      {
+        "kind": "url"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 30000,
+    "jobPolicy": {
+      "cacheTtlMs": 1800000
+    },
+    "credentials": [
+      {
+        "name": "GOOGLE_SAFEBROWSING_API_KEY"
+      }
+    ]
+  },
+  {
+    "id": "threat.xforce.lookup",
+    "version": "1",
+    "title": "IBM X-Force Exchange lookup",
+    "egress": "third_party",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IP, domain, URL, or file hash"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IP, domain, URL, or file hash"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "additionalProperties": false
+    },
+    "description": "IBM X-Force reputation / malware counts for an IP, URL, or file hash — alternate commercial TI view beside VT.",
+    "dataSource": "exchange.xforce.ibmcloud.com",
+    "kind": "collect",
+    "flags": [
+      "needs_key",
+      "third_party"
+    ],
+    "consumes": [
+      {
+        "kind": "ip"
+      },
+      {
+        "kind": "host"
+      },
+      {
+        "kind": "url"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 30000,
+    "jobPolicy": {
+      "cacheTtlMs": 1800000
+    },
+    "credentials": [
+      {
+        "name": "XFORCE_API_KEY"
+      },
+      {
+        "name": "XFORCE_API_PASSWORD"
+      }
+    ]
+  },
+  {
+    "id": "threat.greedybear.lookup",
+    "version": "1",
+    "title": "GreedyBear scanner feed",
+    "egress": "third_party",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IP or domain"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IP or domain"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Whether an IP or domain appears in GreedyBear’s recent honeypot-scanner feed (last ~3 days of observed scanners).",
+    "dataSource": "greedybear.honeynet.org",
+    "kind": "collect",
+    "flags": [
+      "third_party"
+    ],
+    "consumes": [
+      {
+        "kind": "ip"
+      },
+      {
+        "kind": "host"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 30000,
+    "jobPolicy": {
+      "cacheTtlMs": 1800000
+    }
+  },
+  {
+    "id": "threat.honeydb.lookup",
+    "version": "1",
+    "title": "HoneyDB lookup",
+    "egress": "third_party",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "ip": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IPv4 or IPv6"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "ip"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "ip": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IPv4 or IPv6"
+        }
+      },
+      "required": [
+        "ip"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Honeypot sighting history and threat-list flags for an IP — network context plus whether sensors have watched it attack.",
+    "dataSource": "honeydb.io",
+    "kind": "collect",
+    "flags": [
+      "needs_key",
+      "third_party"
+    ],
+    "consumes": [
+      {
+        "kind": "ip"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Passive",
+      "Footprint"
+    ],
+    "timeoutMs": 30000,
+    "jobPolicy": {
+      "cacheTtlMs": 1800000
+    },
+    "credentials": [
+      {
+        "name": "HONEYDB_API_ID"
+      },
+      {
+        "name": "HONEYDB_API_KEY"
+      }
+    ]
+  },
+  {
+    "id": "evidence.harvest",
+    "version": "1",
+    "title": "Harvest Evidence",
+    "egress": "none",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "evidenceId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+          "description": "Evidence id"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "evidenceId"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "evidenceId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+          "description": "Evidence id"
+        }
+      },
+      "required": [
+        "evidenceId"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Deterministic regex harvest of identifiers from Evidence text — fast first pass before or instead of AI extract.",
+    "dataSource": "deterministic harvest",
+    "kind": "process",
+    "consumes": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "identifier",
+        "type": "email"
+      },
+      {
+        "kind": "identifier",
+        "type": "handle"
+      },
+      {
+        "kind": "identifier",
+        "type": "url"
+      },
+      {
+        "kind": "identifier",
+        "type": "phone"
+      }
+    ],
+    "timeoutMs": 30000,
+    "jobPolicy": {
+      "needsEvidenceSnapshot": true,
+      "markEvidenceProcessed": true,
+      "linkEvidenceFromInput": [
+        "evidenceId"
+      ]
+    }
+  },
+  {
+    "id": "evidence.extract.ai",
+    "version": "1",
+    "title": "Extract Evidence (AI)",
+    "egress": "third_party",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "evidenceId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+          "description": "Evidence id"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "model": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "evidenceId"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "evidenceId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+          "description": "Evidence id"
+        }
+      },
+      "required": [
+        "evidenceId"
+      ],
+      "additionalProperties": false
+    },
+    "description": "LLM structured extract of identifiers, claims, and questions from held Evidence text when deterministic harvest is too shallow.",
+    "dataSource": "LLM structured extract",
+    "kind": "process",
+    "flags": [
+      "needs_key",
+      "third_party",
+      "slow"
+    ],
+    "consumes": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "identifier",
+        "type": "email"
+      },
+      {
+        "kind": "identifier",
+        "type": "handle"
+      },
+      {
+        "kind": "identifier",
+        "type": "url"
+      }
+    ],
+    "timeoutMs": 120000,
+    "jobPolicy": {
+      "needsEvidenceSnapshot": true,
+      "markEvidenceProcessed": true,
+      "linkEvidenceFromInput": [
+        "evidenceId"
+      ]
+    },
+    "credentials": [
+      {
+        "anyOf": [
+          "ANTHROPIC_API_KEY",
+          "AI_COMPAT_API_KEY"
+        ]
+      },
+      {
+        "name": "AI_COMPAT_BASE_URL",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "id": "evidence.file.analyze",
+    "version": "1",
+    "title": "Analyze file",
+    "egress": "none",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "evidenceId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+          "description": "Evidence id"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "evidenceId"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "evidenceId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+          "description": "Evidence id"
+        }
+      },
+      "required": [
+        "evidenceId"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Structure held file Evidence (MIME/magic, light EXIF/PDF strings, sha256) into a findings draft for Inbox.",
+    "dataSource": "local file bytes",
+    "kind": "process",
+    "consumes": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "useCases": [
+      "Passive"
+    ],
+    "timeoutMs": 30000,
+    "jobPolicy": {
+      "needsEvidenceSnapshot": true,
+      "markEvidenceProcessed": true,
+      "linkEvidenceFromInput": [
+        "evidenceId"
+      ]
+    }
+  },
+  {
+    "id": "evidence.eml.analyze",
+    "version": "1",
+    "title": "Analyze EML",
+    "egress": "none",
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "evidenceId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+          "description": "Evidence id"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "evidenceId"
+      ],
+      "additionalProperties": false
+    },
+    "inputForm": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "evidenceId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+          "description": "Evidence id"
+        }
+      },
+      "required": [
+        "evidenceId"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Parse a held .eml into headers, Received chain, and harvested email/URL identifiers for Inbox review.",
+    "dataSource": "local EML text",
+    "kind": "process",
+    "consumes": [
+      {
+        "kind": "evidence",
+        "evidenceKind": "file"
+      }
+    ],
+    "produces": [
+      {
+        "kind": "identifier",
+        "type": "email"
+      },
+      {
+        "kind": "identifier",
+        "type": "url"
+      }
+    ],
+    "useCases": [
+      "Passive"
+    ],
+    "timeoutMs": 30000,
+    "jobPolicy": {
+      "needsEvidenceSnapshot": true,
+      "markEvidenceProcessed": true,
+      "linkEvidenceFromInput": [
+        "evidenceId"
+      ]
+    }
+  }
+]
