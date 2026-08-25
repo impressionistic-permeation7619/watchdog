@@ -1,0 +1,15 @@
+{
+  "ip": {
+    "number": "1.2.3.4",
+    "count": "9843",
+    "attacks": "34",
+    "maxrisk": 1,
+    "asname": "CHINANET-BACKBONE",
+    "network": "1.80.0.0/13",
+    "as": "4134",
+    "ascountry": "CN",
+    "mindate": "2020-01-01",
+    "maxdate": "2026-01-01",
+    "threatfeeds": { "spamhaus": "2026-01-01", "blocklist.de": "2025-12-01" }
+  }
+}
