@@ -47,37 +47,11 @@ flowchart LR
 
 Postgres holds the truth. The markdown export at the end is a projection you can delete and regenerate.
 
-## The custody rule, in code
+## The custody rule
 
-This isn't a convention you have to trust. Here is everything a Cap is handed at runtime, in full:
+This is a type boundary, not a convention, and it takes one file to check. The context object a Cap receives at runtime (`CapContext` in `packages/cap-sdk/src/define.ts`) gives it an input, a couple of ids, artifact storage, credentials from the vault, and a log function. There is no database handle, no graph client, no write method of any kind. Even the case data a Cap can read is a snapshot packed for it rather than the live graph.
 
-```ts
-// packages/cap-sdk/src/define.ts
-export interface CapContext<TInput> {
-  input: TInput;
-  caseId: string;
-  jobId: string;
-  signal: AbortSignal;
-  uploadArtifact: (input: {
-    bytes: Uint8Array;
-    mime: string;
-    name?: string;
-  }) => Promise<CapArtifact>;
-  readArtifact: (uri: string) => Promise<Uint8Array>;
-  scratchDir: string;
-  getCredential: (name: string) => Promise<string>;
-  /** Presence check — does not decrypt. Use before selecting a provider. */
-  hasCredential: (name: string) => Promise<boolean>;
-  allowThirdPartyEgress: boolean;
-  log: (message: string) => void;
-  /** Packed by core when `jobPolicy.needsEvidenceSnapshot` — never live Graph. */
-  evidenceSnapshot?: EvidenceSnapshot;
-}
-```
-
-No database handle, no graph client, no write method of any kind. Even the case data a Cap can read is a snapshot packed for it, not the live graph. Its only outputs are artifacts and a report.
-
-Turning that report into proposed graph operations is a separate pure function, `interpret`, which receives the report JSON and nothing else: no context, no network, no database. And the patch schema refuses to parse an operation that carries a `confidence` value at all, because confidence is chosen at Accept, by a person.
+Its only outputs are artifacts and a report. Turning that report into proposed graph operations is a separate pure function, `interpret`, which receives the report JSON and nothing else. The patch schema then refuses to parse an operation carrying a `confidence` value at all, because confidence is chosen at Accept, by a person.
 
 Claims land as `unverified`; a human moves them to `possible` or `confirmed` at Accept. An agent can force a direct graph write, but it takes an explicit override flag, still lands at `unverified`, and is recorded in `graph_writes`.
 
