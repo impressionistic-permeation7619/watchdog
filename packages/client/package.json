@@ -1,0 +1,22 @@
+{
+  "name": "@watchdog/client",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "generate": "pnpm --filter @watchdog/api export-contract"
+  },
+  "dependencies": {
+    "@orpc/client": "^1.14.8",
+    "@orpc/contract": "^1.14.8",
+    "@orpc/openapi-client": "^1.14.8",
+    "@watchdog/api": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^6.0.2"
+  }
+}
