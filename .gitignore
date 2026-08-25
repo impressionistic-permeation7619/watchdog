@@ -1,0 +1,38 @@
+# Secrets
+.env
+/tmp
+
+# Tooling
+.cursor/
+_legacy-v2/
+.desloppify/
+node_modules/
+.venv/
+dist/
+.turbo/
+apps/web/dist/
+apps/web/.output/
+coverage/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# Regenerable platform output
+export/
+.wd-runtime/
+
+# Web build
+apps/web/.vinxi/
+apps/web/.tanstack/
+
+# evlog / audit drains
+apps/web/.evlog/
+apps/worker/.evlog/
+apps/web/.audit/
+
+# Nix
+.direnv/
+
+# Local
+CLAUDE.local.md
