@@ -1,0 +1,14 @@
+{
+  "responseCode": 200,
+  "count": 2,
+  "data": [
+    {
+      "query": "dns.google",
+      "answer": "8.8.8.8",
+      "rrtype": "A",
+      "times": "12",
+      "firstSeenTimestamp": 1609459200000,
+      "lastSeenTimestamp": 1735689600000
+    }
+  ]
+}
