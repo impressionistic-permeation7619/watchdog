@@ -1,0 +1,19 @@
+/**
+ * Resolve queue selection when URL is SoT: keep `urlId` if it appears in the
+ * visible rows, otherwise fall back to the first row (or null if empty).
+ *
+ * `holdMissingUrlId`: keep a URL id that is not in `rows` yet (e.g. just-created
+ * job while the list is still refetching) so callers do not Navigate-clobber
+ * the URL and remount the split view.
+ */
+export function resolveQueueSelection(
+  urlId: string | undefined,
+  rows: readonly { id: string }[],
+  opts?: { holdMissingUrlId?: boolean }
+): string | null {
+  if (urlId !== undefined) {
+    if (rows.some((r) => r.id === urlId)) return urlId;
+    if (opts?.holdMissingUrlId) return urlId;
+  }
+  return rows[0]?.id ?? null;
+}
