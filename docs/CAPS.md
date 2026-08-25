@@ -66,7 +66,7 @@ Jobs category grouping derives from `id.split(".")[0]` until `CapDescriptor` gro
 - Rendered page markup (OG/JSON-LD, tracker script IDs) = **`web`** (`web.page.enrich`).
 - Historical snapshots / CDX = **`archive`**.
 - `network.url.enrich` stays **network** (Intake Job artifacts for a URL seed).
-- Public code-host search = **`breach.github.search`**, not `web.*`.
+- Code-host account lookup = **`identity.github.lookup`**, not `web.*`. No broad code-host *search* Cap ships today; if one lands it belongs in `breach` (leaked-secret sweeps) or `identity` (account discovery) depending on what it returns.
 
 ### Salient axis
 
@@ -78,7 +78,9 @@ Jobs category grouping derives from `id.split(".")[0]` until `CapDescriptor` gro
 
 ## Method vocabulary (slot 3)
 
-Controlled roots — each verb has one meaning. Prefer a root verb; compounds must root in one below. Full neighbor boundaries mined from legacy ubiquitous-language methods; greenfield nouns (Proposal / Evidence / Job artifacts) apply.
+Convention, not enforcement: `CapabilityDef.id` is a plain `string` and no schema validates slot 3. The hygiene tests in `packages/caps/src/__tests__/capabilities-gen.test.ts` are the only automated check, so keeping this list honest is on the author.
+
+Each verb has one meaning. Prefer a root verb; compounds must root in one below.
 
 ### Retrieve
 
@@ -104,6 +106,7 @@ Controlled roots — each verb has one meaning. Prefer a root verb; compounds mu
 | Method | Definition |
 | --- | --- |
 | **enrich** | Deepen existing subject (attributes / Job artifacts) without changing identity |
+| **unshorten** | Resolve a redirect chain to its final URL — today `web.url.unshorten` |
 | **crossref** | Where-else candidates — never identity proof; Maigret-class deferred to external tools hub |
 | **capture** | Full citable Evidence pipeline for a URL |
 | **submit** | Push URL to archive for **our** preservation (public record — opt-in + third_party egress) |

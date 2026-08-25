@@ -9,7 +9,6 @@ document_updated: 2026-08-15T10:35
 
 Status: `shipped` · `partial` · `missing` · `lying` (doc/UI claim a path that cannot complete).
 
-Interactive twin: Cursor canvas `day0-scenario-audit.canvas.tsx` (project canvases folder).
 
 ---
 
@@ -128,7 +127,7 @@ Before the next Cap or UI slice: happy path + 2–3 sad paths + done-when → wa
 | Quick Launch paste → Intake | removed | Dump stays on Intake; Dashboard does not host paste |
 | Dashboard → Inbox with proposalId | shipped | Inbox panel rows deep-link `search.proposalId` |
 | Dashboard → Jobs with jobId | removed | Jobs running tile links `/jobs` without a selected job |
-| Settings vault credentials | shipped | `/settings?tab=credentials`; Connect/Update dialog; needs `WD_MASTER_VAULT_KEY`; also `wd credentials` / `PUT /credentials` (never plaintext) |
+| Settings vault credentials | shipped | `/settings?tab=credentials`; Connect/Update dialog; needs `WD_MASTER_VAULT_KEY`; also `wd credentials` / `PUT /credentials/{name}` (never plaintext) |
 | Export zip from Cases UI | shipped | 404 if zero entities; also `wd export zip` / `md` (x-api-key file routes) |
 | Evidence hide / restore / download | shipped | UI + `wd evidence hide` / `restore` / `download` |
 | Evidence process / enrich | shipped | UI + `wd evidence process` / `--ai` / `enrich` (same core glue as Intake) |

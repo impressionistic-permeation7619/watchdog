@@ -25,7 +25,8 @@ Contract layer for Watchdog: shared atoms in `@watchdog/schemas`, domain inputs 
                          (`listCapabilities` / `capabilities.gen.json`); Zod inputs
 @watchdog/core        ← parsePatch / tryParsePatch; blob; pack EvidenceSnapshot;
                          run-job + run-paths; apply-patch + apply-*-op / edge-update
-                         (no policy/schemas re-exports)
+                         (no policy re-exports; `MAX_UPLOAD_BYTES` is the one
+                          schemas value re-exported, via infra/blob.ts)
 @watchdog/api         ← oRPC procedure I/O (composes schemas atoms)
 @watchdog/client      ← generated OpenAPI contract + createWatchdogClient (CLI/agents)
 @watchdog/cli         ← `wd` over client (+ authenticated file fetch for Case Export)
@@ -48,18 +49,15 @@ apps/web domains      ← types.ts: domain mutation Zod + DTOs (import schemas a
 | `@watchdog/caps` (Process lib) | `evidence/lib/draft-to-patch-ops`, `process-shared` (`uploadProcessArtifacts`, …) |
 | `@watchdog/caps` (harvest) | `evidence/harvest/harvest.ts` (`harvestDeterministic`); `quote-strip.ts` masks IPB/phpBB quoted spans (text after the quote still harvests); `extractors/` (`HARVEST_EXTRACTORS` — quotes, URLs+filename forensics, searchable selectors). Harvest does **not** emit “run oEmbed” Questions. |
 | `@watchdog/caps` (Collect shared) | `lib/collect/` — `define-collect-cap.ts`, `upload-json-report-pair.ts`, `interpret-observation-claim.ts`, `interpret-identifier-batches.ts` (`interpretTypedIdentifiers` thin re-export), `interpret-whois-snapshot.ts` (Claim + optional near-expiry Event; no NS Identifiers); per-Cap `interpret.ts` |
-| `@watchdog/core` | `parsePatch` / `tryParsePatch`; `applyPatch` + `graph/apply-*-op.ts`; `edge-update.ts` (`validateEdgeUpdate`, `buildEdgePatch`); `identifier-collisions.ts` (Inbox warn); `questions.ts` `seedDefaultQuestions` (person seeds on Entity create) + `updateQuestion` / `reopenQuestion`; `jobs/run-paths.ts`; `loadCapReport`; `parseAgentPatch`; `createAgentProposal` / `writeGraphFromAgent` |
+| `@watchdog/core` | Exported from the barrel: `parsePatch` / `tryParsePatch`; `applyPatch`; `updateQuestion` / `reopenQuestion`; `loadCapReport`; `parseAgentPatch`; `createAgentProposal` / `writeGraphFromAgent`. Internal (import by path, not from the package root): `graph/apply-*-op.ts`; `edge-update.ts` (`validateEdgeUpdate`, `buildEdgePatch`); `identifier-collisions.ts` (Inbox warn); `questions.ts` `seedDefaultQuestions` (person seeds on Entity create); `jobs/run-paths.ts` |
 
 ---
 
-## Vault vs platform vocab
+## Platform vocab is the only vocab here
 
-| SoT | Role |
-| --- | --- |
-| [`templates/VOCABULARY.md`](../templates/VOCABULARY.md) | Vault / ETL markdown — still has `probable`, vault statuses/tags |
-| `@watchdog/schemas` | **Platform** Postgres / Caps / Inbox / UI — Day-0 confidence is `unverified` \| `possible` \| `confirmed` |
+`@watchdog/schemas` is the sole vocabulary SoT in this repo, covering Postgres, Caps, Inbox and UI. Confidence is `unverified` | `possible` | `confirmed`.
 
-Do not treat moving platform enums into `@watchdog/schemas` as replacing vault VOCABULARY.md. Overlap (predicates, kinds) is intentional but not identical.
+The separate investigation vault keeps its own markdown vocabulary in a private repo, including tiers such as `probable` that the platform deliberately does not have. Overlap (predicates, kinds) is intentional but not identical, so do not port values between them by assuming the names line up.
 
 ### Platform edge predicates
 

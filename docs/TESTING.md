@@ -25,16 +25,17 @@ pnpm --filter @watchdog/db check:repos
 | Tier | Where | Isolation |
 | --- | --- | --- |
 | Unit | `packages/*/src/**/__tests__/**/*.test.ts` + worker | Pure; `SKIP_ENV_VALIDATION=1` |
-| Property | `*.property.test.ts` | fast-check via `@watchdog/test-kit/fc` |
+| Property | `*.property.test.ts` under `packages/*` or `apps/*` | fast-check via `@watchdog/test-kit/fc` |
 | Component | `apps/web/src/**/__tests__/**` (`*.test.ts` + `*.component.test.tsx`) | jsdom + Testing Library |
-| Integration | `*.int.test.ts` | `watchdog_test`; `withTestTx` or `resetTestDb` |
+| Integration | `*.int.test.ts` under `packages/*` or `apps/*` | `watchdog_test`; `withTestTx` or `resetTestDb` |
+| E2E parser | `e2e/*.test.ts` (not `*.spec.ts`) | Pure; guards the E2E harness itself |
 | E2E | `e2e/*.spec.ts` | `watchdog_e2e` + web + worker |
 
 Sibling `__tests__/` next to source. Shared builders/harness: `@watchdog/test-kit` (`/fc`, `/fixtures`, `/db`, `/http`, `/it`). Playwright starts web on port **3300** (does not reuse `:3000`) and the worker with `pnpm --filter @watchdog/worker start` — not `dev`/`tsx watch`, which would kill a daily worker watching the same files. NixOS: enter `nix develop` so Chromium comes from the flake; CI installs Playwright's own Chromium.
 
 **Web lib tests run in the component project** (jsdom), not `pnpm test:unit`. Unit is packages + worker only.
 
-Collect Caps ship `__tests__/interpret.test.ts`. Do not add a `run()` file per Cap — prove `report.json` + interpret via `itRunsCollectCap` (`@watchdog/test-kit/it`) on **three** Caps (`network.dns.lookup`, `web.url.unshorten`, `threat.virustotal.lookup`). Special `run()` (not `defineCollectCap`): harvest, extract.ai, url.enrich. Web does not re-test Cap handlers. MSW: import `http` / `HttpResponse` / `mockServer` / `mockJson` from `@watchdog/test-kit/http`, not `msw`.
+Collect Caps ship `__tests__/interpret.test.ts`. Do not add a `run()` file per Cap — prove `report.json` + interpret via `itRunsCollectCap` (`@watchdog/test-kit/it`) on **three** Caps (`network.dns.lookup`, `web.url.unshorten`, `threat.virustotal.lookup`). Special `run()` (not `defineCollectCap`): `evidence.harvest`, `evidence.extract.ai`, `network.url.enrich`, `evidence.file.analyze`, `evidence.eml.analyze`. Web does not re-test Cap handlers. MSW: import `http` / `HttpResponse` / `mockServer` / `mockJson` from `@watchdog/test-kit/http`, not `msw`.
 
 CLI unit tests cover `--help`, custody envelopes (`CUSTODY` without `--user-override` on identifier/edge/event/question writes), and `loadPatch`. Generated `packages/client/src/generated/` is CI regen, not a test target.
 

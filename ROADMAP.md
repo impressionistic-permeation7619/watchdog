@@ -5,7 +5,7 @@ document_updated: 2026-08-16T19:31
 
 # Watchdog ROADMAP
 
-Living phase / backlog SoT for **product work**. Nouns and Cap loop rules stay in the [greenfield blueprint](.cursor/plans/all-ts_greenfield_blueprint_44cd45df.plan.md). Product intent / personas / doctrine: [`docs/PRODUCT.md`](docs/PRODUCT.md). UI contracts: [`apps/web/docs/`](apps/web/docs/README.md). Platform UX: [`docs/UX.md`](docs/UX.md). `_legacy-v1/` and `_legacy-v2/` are frozen mines — **do not extend**.
+Living phase / backlog SoT for **product work**. Nouns, Cap loop rules, intent, personas and doctrine: [`docs/PRODUCT.md`](docs/PRODUCT.md). UI contracts: [`apps/web/docs/`](apps/web/docs/README.md). Platform UX: [`docs/UX.md`](docs/UX.md). The `_legacy-*` trees are untracked, frozen mines — **do not extend**.
 
 ---
 
@@ -83,8 +83,8 @@ Signal-era field work + build principles confirm this north star and Phases 0–
 
 | Mine | Steal (ideas / algorithms) | Never resurrect |
 | --- | --- | --- |
-| [`_legacy-v1/`](_legacy-v1/README.md) | Harvest regex + config, classify/adjudicate prompts, confidence ceilings, forum scrape patterns, checkpoint/DLQ ops | Vault-as-DB, ARQ/Python platform core, Scratch dual-control, hardcoded sockhunt targets, “Promote” as Cap verb |
-| [`_legacy-v2/`](_legacy-v2/README.md) · [AUDIT](_legacy-v2/docs-v2/AUDIT.md) | LIVE network Cap algorithms, write-gate _spirit_, Graph Studio UX patterns, Playbook seeds (when earned), external-tools hub ideas | Scratch / Candidate / Door A/B, Mutation R-tiers as Day-0, docs-v2 as coding SoT, visual iPaaS, Cap catalog theater without depth |
+| `_legacy-v1/` | Harvest regex + config, classify/adjudicate prompts, confidence ceilings, forum scrape patterns, checkpoint/DLQ ops | Vault-as-DB, ARQ/Python platform core, Scratch dual-control, hardcoded sockhunt targets, “Promote” as Cap verb |
+| `_legacy-v2/` | LIVE network Cap algorithms, write-gate _spirit_, Graph Studio UX patterns, Playbook seeds (when earned), external-tools hub ideas | Scratch / Candidate / Door A/B, Mutation R-tiers as Day-0, docs-v2 as coding SoT, visual iPaaS, Cap catalog theater without depth |
 
 Port by **reimplementing in TS Caps** when pain is real — don’t copy the Python trees wholesale.
 
@@ -204,10 +204,8 @@ Phase 2–3 items stay as bullets above until earned — don’t checkbox-dream 
 | Doc | Owns |
 | --- | --- |
 | **This file** | Phases, backlog, maturity, legacy mines |
-| [Greenfield blueprint](.cursor/plans/all-ts_greenfield_blueprint_44cd45df.plan.md) | Nouns, hard bets, Cap loop |
-| [`docs/PRODUCT.md`](docs/PRODUCT.md) | Intent, personas, doctrine, rewrite lessons |
-| [`AGENTS.md`](AGENTS.md) | Operational rules (vault + platform) |
+| [`docs/PRODUCT.md`](docs/PRODUCT.md) | Nouns, hard bets, Cap loop, intent, personas, doctrine, rewrite lessons |
+| [`AGENTS.md`](AGENTS.md) | Operational rules |
 | [`docs/`](docs/README.md) | Platform architecture / UX / types / scenarios |
 | [`apps/web/docs/`](apps/web/docs/README.md) | UI / DATA / domains / web architecture |
-| [`_legacy-v2/docs-v2/`](_legacy-v2/docs-v2/README.md) | Historical ADRs / AUDIT (reference only) |
 | [`docs/UX.md`](docs/UX.md) | Experience debt (dated) |

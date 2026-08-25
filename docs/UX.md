@@ -20,18 +20,19 @@ Operate mode: task clarity over surprise. Surfaces earn their chrome; don’t in
 | `/entities` | Browse Case entities (+ Connections column) | table |
 | `/identifiers` | Active-Case identifiers table (browse + inline edit + in-place create + bulk add) | table |
 | `/graph` | Active-Case graph preview | stack (split density) |
-| `/entities/$slug` | Work a subject dossier (Notes tab separate from Overview) | stack |
+| `/entities/$entitySlug` | Work a subject dossier (Notes tab separate from Overview) | stack |
 | `/tasks` | Case work board (kanban); optional entity filter | board |
 | `/cases` | Manage Cases (create / Select Active / Open / export) | card grid |
 | `/cases/$caseSlug` | Case Overview — case dashboard (stats, activity, settings) | stack |
 | `/settings` | Account, security, API keys, Cap credentials (`?tab=`) | stack (sidebar + form) |
 | `/ui` | DS fixtures only — not a product surface | fixtures |
+| `/auth/$path` | Better Auth views: `sign-in`, `sign-up`, `forgot-password`, `reset-password`, `verify-email`, `sign-out` | centered card |
 
 ## Core flows
 
 1. **Cap run → triage** — Jobs starts a Cap → worker → Evidence + Proposal → Inbox Accept/Reject → graph.
 2. **Playbook run → triage** — Jobs **Run Playbook** mode starts a curated Cap chain (`playbook_runs`); each step is its own Job (+ Proposal). Only the first step is queued at start; later steps are created when the prior step succeeds (fan-out siblings join before the next recipe step). Cancel run stops remaining work. Never auto-fires from Intake.
-3. **Evidence in** — Intake dump (paste/file/URL) → Enrich (URL dumps; Output on the same row) → Process (optional harvest / aiprocess) → Inbox Accept. Detail tabs: Content · Output · Jobs. Cap-landed Evidence (e.g. DNS lookup artifact) is labeled **Cap output** with a link to the producing Job. Dossier Evidence tab dumps File/Paste/URL with Entity locked (same APIs; rows also appear in Intake).
+3. **Evidence in** — Intake dump (paste/file/URL) → Enrich (URL dumps; Output on the same row) → Process (optional `evidence.harvest` / `evidence.extract.ai`, labeled **Extract (AI)** in the UI) → Inbox Accept. Detail tabs: Content · Output · Jobs. Cap-landed Evidence (e.g. DNS lookup artifact) is labeled **Cap output** with a link to the producing Job. Dossier Evidence tab dumps File/Paste/URL with Entity locked (same APIs; rows also appear in Intake).
 4. **Dossier** — open entity → Overview (BLUF Summary via Plate Markdown + scan) / Notes (full-height Plate) / Claims / ids / connections / evidence / events / questions / **Tasks**; trail is folder + `{name} / Entities / {name}` (kind badge + blur-save name as last crumb) or **Edit** → `DossierEditDialog` (name / kind / summary / notes Markdown); click Case → Overview; click Entities → table. Evidence tab dumps onto this subject + peek via Drawer. Questions: inline edit (open + resolved), resolve, reopen.
 5. **Case scope** — Active Case is cookie-scoped (not in URL for Work/graph nouns); all work is Case-bound. Sidebar: WATCHDOG logo → Dashboard (`/`); **Search…** (Mod+K) above Case; under Case: flat Overview / Entities / Identifiers / Graph. Case Overview (`/cases/$caseSlug`) is the case dashboard (stats / activity / settings); Manage **Cases** Open sets Active and lands there. Legacy `/cases/$uuid` and `?tab=` bookmarks redirect.
 6. **Tasks** — case-scoped work items (not Graph writes). `/tasks` is kanban-only (fixed status columns; drag across columns changes status; drag within a column reorders via `position`; lane quick-create + header New task → full dialog). Optional `?entityId=` filter. Due dates are calendar-day only. Dossier **Tasks** tab = entity-scoped board (`density="split"`).
@@ -120,7 +121,7 @@ Dialog titles = Title Case statements (`Delete case`), not questions. Primary = 
 | Capability picker discoverability | shipped | CapMatch paste-to-run + category (`id` seg1) + Passive/Active/Footprint filters; empty-default Cap select; Cap meta shows intent |
 | Hide restore / honest copy | done | Filters → Hidden + Restore; dialog copy names the path |
 | Suppression / cache explainability | done | Jobs: From cache / N suppressed chips + clearer no-Proposal copy; Inbox: Reject FP memory note + suppressed-upstream badge |
-| agent_sourced badge | done | Shows when Proposal came from agent propose API; override badge removed (audit is `graph_writes`, not Proposal) |
+| `agent` badge (`proposal.agentSourced`) | done | Shows when Proposal came from agent propose API; override badge removed (audit is `graph_writes`, not Proposal) |
 | Playbook credential pre-check in UI | done | Vault `configured` folded into Jobs Cap/Playbook `canRun`; `startJob` fail-closed |
 | Intake explicit “Run url-capture” | later | Jobs toolbar ships first; Intake must stay user-initiated (never auto-fire) |
 | Figma bridge | later | Gated on Dev seat |

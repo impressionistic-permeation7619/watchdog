@@ -6,7 +6,7 @@ document_updated: 2026-07-27T23:28
 # PRODUCT — intent and doctrine
 
 **What this is:** why Watchdog exists, who it serves, what we refuse, and how we decide. Shared by web, CLI, Caps, and agents.  
-**What this is not:** phase checkboxes ([`ROADMAP.md`](../ROADMAP.md)), route chrome ([`UX.md`](UX.md)), or nouns/hard bets ([greenfield blueprint](../.cursor/plans/all-ts_greenfield_blueprint_44cd45df.plan.md)).
+**What this is not:** phase checkboxes ([`ROADMAP.md`](../ROADMAP.md)) or route chrome ([`UX.md`](UX.md)).
 
 ---
 
@@ -54,7 +54,7 @@ Field chats, vault habits, and frozen prototypes show **pain and anti-patterns**
 7. Polish inside greenfield; a fourth rewrite is the failure mode to refuse.
 8. Phase 0 honesty first — lying stubs and doc drift recreate “file exists ≠ works” at small scale.
 
-Detail: [`_legacy-v1/README.md`](../_legacy-v1/README.md) · [`_legacy-v2/docs-v2/AUDIT.md`](../_legacy-v2/docs-v2/AUDIT.md) · [blueprint](../.cursor/plans/all-ts_greenfield_blueprint_44cd45df.plan.md).
+The `_legacy-*` trees that record this history are untracked and live outside this repo.
 
 ---
 
@@ -118,7 +118,7 @@ Detail: [`_legacy-v1/README.md`](../_legacy-v1/README.md) · [`_legacy-v2/docs-v
 | Doc | Owns |
 | --- | --- |
 | [`ROADMAP.md`](../ROADMAP.md) | Phases, backlog, maturity |
-| [Greenfield blueprint](../.cursor/plans/all-ts_greenfield_blueprint_44cd45df.plan.md) | Nouns, hard bets |
+| **This file** | Nouns, hard bets |
 | [`UX.md`](UX.md) | IA, flows, experience debt |
 | [`apps/web/docs/UI.md`](../apps/web/docs/UI.md) | Design system / chrome |
 | [`README.md`](README.md) | Platform docs index |
