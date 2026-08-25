@@ -1,0 +1,7 @@
+{
+  "license": "CC-BY",
+  "iocs": [
+    { "value": "1.2.3.4", "feed_type": "scanner", "scanner": true },
+    { "value": "evil.example", "feed_type": "scanner" }
+  ]
+}
