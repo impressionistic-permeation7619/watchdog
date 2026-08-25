@@ -1,0 +1,17 @@
+{
+  "$schema": "https://react.doctor/schema/config.json",
+  "blocking": "none",
+  "ignore": {
+    "rules": [
+      "knip/exports",
+      "knip/types",
+      "deslop/unused-export",
+      "react-doctor/prefer-dynamic-import"
+    ],
+    "files": [
+      "src/auth/ui/**",
+      "src/shared/ui/shadcn/**",
+      "src/routeTree.gen.ts"
+    ]
+  }
+}
