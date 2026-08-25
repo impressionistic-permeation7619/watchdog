@@ -1,0 +1,272 @@
+import { normalizeIdentifierValue } from "./normalize-identifier";
+import type { PatchOp } from "./patch";
+import { normalizeIdentifierPlatform } from "./platforms";
+import { IDENTIFIER_TYPES, type IdentifierType } from "./vocab";
+
+export type ValidateIdentifierResult =
+  | { ok: true; value: string }
+  | { ok: false; message: string };
+
+export type ValidateIdentifierWriteResult =
+  | { ok: true; type: IdentifierType; value: string; platform: string }
+  | { ok: false; message: string };
+
+export interface InvalidIdentifierOp {
+  opId: string;
+  type: string;
+  value: string;
+  message: string;
+}
+
+export const HANDLE_REQUIRES_PLATFORM =
+  "platform is required when type is handle";
+
+const PGP_HEX_LENGTHS = new Set([8, 16, 40, 64]);
+const IDENTIFIER_TYPE_SET = new Set<string>(IDENTIFIER_TYPES);
+
+function fail(message: string): ValidateIdentifierResult {
+  return { ok: false, message };
+}
+
+function isValidIpv4(value: string): boolean {
+  const parts = value.split(".");
+  if (parts.length !== 4) return false;
+  return parts.every((part) => {
+    if (!/^\d{1,3}$/.test(part)) return false;
+    const n = Number(part);
+    return n >= 0 && n <= 255;
+  });
+}
+
+/** At most one `::`; 1–8 groups of 1–4 hex; optional trailing IPv4-mapped dotted-quad. */
+function isValidIpv6(value: string): boolean {
+  if ((value.match(/::/g) ?? []).length > 1) return false;
+  if (value.includes(":::")) return false;
+
+  let head = value;
+  let ipv4Tail: string | null = null;
+  const lastColon = value.lastIndexOf(":");
+  if (lastColon !== -1) {
+    const after = value.slice(lastColon + 1);
+    if (after.includes(".")) {
+      if (!isValidIpv4(after)) return false;
+      ipv4Tail = after;
+      head = value.slice(0, lastColon);
+    }
+  }
+
+  if (head === "::" || head === "") {
+    return ipv4Tail !== null || value === "::";
+  }
+
+  const compressed = head.includes("::");
+  const sides = compressed ? head.split("::") : [head];
+  if (sides.length > 2) return false;
+
+  const groups: string[] = [];
+  for (const side of sides) {
+    if (side === "") continue;
+    const parts = side.split(":");
+    if (parts.some((p) => p === "" || !/^[0-9a-fA-F]{1,4}$/.test(p))) {
+      return false;
+    }
+    groups.push(...parts);
+  }
+
+  const maxGroups = ipv4Tail === null ? 8 : 6;
+  if (compressed) {
+    if (groups.length >= maxGroups) return false;
+  } else if (groups.length !== maxGroups) {
+    return false;
+  }
+  return groups.length >= 1 || ipv4Tail !== null || value === "::";
+}
+
+function isValidIp(value: string): boolean {
+  if (value.includes(".")) {
+    if (value.includes(":")) return isValidIpv6(value);
+    return isValidIpv4(value);
+  }
+  if (value.includes(":")) return isValidIpv6(value);
+  return false;
+}
+
+function isValidDomain(value: string): boolean {
+  if (
+    !value ||
+    value.includes(" ") ||
+    value.includes("/") ||
+    value.includes(":")
+  ) {
+    return false;
+  }
+  if (!value.includes(".")) return false;
+  // Labels: letter/digit/underscore start; hyphens/underscores inside; 1–63 chars.
+  return /^(?:[a-z0-9_](?:[a-z0-9_-]{0,61}[a-z0-9_])?\.)+[a-z]{2,63}$/i.test(
+    value
+  );
+}
+
+function validateEmail(normalized: string): ValidateIdentifierResult | null {
+  if (normalized.includes(" ")) {
+    return fail("Invalid email.");
+  }
+  const parts = normalized.split("@");
+  if (parts.length !== 2) {
+    return fail("Invalid email.");
+  }
+  const [local, domain] = parts;
+  if (!local || !domain || !domain.includes(".")) {
+    return fail("Invalid email.");
+  }
+  return null;
+}
+
+function validatePhone(
+  raw: string,
+  normalized: string
+): ValidateIdentifierResult | null {
+  const body = raw.startsWith("+") ? raw.slice(1) : raw;
+  if (/[a-zA-Z]/.test(body)) {
+    return fail("Phone can’t include letters.");
+  }
+  const digits = normalized.startsWith("+") ? normalized.slice(1) : normalized;
+  if (digits.length < 7 || digits.length > 15) {
+    return fail("Phone needs 7–15 digits.");
+  }
+  return null;
+}
+
+function validateUrl(normalized: string): ValidateIdentifierResult | null {
+  try {
+    const url = new URL(normalized);
+    if (url.protocol !== "http:" && url.protocol !== "https:") {
+      return fail("Invalid URL.");
+    }
+  } catch {
+    return fail("Invalid URL.");
+  }
+  return null;
+}
+
+function validatePgp(
+  raw: string,
+  normalized: string
+): ValidateIdentifierResult | null {
+  if (/^-----BEGIN PGP /i.test(raw.trim())) {
+    return null;
+  }
+  const compact = normalized.replaceAll(/[\s:]+/g, "");
+  if (/^[0-9A-F]+$/i.test(compact) && PGP_HEX_LENGTHS.has(compact.length)) {
+    return null;
+  }
+  return fail("Invalid PGP fingerprint or key.");
+}
+
+/**
+ * Normalize then soft-strict shape-check Identifier values.
+ * Soft types (`handle` / `crypto` / `credential` / `other`) are non-empty only.
+ */
+export function validateIdentifierValue(
+  // oxlint-disable-next-line typescript/no-redundant-type-constituents -- callers may pass unvalidated raw JSON `type`
+  type: IdentifierType | string,
+  value: string
+): ValidateIdentifierResult {
+  if (!IDENTIFIER_TYPE_SET.has(type)) {
+    return fail("Invalid identifier type.");
+  }
+
+  const raw = value.trim();
+  if (!raw) {
+    return fail("Value is required.");
+  }
+
+  const normalized = normalizeIdentifierValue(type, raw);
+  if (!normalized) {
+    return fail("Value is required.");
+  }
+
+  switch (type) {
+    case "email": {
+      return validateEmail(normalized) ?? { ok: true, value: normalized };
+    }
+    case "phone": {
+      return validatePhone(raw, normalized) ?? { ok: true, value: normalized };
+    }
+    case "url": {
+      return validateUrl(normalized) ?? { ok: true, value: normalized };
+    }
+    case "domain": {
+      if (!isValidDomain(normalized)) {
+        return fail("Invalid domain.");
+      }
+      return { ok: true, value: normalized };
+    }
+    case "ip": {
+      if (!isValidIp(normalized)) {
+        return fail("Invalid IP address.");
+      }
+      return { ok: true, value: normalized };
+    }
+    case "pgp": {
+      return validatePgp(raw, normalized) ?? { ok: true, value: normalized };
+    }
+    case "handle":
+    case "crypto":
+    case "credential":
+    case "other": {
+      return { ok: true, value: normalized };
+    }
+    default: {
+      return fail("Invalid identifier type.");
+    }
+  }
+}
+
+/** Value shape + handle→platform write gate (normalize platform). */
+export function validateIdentifierWrite(input: {
+  // oxlint-disable-next-line typescript/no-redundant-type-constituents -- callers may pass unvalidated raw JSON `type`
+  type: IdentifierType | string;
+  value: string;
+  platform?: string;
+}): ValidateIdentifierWriteResult {
+  const validated = validateIdentifierValue(input.type, input.value);
+  if (!validated.ok) {
+    return validated;
+  }
+  const type = IDENTIFIER_TYPES.find((t) => t === input.type);
+  if (type === undefined) {
+    return { ok: false, message: "Invalid identifier type." };
+  }
+  const platform = normalizeIdentifierPlatform(input.platform ?? "");
+  if (type === "handle" && !platform) {
+    return { ok: false, message: HANDLE_REQUIRES_PLATFORM };
+  }
+  return { ok: true, type, value: validated.value, platform };
+}
+
+/** Inbox / Accept preflight — same write gate as core create/Accept. */
+export function listInvalidIdentifierOps(
+  patch: readonly PatchOp[]
+): InvalidIdentifierOp[] {
+  const out: InvalidIdentifierOp[] = [];
+  for (const op of patch) {
+    if (op.resource !== "identifier") continue;
+    if (op.op !== "create" && op.op !== "upsert") continue;
+
+    const type = typeof op.data.type === "string" ? op.data.type : "";
+    const value = typeof op.data.value === "string" ? op.data.value : "";
+    const platform =
+      typeof op.data.platform === "string" ? op.data.platform : "";
+    const written = validateIdentifierWrite({ type, value, platform });
+    if (!written.ok) {
+      out.push({
+        opId: op.id,
+        type,
+        value,
+        message: written.message,
+      });
+    }
+  }
+  return out;
+}
