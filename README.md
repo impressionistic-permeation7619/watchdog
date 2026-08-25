@@ -1,14 +1,29 @@
-# Watchdog
+<div align="center">
+    <p>
+        <a href="https://github.com/kzndotsh/watchdog/actions/workflows/ci.yml">
+            <img alt="CI" src="https://github.com/kzndotsh/watchdog/actions/workflows/ci.yml/badge.svg"></a>
+        <a href="https://www.typescriptlang.org">
+            <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-6-3178c6?logo=typescript&logoColor=white"></a>
+        <a href="https://tanstack.com/start">
+            <img alt="TanStack Start" src="https://img.shields.io/badge/TanStack_Start-ff4154?logo=react&logoColor=white"></a>
+        <a href="https://www.postgresql.org">
+            <img alt="Postgres" src="https://img.shields.io/badge/Postgres-16-4169e1?logo=postgresql&logoColor=white"></a>
+        <a href="https://orpc.dev">
+            <img alt="oRPC" src="https://img.shields.io/badge/oRPC-OpenAPI-6366f1"></a>
+    </p>
+    <h1>Watchdog</h1>
+    <p><strong>An OSINT case platform where machines collect and humans decide.</strong></p>
+    <p>
+        <a href="#quick-start">Quick start</a> •
+        <a href="#capabilities">Caps</a> •
+        <a href="#architecture">Architecture</a> •
+        <a href="docs/README.md">Docs</a> •
+        <a href="ROADMAP.md">Roadmap</a>
+    </p>
+</div>
 
-**An OSINT case platform where machines collect and humans decide.**
-
-[![ci](https://github.com/kzndotsh/watchdog/actions/workflows/ci.yml/badge.svg)](https://github.com/kzndotsh/watchdog/actions/workflows/ci.yml)
-
-[Quick start](#quick-start) •
-[Caps](#capabilities) •
-[Architecture](#architecture) •
-[Docs](docs/README.md) •
-[Roadmap](ROADMAP.md)
+> [!WARNING]
+> **Pre-1.0 and under active development.** Schemas, Cap ids, and API shapes change without notice, and several surfaces in [`ROADMAP.md`](ROADMAP.md) are half-built. Built for solo and small-team use — it has not been hardened for multi-tenant or production deployment.
 
 ```
 web:    http://127.0.0.1:3000
@@ -17,6 +32,15 @@ spec:   http://127.0.0.1:3000/api/v1/spec.json
 cli:    wd cases list
 worker: pnpm dev:worker                     required to run jobs
 ```
+
+## Start here
+
+| You are | Go to |
+| --- | --- |
+| **Running an investigation** | [Quick start](#quick-start) → [`docs/UX.md`](docs/UX.md) |
+| **Driving it from an agent or script** | [A case, end to end](#a-case-end-to-end) → [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |
+| **Writing a Cap** | [`docs/CAPS.md`](docs/CAPS.md) → [`packages/caps/AGENTS.md`](packages/caps/AGENTS.md) |
+| **Judging whether this is real** | [What's missing](#whats-missing) → [`ROADMAP.md`](ROADMAP.md) |
 
 ---
 
@@ -224,3 +248,5 @@ Investigation content — corpus, entity notes, mirrors — lives in a separate 
 ## License
 
 TBD
+
+Created by [@kzndotsh](https://github.com/kzndotsh)
