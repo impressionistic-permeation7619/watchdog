@@ -1,0 +1,100 @@
+import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+
+import {
+  readActiveCaseId,
+  writeActiveCaseId,
+} from "@/domains/cases/lib/active-case.server";
+import {
+  createCaseInputSchema,
+  deleteCaseInputSchema,
+  setActiveCaseIdInputSchema,
+  updateCaseInputSchema,
+  type CaseRecord,
+  type CasesContext,
+} from "@/domains/cases/types";
+import {
+  actorFromSession,
+  orpcForActor,
+  orpcNullIfNotFound,
+} from "@/lib/orpc.server";
+import {
+  getCaseById,
+  getCaseBySlug,
+  listCases,
+  updateCase,
+} from "@watchdog/core";
+import { nonEmptyTrimmed, uuidSchema } from "@watchdog/schemas";
+
+/** Cases + active Case from cookie; heals invalid/missing selection. */
+export const getCasesContextFn = createServerFn({ method: "GET" }).handler(
+  async (): Promise<CasesContext> => {
+    const cases = await listCases();
+    const stored = readActiveCaseId();
+    const active =
+      (stored ? cases.find((c) => c.id === stored) : undefined) ??
+      cases[0] ??
+      null;
+
+    if (active?.id !== stored) {
+      writeActiveCaseId(active?.id ?? null);
+    }
+
+    return { cases, active };
+  }
+);
+
+export const getCaseByIdFn = createServerFn({ method: "GET" })
+  .validator(z.object({ caseId: uuidSchema }))
+  .handler(
+    async ({ data, context }): Promise<CaseRecord | null> =>
+      orpcNullIfNotFound(
+        orpcForActor(actorFromSession(context.session)).cases.get({
+          caseId: data.caseId,
+        })
+      )
+  );
+
+export const getCaseBySlugFn = createServerFn({ method: "GET" })
+  .validator(z.object({ caseSlug: nonEmptyTrimmed }))
+  .handler(
+    async ({ data }): Promise<CaseRecord | null> => getCaseBySlug(data.caseSlug)
+  );
+
+export const setActiveCaseIdFn = createServerFn({ method: "POST" })
+  .validator(setActiveCaseIdInputSchema)
+  .handler(async ({ data }): Promise<string | null> => {
+    if (data.caseId) {
+      const row = await getCaseById(data.caseId);
+      if (!row) throw new Error("Case not found");
+    }
+
+    writeActiveCaseId(data.caseId);
+    return data.caseId;
+  });
+
+export const createCaseFn = createServerFn({ method: "POST" })
+  .validator(createCaseInputSchema)
+  .handler(async ({ data, context }): Promise<CaseRecord> => {
+    const created = await orpcForActor(
+      actorFromSession(context.session)
+    ).cases.create(data);
+    writeActiveCaseId(created.id);
+    return created;
+  });
+
+export const updateCaseFn = createServerFn({ method: "POST" })
+  .validator(updateCaseInputSchema)
+  .handler(async ({ data }): Promise<CaseRecord> => updateCase(data));
+
+export const deleteCaseFn = createServerFn({ method: "POST" })
+  .validator(deleteCaseInputSchema)
+  .handler(async ({ data, context }): Promise<void> => {
+    await orpcForActor(actorFromSession(context.session)).cases.delete({
+      caseId: data.id,
+    });
+    if (readActiveCaseId() === data.id) {
+      const remaining = await listCases();
+      writeActiveCaseId(remaining[0]?.id ?? null);
+    }
+  });
