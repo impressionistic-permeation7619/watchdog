@@ -1,0 +1,119 @@
+import { z } from "zod";
+
+import { normalizeIp } from "../dns/reverse";
+import { httpToolsError } from "../errors/tools-error";
+import { asString, isRecord } from "../parse/coerce";
+
+export const feodoLookupSnapshotSchema = z.object({
+  ip: z.string().min(1),
+  queriedAt: z.string().min(1),
+  source: z.literal("feodotracker.abuse.ch"),
+  found: z.boolean(),
+  malware: z.string().nullable(),
+  status: z.string().nullable(),
+  firstSeen: z.string().nullable(),
+  lastOnline: z.string().nullable(),
+});
+
+export type FeodoLookupSnapshot = z.infer<typeof feodoLookupSnapshotSchema>;
+
+interface FeodoEntry {
+  ipAddress: string;
+  malware: string | null;
+  status: string | null;
+  firstSeen: string | null;
+  lastOnline: string | null;
+}
+
+const FEODO_BLOCKLIST_URL =
+  "https://feodotracker.abuse.ch/downloads/ipblocklist_recommended.json";
+const CACHE_TTL_MS = 60 * 60_000;
+
+let cachedEntries: FeodoEntry[] | null = null;
+let cachedAt = 0;
+let inflight: Promise<FeodoEntry[]> | null = null;
+
+export function parseFeodoEntries(raw: unknown): FeodoEntry[] {
+  if (!Array.isArray(raw)) return [];
+  const out: FeodoEntry[] = [];
+  for (const row of raw) {
+    if (!isRecord(row)) continue;
+    const ipAddress = asString(row.ip_address) ?? asString(row.ip);
+    if (!ipAddress) continue;
+    out.push({
+      ipAddress,
+      malware: asString(row.malware),
+      status: asString(row.status),
+      firstSeen: asString(row.first_seen),
+      lastOnline: asString(row.last_online),
+    });
+  }
+  return out;
+}
+
+async function fetchBlocklist(
+  signal: AbortSignal,
+  options: { userAgent: string; apiKey?: string }
+): Promise<FeodoEntry[]> {
+  const now = Date.now();
+  if (cachedEntries && now - cachedAt < CACHE_TTL_MS) return cachedEntries;
+  if (inflight) return inflight;
+
+  const headers: Record<string, string> = {
+    Accept: "application/json",
+    "User-Agent": options.userAgent,
+  };
+  if (options.apiKey) headers["Auth-Key"] = options.apiKey;
+
+  inflight = (async () => {
+    const res = await fetch(FEODO_BLOCKLIST_URL, {
+      method: "GET",
+      signal,
+      headers,
+    });
+    if (!res.ok) throw httpToolsError("Feodo Tracker blocklist", res.status);
+    const body: unknown = await res.json();
+    const entries = parseFeodoEntries(body);
+    cachedEntries = entries;
+    cachedAt = Date.now();
+    return entries;
+  })();
+
+  try {
+    return await inflight;
+  } finally {
+    inflight = null;
+  }
+}
+
+/**
+ * Feodo Tracker (abuse.ch) botnet C2 IP blocklist — membership check.
+ * GET …/ipblocklist_recommended.json, module-level 1h TTL cache (shared
+ * across lookups this process). Optional Auth-Key header.
+ * @see https://feodotracker.abuse.ch/
+ */
+export async function fetchFeodoLookup(
+  ipRaw: string,
+  signal: AbortSignal,
+  options?: { userAgent?: string; apiKey?: string }
+): Promise<FeodoLookupSnapshot> {
+  const ip = normalizeIp(ipRaw);
+  const ua = options?.userAgent ?? "Watchdog/1.0 (+threat.feodo.lookup; OSINT)";
+
+  const entries = await fetchBlocklist(signal, {
+    userAgent: ua,
+    apiKey: options?.apiKey,
+  });
+  const match = entries.find((e) => e.ipAddress === ip);
+
+  return feodoLookupSnapshotSchema.parse({
+    ip,
+    queriedAt: new Date().toISOString(),
+    source: "feodotracker.abuse.ch",
+    found: Boolean(match),
+    malware: match?.malware ?? null,
+    status: match?.status ?? null,
+    firstSeen: match?.firstSeen ?? null,
+    lastOnline: match?.lastOnline ?? null,
+  });
+}
