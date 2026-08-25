@@ -46,7 +46,7 @@ In most of them the collector writes the graph. SpiderFoot persists every event 
 
 Confidence works differently too. These tools express it as numeric scores, decay models, or severity labels. Claims here land as `unverified` and a human moves them to `possible` or `confirmed` at Accept, where `confirmed` requires cited evidence. There's also no automatic fan-out and no crawler. Jobs start explicitly and reason over one case, because a seed that expands into hundreds of module runs is how you end up with more data and less clarity.
 
-The boundary is enforced by types rather than convention: a Cap's runtime context has no database handle, and the patch schema rejects any operation carrying a `confidence` value. Postgres holds the truth, and the markdown export is a projection you can delete and regenerate. [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) has the details.
+The boundary is enforced by types rather than convention: a Cap's runtime context has no database handle, and the patch schema rejects any operation carrying a `confidence` value. Postgres holds the truth, and the markdown export is a projection you can delete and regenerate.
 
 ```mermaid
 flowchart LR
