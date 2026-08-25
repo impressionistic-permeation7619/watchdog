@@ -40,7 +40,7 @@ worker: pnpm dev:worker                     required to run jobs
 | **Running an investigation** | [Quick start](#quick-start) → [`docs/UX.md`](docs/UX.md) |
 | **Driving it from an agent or script** | [A case, end to end](#a-case-end-to-end) → [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |
 | **Writing a Cap** | [`docs/CAPS.md`](docs/CAPS.md) → [`packages/caps/AGENTS.md`](packages/caps/AGENTS.md) |
-| **Judging whether this is real** | [What's missing](#whats-missing) → [`ROADMAP.md`](ROADMAP.md) |
+| **Judging whether this is real** | [Status](#status) → [`ROADMAP.md`](ROADMAP.md) |
 
 ---
 
@@ -209,9 +209,13 @@ A job's path: `enqueueCapJob` → the `watchdog.cap-jobs` queue → worker runs 
 
 Integration and end-to-end runs need their own databases first: `just test-db`.
 
-## What's missing
+## Status
 
-Worth knowing before you invest time:
+Third design, first one that ships. A vault-plus-Python-pipeline version and a broad platform spec both got frozen before this; [`docs/PRODUCT.md`](docs/PRODUCT.md) records what each one taught and what not to resurrect.
+
+Today: **63 Caps**, **14 packages**, **433 unit and property tests** green. The solo-investigator loop runs end to end — authenticate, create a case, dump evidence, run Caps, accept proposals, export the package. [`ROADMAP.md`](ROADMAP.md) scores every surface honestly, including the half-built ones.
+
+Not there yet, worth knowing before you invest time:
 
 - **MCP server** — not built. Agents use the OpenAPI surface today.
 - **Playbooks** are linear chains. No branching, no conditionals.
@@ -219,22 +223,16 @@ Worth knowing before you invest time:
 - **Multi-user collaboration** is thin. Auth and API keys work; team workflows aren't designed yet.
 - **End-to-end coverage** is two Playwright flows on top of the unit and integration tiers.
 
+Investigation content — corpus, entity notes, mirrors — lives in a separate private repo and never enters this one.
+
 ## What it refuses to do
 
-Some of these are permanent, and they explain decisions that would otherwise look like gaps:
+Some gaps are permanent, and they explain decisions that would otherwise look like oversights:
 
 - No machine-set `confirmed`. Ever.
 - No percentage confidence scores — three tiers a person can defend, not a number implying false precision.
 - No second source of truth. The markdown export is derived and disposable.
 - No collection so autonomous that nobody can say where a claim came from.
-
-## Status
-
-Third design, first one that ships. A vault-plus-Python-pipeline version and a broad platform spec both got frozen before this; [`docs/PRODUCT.md`](docs/PRODUCT.md) records what each one taught and what not to resurrect.
-
-Today: **63 Caps**, **14 packages**, **433 unit and property tests** green. The solo-investigator loop runs end to end — authenticate, create a case, dump evidence, run Caps, accept proposals, export the package. [`ROADMAP.md`](ROADMAP.md) scores every surface honestly, including the half-built ones.
-
-Investigation content — corpus, entity notes, mirrors — lives in a separate private repo and never enters this one.
 
 ## Docs
 
