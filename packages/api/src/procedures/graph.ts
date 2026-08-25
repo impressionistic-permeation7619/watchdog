@@ -1,0 +1,40 @@
+import { z } from "zod";
+
+import { writeGraphFromAgent } from "@watchdog/core";
+import { patchOpSchema } from "@watchdog/schemas";
+
+import { mapDomainError } from "../map-domain-error";
+import { authed } from "../os";
+import { graphWriteResultSchema } from "../schemas";
+
+export const write = authed
+  .route({
+    method: "POST",
+    path: "/cases/{caseId}/graph/write",
+    summary: "Write Graph from agent (userOverride escape hatch)",
+    tags: ["graph"],
+  })
+  .input(
+    z.object({
+      caseId: z.uuid(),
+      patch: z.array(patchOpSchema).min(1),
+      summary: z.string().optional(),
+      evidenceIds: z.array(z.uuid()).optional(),
+      userOverride: z.literal(true),
+      idempotencyKey: z.string().min(1).optional(),
+    })
+  )
+  .output(graphWriteResultSchema)
+  .handler(async ({ input, context }) =>
+    mapDomainError(async () =>
+      writeGraphFromAgent({
+        caseId: input.caseId,
+        actorId: context.actor.userId,
+        patch: input.patch,
+        summary: input.summary,
+        evidenceIds: input.evidenceIds,
+        userOverride: true,
+        idempotencyKey: input.idempotencyKey,
+      })
+    )
+  );
