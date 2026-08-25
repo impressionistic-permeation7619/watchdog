@@ -1,0 +1,30 @@
+import { isPublicIpv4, pushId } from "../harvest-helpers";
+import * as P from "../harvest-patterns";
+import type { HarvestExtractor } from "./types";
+
+const pgpToxIpv4Extractor: HarvestExtractor = {
+  id: "pgp_tox_ipv4",
+  collect(ctx) {
+    for (const m of ctx.cleaned.matchAll(P.PGP_RE)) {
+      const raw = m[0] ?? "";
+      const norm = raw.replaceAll(/[\s:]/g, "").toUpperCase();
+      if (norm.length !== 40 || !/[A-F]/.test(norm)) continue;
+      pushId(ctx.identifiers, ctx.seen, "other", norm, ctx.sourceText, {
+        notes: "pgp_fingerprint",
+        quoteNeedle: raw,
+      });
+    }
+    for (const m of ctx.cleaned.matchAll(P.TOX_RE)) {
+      pushId(ctx.identifiers, ctx.seen, "other", m[0] ?? "", ctx.sourceText, {
+        notes: "tox",
+      });
+    }
+    for (const m of ctx.cleaned.matchAll(P.IPV4_RE)) {
+      const ip = m[0] ?? "";
+      if (!isPublicIpv4(ip)) continue;
+      pushId(ctx.identifiers, ctx.seen, "ip", ip, ctx.sourceText);
+    }
+  },
+};
+
+export { pgpToxIpv4Extractor };
