@@ -1,0 +1,14 @@
+{
+  "include": ["src/**/*.ts", "drizzle.config.ts"],
+  "exclude": ["src/**/__tests__/**", "src/**/*.test.ts"],
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "verbatimModuleSyntax": true,
+    "types": ["node"]
+  }
+}

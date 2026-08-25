@@ -1,0 +1,29 @@
+{
+  "name": "@watchdog/db",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema/index.ts"
+  },
+  "scripts": {
+    "generate": "drizzle-kit generate",
+    "migrate": "drizzle-kit migrate",
+    "studio": "drizzle-kit studio",
+    "typecheck": "tsc --noEmit",
+    "check:repos": "node ./scripts/check-repo-rules.mjs"
+  },
+  "dependencies": {
+    "@watchdog/env": "workspace:*",
+    "@watchdog/schemas": "workspace:*",
+    "drizzle-orm": "^0.44.7",
+    "postgres": "^3.4.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@watchdog/test-kit": "workspace:*",
+    "dotenv": "^17.4.2",
+    "drizzle-kit": "^0.31.4",
+    "typescript": "^6.0.2"
+  }
+}
