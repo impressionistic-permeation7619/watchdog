@@ -1,0 +1,27 @@
+{
+  "status": { "code": 0, "name": "OK" },
+  "them": [
+    {
+      "basics": { "username": "chris" },
+      "profile": { "full_name": "Chris Coyne", "bio": "bio", "location": "" },
+      "proofs_summary": {
+        "by_presentation_group": {
+          "github": [
+            {
+              "nametag": "malgorithms",
+              "proof_url": "https://gist.github.com/malgorithms/xxx"
+            }
+          ]
+        }
+      },
+      "public_keys": {
+        "primary": {
+          "key_fingerprint": "aabbccddeeff00112233445566778899aabbccdd"
+        }
+      },
+      "cryptocurrency_addresses": {
+        "bitcoin": [{ "address": "1BitcoinEaterAddressDontSendf59kuE" }]
+      }
+    }
+  ]
+}
