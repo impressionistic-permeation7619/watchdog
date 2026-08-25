@@ -1,0 +1,21 @@
+{
+  "data": {
+    "reverse_dns": "dns.google",
+    "is_anycast": true,
+    "is_bogon": false,
+    "threat_score": 0,
+    "tags": ["anycast", "dns"],
+    "asn": {
+      "asn": "15169",
+      "name": "GOOGLE",
+      "country_code": "US",
+      "rir": "ARIN"
+    },
+    "geo": {
+      "country_code": "US",
+      "country_name": "United States",
+      "city": "Mountain View",
+      "region": "California"
+    }
+  }
+}
