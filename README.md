@@ -73,6 +73,28 @@ Signup is closed by default. For your first account set `BETTER_AUTH_ALLOW_SIGNU
 
 Everything binds to loopback — web on `:3000`, Postgres on `:5432`, MinIO on `:9100` with its console on `:9101`.
 
+**pnpm only.** Version is pinned in `package.json`; npm and yarn will produce a broken workspace.
+
+## Environment
+
+Validated by `@watchdog/env` at boot, so a bad `.env` fails immediately rather than at first query. Copying `env.example` gives you working local defaults for everything except the two secrets.
+
+| Variable | Required | Description |
+| --- | :---: | --- |
+| `DATABASE_URL` | ✅ | Postgres connection string |
+| `BETTER_AUTH_SECRET` | ✅ | Session signing key, 32+ chars |
+| `WD_MASTER_VAULT_KEY` | ✅ | Encrypts Cap credentials at rest — 32-byte base64 or 64-char hex |
+| `S3_ENDPOINT` · `S3_ACCESS_KEY` · `S3_SECRET_KEY` · `S3_BUCKET` | ✅ | Evidence and artifact storage |
+| `DATABASE_URL_MIGRATE` | — | Superuser URL for migrations; falls back to `DATABASE_URL` |
+| `BETTER_AUTH_URL` | — | Default `http://127.0.0.1:3000` |
+| `BETTER_AUTH_ALLOW_SIGNUP` | — | Open registration; default off |
+| `BETTER_AUTH_TRUSTED_ORIGINS` | — | Comma-separated extra origins |
+| `S3_REGION` | — | Default `us-east-1` |
+| `WD_EXPORT_DIR` | — | Markdown shadow location; default `<repo>/export` |
+| `NODE_ENV` | — | `development` · `production` · `test` |
+
+The CLI reads its own pair: `WD_API_URL` and `WD_API_KEY`, the latter created in Settings → API Keys. **Cap API keys never go here** — they live in the encrypted vault.
+
 ## A case, end to end
 
 ```bash
@@ -135,7 +157,15 @@ Dependencies flow one direction and the boundaries are enforced, not suggested: 
 
 A job's path: `enqueueCapJob` → the `watchdog.cap-jobs` queue → worker runs the Cap → artifacts to S3, Proposal to the Inbox → Accept applies the patch in one transaction → worker re-syncs the case's markdown shadow.
 
-Built with TanStack Start, Drizzle, Postgres 16, pg-boss, Better Auth, oRPC, Zod, MinIO, Tailwind 4 and shadcn/ui.
+| Layer | Stack |
+| --- | --- |
+| **Frontend** | TanStack Start · React · Tailwind 4 · shadcn/ui · TanStack Query |
+| **API** | oRPC (RPC for the app, OpenAPI for agents) · Zod |
+| **Data** | Postgres 16 · Drizzle ORM · MinIO/S3 |
+| **Jobs** | pg-boss · dedicated worker process |
+| **Auth** | Better Auth — sessions, API keys |
+| **Observability** | evlog structured wide events |
+| **Tooling** | pnpm · Nix · just · Vitest · Playwright · oxlint · oxfmt |
 
 ## Commands
 
