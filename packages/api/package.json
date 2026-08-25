@@ -1,0 +1,30 @@
+{
+  "name": "@watchdog/api",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "export-contract": "tsx scripts/export-contract.ts"
+  },
+  "dependencies": {
+    "@orpc/contract": "^1.14.8",
+    "@orpc/openapi": "^1.14.8",
+    "@orpc/server": "^1.14.8",
+    "@orpc/zod": "^1.14.8",
+    "@watchdog/caps": "workspace:*",
+    "@watchdog/core": "workspace:*",
+    "@watchdog/log": "workspace:*",
+    "@watchdog/schemas": "workspace:*",
+    "evlog": "2.24.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@watchdog/test-kit": "workspace:*",
+    "tsx": "^4.20.0",
+    "typescript": "^6.0.2"
+  }
+}
