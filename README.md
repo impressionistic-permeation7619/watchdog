@@ -17,6 +17,7 @@
         <a href="#quick-start">Quick start</a> •
         <a href="#capabilities">Caps</a> •
         <a href="#architecture">Architecture</a> •
+        <a href="#status">Status</a> •
         <a href="docs/README.md">Docs</a> •
         <a href="ROADMAP.md">Roadmap</a>
     </p>
@@ -32,17 +33,6 @@ spec:   http://127.0.0.1:3000/api/v1/spec.json
 cli:    wd cases list
 worker: pnpm dev:worker                     required to run jobs
 ```
-
-## Start here
-
-| You are | Go to |
-| --- | --- |
-| **Running an investigation** | [Quick start](#quick-start) → [`docs/UX.md`](docs/UX.md) |
-| **Driving it from an agent or script** | [A case, end to end](#a-case-end-to-end) → [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |
-| **Writing a Cap** | [`docs/CAPS.md`](docs/CAPS.md) → [`packages/caps/AGENTS.md`](packages/caps/AGENTS.md) |
-| **Judging whether this is real** | [Status](#status) → [`ROADMAP.md`](ROADMAP.md) |
-
----
 
 Investigation tools tend to fail one of two ways: they automate collection so aggressively your case file fills with unverified junk, or they stay so manual you lose a day to copy-paste. Watchdog splits the difference by making custody a hard boundary instead of a convention.
 
@@ -245,7 +235,7 @@ Some gaps are permanent, and they explain decisions that would otherwise look li
 | --- | --- |
 | [`docs/PRODUCT.md`](docs/PRODUCT.md) | Intent, personas, what this refuses to build and why |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Packages, import rules, jobs, oRPC, logging |
-| [`docs/CAPS.md`](docs/CAPS.md) | Cap naming, method vocabulary, ship gates |
+| [`docs/CAPS.md`](docs/CAPS.md) · [`packages/caps/AGENTS.md`](packages/caps/AGENTS.md) | Cap naming, method vocabulary, ship gates, how to write one |
 | [`docs/TYPES.md`](docs/TYPES.md) | Shared Zod schemas and vocabulary |
 | [`docs/UX.md`](docs/UX.md) | Information architecture and investigator flows |
 | [`apps/web/docs/`](apps/web/docs/README.md) | UI, design system, domains, data fetching |
