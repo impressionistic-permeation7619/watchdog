@@ -1,0 +1,20 @@
+{
+  "name": "@watchdog/worker",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "start": "tsx src/main.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@watchdog/core": "workspace:*",
+    "@watchdog/env": "workspace:*",
+    "@watchdog/log": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "tsx": "^4.20.0",
+    "typescript": "^6.0.2"
+  }
+}
