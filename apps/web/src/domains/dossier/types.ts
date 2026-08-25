@@ -1,0 +1,32 @@
+import type { EvidenceKind } from "@watchdog/schemas";
+
+/** Case Evidence option for pickers / dossier composers (parent owns fetch). */
+export interface EvidenceOption {
+  id: string;
+  kind: EvidenceKind;
+  label?: string | null;
+  sourceUrl?: string | null;
+  sha256?: string | null;
+}
+
+/** Overview nest = muted line; dedicated tab = EmptyState panel. */
+export type DossierEmptyPresentation = "inline" | "panel";
+
+/** Shared props for dossier CRUD list sections — Case + Entity scope. */
+export interface DossierSectionProps {
+  caseId: string;
+  entityId: string;
+  /** Entity slug for `invalidateAfterEntityChanged` / detail cache keys. */
+  entitySlug: string;
+  /**
+   * How to render list blank-slates.
+   * `inline` for Overview nest; `panel` for dedicated tabs.
+   */
+  emptyPresentation?: DossierEmptyPresentation;
+}
+
+/** Sections that link Evidence chips in composers / rows. */
+export type DossierSectionWithEvidenceProps = DossierSectionProps & {
+  evidenceOptions: EvidenceOption[];
+  onEvidenceClick?: (evidenceId: string) => void;
+};
