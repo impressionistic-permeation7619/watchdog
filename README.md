@@ -44,7 +44,9 @@ The nearest tools are MISP, TheHive with Cortex, IntelOwl, SpiderFoot, and FlowS
 
 In most of them the collector writes the graph. SpiderFoot persists every event it finds as fact, TheHive imports analyzer artifacts into the case when a job finishes, FlowSint enrichers write to Neo4j at the end of each step, and IntelOwl merges analyzer votes into a single evaluation. That's a fair trade for threat intel, where corpus volume matters more than the provenance of any one row. It's the wrong trade for a case you may have to defend, so a Cap here produces evidence and a proposal, and nothing reaches the graph until a person accepts it.
 
-Confidence works differently too. These tools express it as numeric scores, decay models, or severity labels; Watchdog uses three tiers a person can defend, and a claim cannot reach `confirmed` without cited evidence. There's also no automatic fan-out and no crawler. Jobs start explicitly and reason over one case, because a seed that expands into hundreds of module runs is how you end up with more data and less clarity.
+Confidence works differently too. These tools express it as numeric scores, decay models, or severity labels. Claims here land as `unverified` and a human moves them to `possible` or `confirmed` at Accept, where `confirmed` requires cited evidence. There's also no automatic fan-out and no crawler. Jobs start explicitly and reason over one case, because a seed that expands into hundreds of module runs is how you end up with more data and less clarity.
+
+The boundary is enforced by types rather than convention: a Cap's runtime context has no database handle, and the patch schema rejects any operation carrying a `confidence` value. Postgres holds the truth, and the markdown export is a projection you can delete and regenerate. [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) has the details.
 
 ```mermaid
 flowchart LR
@@ -54,8 +56,6 @@ flowchart LR
   C -->|reject| X["Discarded"]
   D --> E["Export<br/>markdown + zip"]
 ```
-
-Claims land as `unverified`; a human moves them to `possible` or `confirmed` at Accept. Postgres holds the truth, and the markdown export is a projection you can delete and regenerate. The boundary is enforced by types rather than convention: a Cap's runtime context has no database handle, and the patch schema rejects any operation carrying a `confidence` value. [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) has the details.
 
 ## Quick start
 
