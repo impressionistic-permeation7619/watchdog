@@ -1,0 +1,122 @@
+import { z } from "zod";
+
+import { classifyIpOrHost } from "../parse/classify-ip-or-host";
+import {
+  httpToolsError,
+  missingApiKey,
+  parseToolsError,
+} from "../errors/tools-error";
+import { isRecord } from "../parse/coerce";
+
+export const virusTotalLookupSnapshotSchema = z.object({
+  query: z.string().min(1),
+  kind: z.enum(["ip", "domain"]),
+  queriedAt: z.string().min(1),
+  found: z.boolean(),
+  status: z.number().int().nullable(),
+  reputation: z.number().nullable(),
+  malicious: z.number().int().nullable(),
+  suspicious: z.number().int().nullable(),
+  harmless: z.number().int().nullable(),
+  undetected: z.number().int().nullable(),
+  asOwner: z.string().nullable(),
+  asn: z.number().int().nullable(),
+  country: z.string().nullable(),
+  network: z.string().nullable(),
+  registrar: z.string().nullable(),
+});
+
+export type VirusTotalLookupSnapshot = z.infer<
+  typeof virusTotalLookupSnapshotSchema
+>;
+
+/**
+ * VirusTotal v3 IP or domain report.
+ * GET /api/v3/ip_addresses/{ip} | /api/v3/domains/{domain}
+ * Auth: x-apikey header.
+ * @see https://docs.virustotal.com/reference/ip-info
+ */
+export async function fetchVirusTotalLookup(
+  queryRaw: string,
+  apiKey: string,
+  signal: AbortSignal,
+  options?: { userAgent?: string }
+): Promise<VirusTotalLookupSnapshot> {
+  const { kind, value } = classifyIpOrHost(queryRaw);
+  const key = apiKey.trim();
+  if (!key) throw missingApiKey("VIRUSTOTAL_API_KEY");
+
+  const ua =
+    options?.userAgent ?? "Watchdog/1.0 (+threat.virustotal.lookup; OSINT)";
+  const path =
+    kind === "ip"
+      ? `ip_addresses/${encodeURIComponent(value)}`
+      : `domains/${encodeURIComponent(value)}`;
+  const url = `https://www.virustotal.com/api/v3/${path}`;
+
+  const res = await fetch(url, {
+    method: "GET",
+    signal,
+    headers: {
+      Accept: "application/json",
+      "x-apikey": key,
+      "User-Agent": ua,
+    },
+  });
+
+  if (res.status === 404) {
+    return virusTotalLookupSnapshotSchema.parse({
+      query: value,
+      kind,
+      queriedAt: new Date().toISOString(),
+      found: false,
+      status: 404,
+      reputation: null,
+      malicious: null,
+      suspicious: null,
+      harmless: null,
+      undetected: null,
+      asOwner: null,
+      asn: null,
+      country: null,
+      network: null,
+      registrar: null,
+    });
+  }
+
+  if (!res.ok) {
+    throw httpToolsError(
+      "VirusTotal API",
+      res.status,
+      `VirusTotal API ${res.status} for ${value}`
+    );
+  }
+
+  const body: unknown = await res.json();
+  if (!isRecord(body)) {
+    throw parseToolsError("VirusTotal", value);
+  }
+  const data = isRecord(body.data) ? body.data : {};
+  const attrs = isRecord(data.attributes) ? data.attributes : {};
+  const stats = isRecord(attrs.last_analysis_stats)
+    ? attrs.last_analysis_stats
+    : {};
+
+  return virusTotalLookupSnapshotSchema.parse({
+    query: value,
+    kind,
+    queriedAt: new Date().toISOString(),
+    found: true,
+    status: res.status,
+    reputation: typeof attrs.reputation === "number" ? attrs.reputation : null,
+    malicious: typeof stats.malicious === "number" ? stats.malicious : null,
+    suspicious: typeof stats.suspicious === "number" ? stats.suspicious : null,
+    harmless: typeof stats.harmless === "number" ? stats.harmless : null,
+    undetected: typeof stats.undetected === "number" ? stats.undetected : null,
+    asOwner: typeof attrs.as_owner === "string" ? attrs.as_owner : null,
+    asn: typeof attrs.asn === "number" ? attrs.asn : null,
+    country: typeof attrs.country === "string" ? attrs.country : null,
+    network: typeof attrs.network === "string" ? attrs.network : null,
+    registrar: typeof attrs.registrar === "string" ? attrs.registrar : null,
+  });
+}
