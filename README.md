@@ -38,6 +38,14 @@ Small-team OSINT usually runs on general-purpose tools: a chat thread for coordi
 
 Watchdog exists for the opposite: one case graph of claims and evidence you can defend, built while collection stays fast. Every claim carries its evidence, a person accepts each one before it lands, and the whole case exports as a package you can hand to someone else.
 
+## How it differs
+
+The nearest tools are MISP, TheHive with Cortex, IntelOwl, SpiderFoot, and FlowSint. All are mature and solve real problems. The difference is where machine output is allowed to land.
+
+In most of them the collector writes the graph. SpiderFoot persists every event it finds as fact, TheHive imports analyzer artifacts into the case when a job finishes, FlowSint enrichers write to Neo4j at the end of each step, and IntelOwl merges analyzer votes into a single evaluation. That's a fair trade for threat intel, where corpus volume matters more than the provenance of any one row. It's the wrong trade for a case you may have to defend, so a Cap here produces evidence and a proposal, and nothing reaches the graph until a person accepts it.
+
+Confidence works differently too. These tools express it as numeric scores, decay models, or severity labels; Watchdog uses three tiers a person can defend, and a claim cannot reach `confirmed` without cited evidence. There's also no automatic fan-out and no crawler. Jobs start explicitly and reason over one case, because a seed that expands into hundreds of module runs is how you end up with more data and less clarity.
+
 ```mermaid
 flowchart LR
   A["Caps and agents<br/>collect"] --> B["Evidence<br/>+ Proposal"]
@@ -208,14 +216,6 @@ Not there yet, worth knowing before you invest time:
 - **End-to-end coverage** is two Playwright flows on top of the unit and integration tiers.
 
 Investigation content (corpus, entity notes, mirrors) lives in a separate private repo and never enters this one.
-
-## What it refuses to do
-
-Some gaps are permanent, and they explain decisions that would otherwise look like oversights:
-
-- No percentage confidence scores. Three tiers a person can defend beat a number implying false precision.
-- No corpus or scrape import. This reasons over a case; it does not crawl the internet for you.
-- No collection so autonomous that nobody can say where a claim came from.
 
 ## Docs
 
