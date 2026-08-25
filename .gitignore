@@ -1,6 +1,9 @@
 # Secrets
 .env
+.env.*
 /tmp
+*.pem
+*.key
 
 # Tooling
 .cursor/
@@ -10,8 +13,10 @@ node_modules/
 .venv/
 dist/
 .turbo/
-apps/web/dist/
-apps/web/.output/
+*.tsbuildinfo
+.cache/
+*.log
+pnpm-debug.log*
 coverage/
 test-results/
 playwright-report/
@@ -23,8 +28,14 @@ export/
 .wd-runtime/
 
 # Web build
+apps/web/dist/
+apps/web/.output/
+apps/web/dist-ssr/
+apps/web/.nitro/
+apps/web/.wrangler/
 apps/web/.vinxi/
 apps/web/.tanstack/
+apps/web/todos.json
 
 # evlog / audit drains
 apps/web/.evlog/
@@ -34,5 +45,11 @@ apps/web/.audit/
 # Nix
 .direnv/
 
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+
 # Local
 CLAUDE.local.md
+*.local
