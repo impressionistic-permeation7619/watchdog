@@ -55,7 +55,7 @@ flowchart LR
   D --> E["Export<br/>markdown + zip"]
 ```
 
-63 capabilities can run against a case. None of them can write to the graph. They produce Evidence and a **Proposal**, and a human accepts or rejects it. Postgres holds the truth; the markdown export is a projection you can delete and regenerate.
+Postgres holds the truth. The markdown export at the end is a projection you can delete and regenerate.
 
 ## The custody rule, in code
 
@@ -73,7 +73,7 @@ if (CONFIDENCE_GATED_RESOURCES.has(op.resource) && "confidence" in op.data) {
 }
 ```
 
-Deciding how far to trust a claim is a judgment call, so it stays with the person making it. Claims land as `unverified`; a human moves them to `possible` or `confirmed` at Accept. An agent can force a direct graph write, but it takes an explicit override flag, still lands at `unverified`, and is recorded in `graph_writes`.
+Claims land as `unverified`; a human moves them to `possible` or `confirmed` at Accept. An agent can force a direct graph write, but it takes an explicit override flag, still lands at `unverified`, and is recorded in `graph_writes`.
 
 ## Quick start
 
@@ -236,7 +236,6 @@ Investigation content (corpus, entity notes, mirrors) lives in a separate privat
 
 Some gaps are permanent, and they explain decisions that would otherwise look like oversights:
 
-- No machine ever sets `confirmed`.
 - No percentage confidence scores. Three tiers a person can defend beat a number implying false precision.
 - No second source of truth. The markdown export is derived and disposable.
 - No collection so autonomous that nobody can say where a claim came from.
