@@ -1,0 +1,50 @@
+import { closestWaybackTimestamp, fetchWaybackSnapshot } from "@watchdog/tools";
+
+import { defineCollectCap } from "../../lib/collect/define-collect-cap";
+import { waybackFetchInput } from "./input";
+import { interpretWaybackFetchReport } from "./interpret";
+import { waybackFetchSnapshotSchema } from "./report-schema";
+
+const UA = "Watchdog/1.0 (+archive.wayback.fetch; OSINT)";
+
+export const waybackFetch = defineCollectCap({
+  id: "archive.wayback.fetch",
+  version: "1",
+  title: "Wayback fetch",
+  description:
+    "Pull the body of a Wayback snapshot for a URL (closest CDX hit when no timestamp). Use after Wayback history to inspect what the page actually said.",
+  dataSource: "web.archive.org",
+  input: waybackFetchInput,
+  timeoutMs: 90_000,
+  kind: "collect",
+  useCases: ["Passive"],
+  formOmit: ["entityId", "timestamp"],
+  consumes: [{ kind: "url" }],
+  produces: [{ kind: "evidence", evidenceKind: "file" }],
+  jobPolicy: {
+    cacheTtlMs: 60 * 60_000,
+  },
+  schema: waybackFetchSnapshotSchema,
+  reportLabel: "wayback.fetch",
+  async fetch(ctx) {
+    const url = ctx.input.url.trim();
+    let timestamp = ctx.input.timestamp?.trim();
+    if (!timestamp) {
+      ctx.log(`resolving closest CDX for ${url}`);
+      timestamp =
+        (await closestWaybackTimestamp(url, ctx.signal, UA)) ?? undefined;
+      if (!timestamp) {
+        throw new Error(`No Wayback snapshot found for ${url}`);
+      }
+    }
+    ctx.log(`fetching Wayback ${timestamp} ${url}`);
+    const snap = await fetchWaybackSnapshot(url, timestamp, ctx.signal, {
+      userAgent: UA,
+    });
+    if (!snap.ok) {
+      throw new Error(snap.error ?? `Wayback fetch HTTP ${snap.status}`);
+    }
+    return { snap, artifactName: `wayback-${timestamp}.json` };
+  },
+  interpretSnap: interpretWaybackFetchReport,
+});
