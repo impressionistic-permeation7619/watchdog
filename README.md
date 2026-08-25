@@ -45,15 +45,7 @@ flowchart LR
   D --> E["Export<br/>markdown + zip"]
 ```
 
-Postgres holds the truth. The markdown export at the end is a projection you can delete and regenerate.
-
-## The custody rule
-
-A Cap's runtime context (`CapContext` in `packages/cap-sdk/src/define.ts`) carries an input, a case and job id, artifact storage, vault credentials, and a log function. There's no database handle and no graph client. Case data it reads arrives as a snapshot rather than a live connection.
-
-A Cap writes artifacts and a report. A separate pure function, `interpret`, reads that report and returns proposed graph operations. The patch schema rejects any operation containing a `confidence` value, so a Cap can't set one even by accident.
-
-Claims land as `unverified`. A human moves them to `possible` or `confirmed` at Accept. An agent can write to the graph directly with an explicit override flag; the write still lands at `unverified` and gets a row in `graph_writes`.
+Claims land as `unverified`; a human moves them to `possible` or `confirmed` at Accept. Postgres holds the truth, and the markdown export is a projection you can delete and regenerate. The boundary is enforced by types rather than convention: a Cap's runtime context has no database handle, and the patch schema rejects any operation carrying a `confidence` value. [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) has the details.
 
 ## Quick start
 
@@ -127,6 +119,8 @@ Output is compact JSON so it pipes into `jq`; add `--table` when a human is read
 ```bash
 wd jobs playbook -c 0b8f… --id host-footprint --host example.com
 ```
+
+Agents propose by default. `wd graph write` skips the Inbox, but it needs an explicit `--user-override`, still lands at `unverified`, and records a row in `graph_writes`.
 
 ## Capabilities
 
