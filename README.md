@@ -34,7 +34,7 @@ cli:    wd cases list
 worker: pnpm dev:worker                     required to run jobs
 ```
 
-Investigation tools tend to fail one of two ways: they automate collection so aggressively your case file fills with unverified junk, or they stay so manual you lose a day to copy-paste. Watchdog splits the difference by making custody a hard boundary instead of a convention.
+Automated collection is fast, and it fills case files with things nobody checked. Watchdog keeps the automation and puts a person at the point where anything enters the case graph.
 
 ```mermaid
 flowchart LR
@@ -49,11 +49,11 @@ Postgres holds the truth. The markdown export at the end is a projection you can
 
 ## The custody rule
 
-This is a type boundary, not a convention, and it takes one file to check. The context object a Cap receives at runtime (`CapContext` in `packages/cap-sdk/src/define.ts`) gives it an input, a couple of ids, artifact storage, credentials from the vault, and a log function. There is no database handle, no graph client, no write method of any kind. Even the case data a Cap can read is a snapshot packed for it rather than the live graph.
+A Cap's runtime context (`CapContext` in `packages/cap-sdk/src/define.ts`) carries an input, a case and job id, artifact storage, vault credentials, and a log function. There's no database handle and no graph client. Case data it reads arrives as a snapshot rather than a live connection.
 
-Its only outputs are artifacts and a report. Turning that report into proposed graph operations is a separate pure function, `interpret`, which receives the report JSON and nothing else. The patch schema then refuses to parse an operation carrying a `confidence` value at all, because confidence is chosen at Accept, by a person.
+A Cap writes artifacts and a report. A separate pure function, `interpret`, reads that report and returns proposed graph operations. The patch schema rejects any operation containing a `confidence` value, so a Cap can't set one even by accident.
 
-Claims land as `unverified`; a human moves them to `possible` or `confirmed` at Accept. An agent can force a direct graph write, but it takes an explicit override flag, still lands at `unverified`, and is recorded in `graph_writes`.
+Claims land as `unverified`. A human moves them to `possible` or `confirmed` at Accept. An agent can write to the graph directly with an explicit override flag; the write still lands at `unverified` and gets a row in `graph_writes`.
 
 ## Quick start
 
