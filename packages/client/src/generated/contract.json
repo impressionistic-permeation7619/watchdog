@@ -1,0 +1,987 @@
+{
+  "health": {
+    "~orpc": {
+      "errorMap": {},
+      "meta": {},
+      "route": {
+        "method": "GET",
+        "path": "/health",
+        "summary": "Health check",
+        "tags": [
+          "system"
+        ]
+      }
+    }
+  },
+  "activity": {
+    "listRecent": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "GET",
+          "path": "/activity/recent",
+          "summary": "List recent activity across cases",
+          "tags": [
+            "activity"
+          ]
+        }
+      }
+    }
+  },
+  "search": {
+    "case": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "GET",
+          "path": "/cases/{caseId}/search",
+          "summary": "Search Active Case material and Cases by name",
+          "tags": [
+            "search"
+          ]
+        }
+      }
+    }
+  },
+  "capabilities": {
+    "list": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "GET",
+          "path": "/capabilities",
+          "summary": "List registered Capabilities (CapDescriptor catalog)",
+          "tags": [
+            "capabilities"
+          ]
+        }
+      }
+    },
+    "listPlaybooks": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "GET",
+          "path": "/playbooks",
+          "summary": "List Cap playbooks (curated Cap chains)",
+          "tags": [
+            "capabilities"
+          ]
+        }
+      }
+    }
+  },
+  "cases": {
+    "list": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "GET",
+          "path": "/cases",
+          "summary": "List cases",
+          "tags": [
+            "cases"
+          ]
+        }
+      }
+    },
+    "get": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "GET",
+          "path": "/cases/{caseId}",
+          "summary": "Get case by id",
+          "tags": [
+            "cases"
+          ]
+        }
+      }
+    },
+    "create": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "POST",
+          "path": "/cases",
+          "summary": "Create a case",
+          "tags": [
+            "cases"
+          ],
+          "successStatus": 201
+        }
+      }
+    },
+    "update": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "PATCH",
+          "path": "/cases/{caseId}",
+          "summary": "Update case name (regenerates slug), description, or third-party egress",
+          "tags": [
+            "cases"
+          ]
+        }
+      }
+    },
+    "delete": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "DELETE",
+          "path": "/cases/{caseId}",
+          "summary": "Delete a case and cascaded graph / jobs / evidence",
+          "tags": [
+            "cases"
+          ]
+        }
+      }
+    }
+  },
+  "entities": {
+    "list": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "GET",
+          "path": "/cases/{caseId}/entities",
+          "summary": "List entities for a case",
+          "tags": [
+            "entities"
+          ]
+        }
+      }
+    },
+    "get": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "GET",
+          "path": "/cases/{caseId}/entities/{slug}",
+          "summary": "Get entity by slug",
+          "tags": [
+            "entities"
+          ]
+        }
+      }
+    },
+    "create": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "POST",
+          "path": "/cases/{caseId}/entities",
+          "summary": "Create an entity",
+          "tags": [
+            "entities"
+          ],
+          "successStatus": 201
+        }
+      }
+    },
+    "update": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "PATCH",
+          "path": "/cases/{caseId}/entities/{entityId}",
+          "summary": "Update entity kind, name, summary, or notes",
+          "tags": [
+            "entities"
+          ]
+        }
+      }
+    }
+  },
+  "claims": {
+    "list": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "GET",
+          "path": "/cases/{caseId}/entities/{entityId}/claims",
+          "summary": "List claims for an entity",
+          "tags": [
+            "claims"
+          ]
+        }
+      }
+    },
+    "create": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "POST",
+          "path": "/cases/{caseId}/entities/{entityId}/claims",
+          "summary": "Create a claim",
+          "tags": [
+            "claims"
+          ],
+          "successStatus": 201
+        }
+      }
+    },
+    "update": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "PATCH",
+          "path": "/cases/{caseId}/claims/{claimId}",
+          "summary": "Update a claim",
+          "tags": [
+            "claims"
+          ]
+        }
+      }
+    },
+    "retract": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "POST",
+          "path": "/cases/{caseId}/claims/{claimId}/retract",
+          "summary": "Retract a claim",
+          "tags": [
+            "claims"
+          ]
+        }
+      }
+    }
+  },
+  "identifiers": {
+    "list": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "GET",
+          "path": "/cases/{caseId}/entities/{entityId}/identifiers",
+          "summary": "List identifiers for an entity",
+          "tags": [
+            "identifiers"
+          ]
+        }
+      }
+    },
+    "listForCase": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "GET",
+          "path": "/cases/{caseId}/identifiers",
+          "summary": "List all identifiers in a case",
+          "tags": [
+            "identifiers"
+          ]
+        }
+      }
+    },
+    "create": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "POST",
+          "path": "/cases/{caseId}/entities/{entityId}/identifiers",
+          "summary": "Create an identifier",
+          "tags": [
+            "identifiers"
+          ],
+          "successStatus": 201
+        }
+      }
+    },
+    "update": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "PATCH",
+          "path": "/cases/{caseId}/identifiers/{identifierId}",
+          "summary": "Update an identifier",
+          "tags": [
+            "identifiers"
+          ]
+        }
+      }
+    }
+  },
+  "edges": {
+    "list": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "GET",
+          "path": "/cases/{caseId}/entities/{entityId}/edges",
+          "summary": "List edges for an entity",
+          "tags": [
+            "edges"
+          ]
+        }
+      }
+    },
+    "listForCase": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "GET",
+          "path": "/cases/{caseId}/edges",
+          "summary": "List all edges in a case",
+          "tags": [
+            "edges"
+          ]
+        }
+      }
+    },
+    "create": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "POST",
+          "path": "/cases/{caseId}/edges",
+          "summary": "Create an edge",
+          "tags": [
+            "edges"
+          ],
+          "successStatus": 201
+        }
+      }
+    },
+    "update": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "PATCH",
+          "path": "/cases/{caseId}/edges/{edgeId}",
+          "summary": "Update an edge (endpoints, predicate, notes, confidence, evidence)",
+          "tags": [
+            "edges"
+          ]
+        }
+      }
+    },
+    "delete": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "DELETE",
+          "path": "/cases/{caseId}/edges/{edgeId}",
+          "summary": "Delete an edge",
+          "tags": [
+            "edges"
+          ]
+        }
+      }
+    }
+  },
+  "events": {
+    "list": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "GET",
+          "path": "/cases/{caseId}/entities/{entityId}/events",
+          "summary": "List timeline events for an entity",
+          "tags": [
+            "events"
+          ]
+        }
+      }
+    },
+    "create": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "POST",
+          "path": "/cases/{caseId}/entities/{entityId}/events",
+          "summary": "Create a timeline event",
+          "tags": [
+            "events"
+          ],
+          "successStatus": 201
+        }
+      }
+    },
+    "update": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "PATCH",
+          "path": "/cases/{caseId}/events/{eventId}",
+          "summary": "Update a timeline event",
+          "tags": [
+            "events"
+          ]
+        }
+      }
+    },
+    "delete": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "DELETE",
+          "path": "/cases/{caseId}/events/{eventId}",
+          "summary": "Delete a timeline event",
+          "tags": [
+            "events"
+          ]
+        }
+      }
+    }
+  },
+  "questions": {
+    "list": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "GET",
+          "path": "/cases/{caseId}/entities/{entityId}/questions",
+          "summary": "List questions for an entity",
+          "tags": [
+            "questions"
+          ]
+        }
+      }
+    },
+    "create": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "POST",
+          "path": "/cases/{caseId}/entities/{entityId}/questions",
+          "summary": "Create a question",
+          "tags": [
+            "questions"
+          ],
+          "successStatus": 201
+        }
+      }
+    },
+    "update": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "PATCH",
+          "path": "/cases/{caseId}/questions/{questionId}",
+          "summary": "Update a question",
+          "tags": [
+            "questions"
+          ]
+        }
+      }
+    },
+    "resolve": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "POST",
+          "path": "/cases/{caseId}/questions/{questionId}/resolve",
+          "summary": "Resolve a question",
+          "tags": [
+            "questions"
+          ]
+        }
+      }
+    },
+    "reopen": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "POST",
+          "path": "/cases/{caseId}/questions/{questionId}/reopen",
+          "summary": "Reopen a resolved question",
+          "tags": [
+            "questions"
+          ]
+        }
+      }
+    }
+  },
+  "tasks": {
+    "list": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "GET",
+          "path": "/cases/{caseId}/tasks",
+          "summary": "List tasks for a case",
+          "tags": [
+            "tasks"
+          ]
+        }
+      }
+    },
+    "get": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "GET",
+          "path": "/cases/{caseId}/tasks/{taskId}",
+          "summary": "Get a task by id",
+          "tags": [
+            "tasks"
+          ]
+        }
+      }
+    },
+    "create": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "POST",
+          "path": "/cases/{caseId}/tasks",
+          "summary": "Create a task",
+          "tags": [
+            "tasks"
+          ],
+          "successStatus": 201
+        }
+      }
+    },
+    "update": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "PATCH",
+          "path": "/cases/{caseId}/tasks/{taskId}",
+          "summary": "Update a task",
+          "tags": [
+            "tasks"
+          ]
+        }
+      }
+    },
+    "remove": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "DELETE",
+          "path": "/cases/{caseId}/tasks/{taskId}",
+          "summary": "Delete a task",
+          "tags": [
+            "tasks"
+          ]
+        }
+      }
+    },
+    "reorder": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "POST",
+          "path": "/cases/{caseId}/tasks/reorder",
+          "summary": "Rewrite task order within a status column",
+          "tags": [
+            "tasks"
+          ]
+        }
+      }
+    }
+  },
+  "evidence": {
+    "list": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "GET",
+          "path": "/cases/{caseId}/evidence",
+          "summary": "List evidence for a case",
+          "tags": [
+            "evidence"
+          ]
+        }
+      }
+    },
+    "createPaste": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "POST",
+          "path": "/cases/{caseId}/evidence/paste",
+          "summary": "Dump paste text as evidence",
+          "tags": [
+            "evidence"
+          ],
+          "successStatus": 201
+        }
+      }
+    },
+    "createUrl": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "POST",
+          "path": "/cases/{caseId}/evidence/url",
+          "summary": "Dump a URL reference as evidence",
+          "tags": [
+            "evidence"
+          ],
+          "successStatus": 201
+        }
+      }
+    },
+    "softDelete": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "DELETE",
+          "path": "/cases/{caseId}/evidence/{evidenceId}",
+          "summary": "Soft-delete evidence",
+          "tags": [
+            "evidence"
+          ]
+        }
+      }
+    },
+    "restore": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "POST",
+          "path": "/cases/{caseId}/evidence/{evidenceId}/restore",
+          "summary": "Restore soft-deleted evidence to the active queue",
+          "tags": [
+            "evidence"
+          ]
+        }
+      }
+    },
+    "attachEntity": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "PATCH",
+          "path": "/cases/{caseId}/evidence/{evidenceId}",
+          "summary": "Attach or replace the Evidence Entity",
+          "tags": [
+            "evidence"
+          ]
+        }
+      }
+    },
+    "presign": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "POST",
+          "path": "/cases/{caseId}/evidence/presign",
+          "summary": "Presign a direct upload to object storage",
+          "tags": [
+            "evidence"
+          ]
+        }
+      }
+    },
+    "confirmFile": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "POST",
+          "path": "/cases/{caseId}/evidence/file",
+          "summary": "Confirm a presigned file upload as evidence",
+          "tags": [
+            "evidence"
+          ],
+          "successStatus": 201
+        }
+      }
+    },
+    "downloadUrl": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "GET",
+          "path": "/cases/{caseId}/evidence/{evidenceId}/download-url",
+          "summary": "Get a short-lived download URL for evidence",
+          "tags": [
+            "evidence"
+          ]
+        }
+      }
+    },
+    "process": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "POST",
+          "path": "/cases/{caseId}/evidence/{evidenceId}/process",
+          "summary": "Start Harvest or Extract (AI) for evidence",
+          "tags": [
+            "evidence"
+          ],
+          "successStatus": 201
+        }
+      }
+    },
+    "enrich": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "POST",
+          "path": "/cases/{caseId}/evidence/{evidenceId}/enrich",
+          "summary": "Start URL Enrich for evidence",
+          "tags": [
+            "evidence"
+          ],
+          "successStatus": 201
+        }
+      }
+    }
+  },
+  "jobs": {
+    "listForCase": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "GET",
+          "path": "/cases/{caseId}/jobs",
+          "summary": "List jobs for a case",
+          "tags": [
+            "jobs"
+          ]
+        }
+      }
+    },
+    "get": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "GET",
+          "path": "/cases/{caseId}/jobs/{jobId}",
+          "summary": "Get a job by id (includes logs)",
+          "tags": [
+            "jobs"
+          ]
+        }
+      }
+    },
+    "start": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "POST",
+          "path": "/cases/{caseId}/jobs",
+          "summary": "Start a Cap Job",
+          "tags": [
+            "jobs"
+          ],
+          "successStatus": 201
+        }
+      }
+    },
+    "cancel": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "POST",
+          "path": "/cases/{caseId}/jobs/{jobId}/cancel",
+          "summary": "Cancel a queued, running, or blocked Job",
+          "tags": [
+            "jobs"
+          ]
+        }
+      }
+    },
+    "startPlaybook": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "POST",
+          "path": "/cases/{caseId}/playbooks/{playbookId}/run",
+          "summary": "Start a playbook (later steps are created after each success)",
+          "tags": [
+            "jobs"
+          ],
+          "successStatus": 201
+        }
+      }
+    },
+    "cancelPlaybook": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "POST",
+          "path": "/cases/{caseId}/playbook-runs/{playbookRunId}/cancel",
+          "summary": "Cancel a playbook run (queued and running members)",
+          "tags": [
+            "jobs"
+          ]
+        }
+      }
+    }
+  },
+  "proposals": {
+    "listForCase": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "GET",
+          "path": "/cases/{caseId}/proposals",
+          "summary": "List proposals for a case",
+          "tags": [
+            "inbox"
+          ]
+        }
+      }
+    },
+    "create": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "POST",
+          "path": "/cases/{caseId}/proposals",
+          "summary": "Create an agent Proposal (Inbox)",
+          "tags": [
+            "inbox"
+          ]
+        }
+      }
+    },
+    "accept": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "POST",
+          "path": "/cases/{caseId}/proposals/{proposalId}/accept",
+          "summary": "Accept a pending Proposal",
+          "tags": [
+            "inbox"
+          ]
+        }
+      }
+    },
+    "reject": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "POST",
+          "path": "/cases/{caseId}/proposals/{proposalId}/reject",
+          "summary": "Reject a pending Proposal",
+          "tags": [
+            "inbox"
+          ]
+        }
+      }
+    }
+  },
+  "credentials": {
+    "list": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "GET",
+          "path": "/credentials",
+          "summary": "List credential slots (never plaintext)",
+          "tags": [
+            "credentials"
+          ]
+        }
+      }
+    },
+    "put": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "PUT",
+          "path": "/credentials/{name}",
+          "summary": "Create or replace a credential secret",
+          "tags": [
+            "credentials"
+          ]
+        }
+      }
+    },
+    "delete": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "DELETE",
+          "path": "/credentials/{name}",
+          "summary": "Delete a credential by name",
+          "tags": [
+            "credentials"
+          ]
+        }
+      }
+    }
+  },
+  "graph": {
+    "write": {
+      "~orpc": {
+        "errorMap": {},
+        "meta": {},
+        "route": {
+          "method": "POST",
+          "path": "/cases/{caseId}/graph/write",
+          "summary": "Write Graph from agent (userOverride escape hatch)",
+          "tags": [
+            "graph"
+          ]
+        }
+      }
+    }
+  }
+}
