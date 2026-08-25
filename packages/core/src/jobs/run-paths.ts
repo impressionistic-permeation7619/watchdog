@@ -1,0 +1,105 @@
+import { db, jobsRepo, playbookRunsRepo, type JobRow } from "@watchdog/db";
+
+import { logSwallowed } from "../infra/process-log";
+import { storeCacheStage } from "./stages/cache";
+import { advancePlaybookRun } from "./stages/chain";
+import type { CollectResult } from "./stages/collect";
+import { failJob, type createJobLog } from "./stages/helpers";
+import type { PreflightState } from "./stages/preflight";
+
+async function logPlaybookAdvanceFailure(
+  advanceError: unknown,
+  opts: {
+    jobId: string;
+    caseId: string;
+    playbookRunId: string | null;
+    jobLog: ReturnType<typeof createJobLog>;
+  }
+): Promise<void> {
+  const { jobId, caseId, playbookRunId, jobLog } = opts;
+  const msg =
+    advanceError instanceof Error ? advanceError.message : String(advanceError);
+  jobLog.log(`playbook advance failed: ${msg}`);
+  await jobsRepo
+    .update(db, jobId, { logs: jobLog.lines })
+    .catch((persistError: unknown) => {
+      logSwallowed("playbook.advance_log", persistError, { jobId });
+    });
+  logSwallowed("playbook.advance", advanceError, {
+    jobId,
+    caseId,
+    playbookRunId,
+  });
+}
+
+export async function runSucceededPath(opts: {
+  jobId: string;
+  state: PreflightState;
+  collected: CollectResult;
+  resultSummary: string | null;
+  interpretError: string | null;
+  jobLog: ReturnType<typeof createJobLog>;
+}): Promise<void> {
+  const { jobId, state, collected, resultSummary, interpretError, jobLog } =
+    opts;
+
+  await storeCacheStage({
+    state,
+    runtime: collected.runtime,
+    artifacts: collected.artifacts,
+    resultSummary,
+    fromCache: collected.fromCache,
+    reclaim: collected.reclaim,
+    interpretError,
+  });
+
+  const playbookRunId = state.job.playbookRunId;
+  if (playbookRunId === null) return;
+
+  try {
+    await advancePlaybookRun({
+      caseId: state.job.caseId,
+      playbookRunId,
+    });
+  } catch (advanceError: unknown) {
+    await logPlaybookAdvanceFailure(advanceError, {
+      jobId,
+      caseId: state.job.caseId,
+      playbookRunId,
+      jobLog,
+    });
+    await playbookRunsRepo
+      .setStatus(db, playbookRunId, "cancelled", new Date(), {
+        onlyStatuses: ["running"],
+      })
+      .catch((cancelError: unknown) => {
+        logSwallowed("playbook.advance_cancel", cancelError, {
+          jobId,
+          playbookRunId,
+        });
+      });
+  }
+}
+
+export async function runFailedPath(opts: {
+  jobId: string;
+  error: unknown;
+  jobLog: ReturnType<typeof createJobLog>;
+  playbookRunId: JobRow["playbookRunId"];
+  caseId?: string;
+}): Promise<void> {
+  const { jobId, error, jobLog, playbookRunId, caseId } = opts;
+  const msg = error instanceof Error ? error.message : String(error);
+  jobLog.log(`run failed: ${msg}`);
+  await failJob(jobId, msg, jobLog.lines);
+  if (playbookRunId !== null) {
+    await advancePlaybookRun({ playbookRunId, caseId }).catch(
+      (advanceError: unknown) => {
+        logSwallowed("playbook.abandon", advanceError, {
+          jobId,
+          playbookRunId,
+        });
+      }
+    );
+  }
+}
