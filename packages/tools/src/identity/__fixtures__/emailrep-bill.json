@@ -1,0 +1,17 @@
+{
+  "email": "bill@microsoft.com",
+  "reputation": "high",
+  "suspicious": false,
+  "references": 79,
+  "details": {
+    "credentials_leaked": true,
+    "malicious_activity": false,
+    "data_breach": true,
+    "profiles": ["twitter", "github"],
+    "first_seen": "07/01/07",
+    "last_seen": "07/01/23",
+    "disposable": false,
+    "free_provider": false,
+    "spoofable": false
+  }
+}
