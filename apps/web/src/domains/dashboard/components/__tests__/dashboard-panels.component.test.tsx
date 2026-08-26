@@ -43,8 +43,11 @@ const TASK: TaskRecord = {
   caseId: "case-1",
   entityId: null,
   title: "Review intake",
-  status: "open",
+  description: null,
+  status: "in_progress",
+  priority: null,
   dueDate: "2026-01-10",
+  position: 0,
   createdAt: "2026-01-01T00:00:00.000Z",
   updatedAt: "2026-01-01T00:00:00.000Z",
 };
