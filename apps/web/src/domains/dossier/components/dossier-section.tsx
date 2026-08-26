@@ -77,6 +77,15 @@ export function DossierSection({
   fill = false,
 }: Props) {
   const panelEmpty = empty === true && emptyPresentation === "panel";
+  const body = renderSectionBody({
+    empty,
+    emptyPresentation,
+    emptyItems,
+    emptyDescription,
+    emptyText,
+    emptyAction,
+    children,
+  });
 
   return (
     <section
@@ -96,27 +105,9 @@ export function DossierSection({
         {actions}
       </div>
       {fill ? (
-        <div className="flex min-h-0 flex-1 flex-col">
-          {renderSectionBody({
-            empty,
-            emptyPresentation,
-            emptyItems,
-            emptyDescription,
-            emptyText,
-            emptyAction,
-            children,
-          })}
-        </div>
+        <div className="flex min-h-0 flex-1 flex-col">{body}</div>
       ) : (
-        renderSectionBody({
-          empty,
-          emptyPresentation,
-          emptyItems,
-          emptyDescription,
-          emptyText,
-          emptyAction,
-          children,
-        })
+        body
       )}
     </section>
   );

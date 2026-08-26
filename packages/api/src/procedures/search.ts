@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { searchCase } from "@watchdog/core";
 
-import { mapDomainError } from "../map-domain-error";
+import { withDomainError } from "../map-domain-error";
 import { authed } from "../os";
 import { searchCaseResultSchema } from "../schemas";
 
@@ -21,8 +21,8 @@ export const searchCaseProc = authed
     })
   )
   .output(searchCaseResultSchema)
-  .handler(async ({ input }) =>
-    mapDomainError(async () =>
+  .handler(
+    withDomainError(async ({ input }) =>
       searchCase({
         caseId: input.caseId,
         q: input.q,

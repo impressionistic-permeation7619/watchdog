@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { DomainError } from "@watchdog/core";
 
-import { mapDomainError } from "../map-domain-error";
+import { mapDomainError, withDomainError } from "../map-domain-error";
 
 async function expectMapped(
   code: DomainError["code"],
@@ -42,5 +42,18 @@ describe("mapDomainError", () => {
         throw boom;
       })
     ).rejects.toBe(boom);
+  });
+});
+
+describe("withDomainError", () => {
+  it("maps domain errors from wrapped handlers", async () => {
+    await expect(
+      withDomainError(async () => {
+        throw new DomainError("not_found", "missing");
+      })()
+    ).rejects.toSatisfy(
+      (error: unknown) =>
+        error instanceof ORPCError && error.code === "NOT_FOUND"
+    );
   });
 });

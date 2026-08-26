@@ -10,7 +10,7 @@ import {
   startJob,
 } from "@watchdog/core";
 
-import { mapDomainError } from "../map-domain-error";
+import { withDomainError } from "../map-domain-error";
 import { authed } from "../os";
 import { jobListSchema, jobSchema, jsonObjectSchema } from "../schemas";
 
@@ -23,8 +23,8 @@ export const listForCase = authed
   })
   .input(z.object({ caseId: z.uuid() }))
   .output(z.array(jobListSchema))
-  .handler(async ({ input }) =>
-    mapDomainError(async () => listJobsForCase(input.caseId))
+  .handler(
+    withDomainError(async ({ input }) => listJobsForCase(input.caseId))
   );
 
 export const get = authed
@@ -36,13 +36,13 @@ export const get = authed
   })
   .input(z.object({ caseId: z.uuid(), jobId: z.uuid() }))
   .output(jobSchema)
-  .handler(async ({ input }) => {
-    const row = await mapDomainError(async () =>
-      getJobForCase(input.caseId, input.jobId)
-    );
-    if (!row) throw new ORPCError("NOT_FOUND", { message: "Job not found" });
-    return row;
-  });
+  .handler(
+    withDomainError(async ({ input }) => {
+      const row = await getJobForCase(input.caseId, input.jobId);
+      if (!row) throw new ORPCError("NOT_FOUND", { message: "Job not found" });
+      return row;
+    })
+  );
 
 export const start = authed
   .route({
@@ -60,8 +60,8 @@ export const start = authed
     })
   )
   .output(jobSchema)
-  .handler(async ({ input, context }) =>
-    mapDomainError(async () =>
+  .handler(
+    withDomainError(async ({ input, context }) =>
       startJob({
         caseId: input.caseId,
         capabilityId: input.capabilityId,
@@ -85,8 +85,8 @@ export const cancel = authed
     })
   )
   .output(jobSchema)
-  .handler(async ({ input }) =>
-    mapDomainError(async () => cancelJob(input.caseId, input.jobId))
+  .handler(
+    withDomainError(async ({ input }) => cancelJob(input.caseId, input.jobId))
   );
 
 export const startPlaybook = authed
@@ -120,8 +120,8 @@ export const startPlaybook = authed
       jobs: z.array(jobSchema),
     })
   )
-  .handler(async ({ input, context }) =>
-    mapDomainError(async () =>
+  .handler(
+    withDomainError(async ({ input, context }) =>
       runPlaybook({
         caseId: input.caseId,
         playbookId: input.playbookId,
@@ -150,8 +150,8 @@ export const cancelPlaybook = authed
       cancelledJobIds: z.array(z.uuid()),
     })
   )
-  .handler(async ({ input }) =>
-    mapDomainError(async () =>
+  .handler(
+    withDomainError(async ({ input }) =>
       cancelPlaybookRun(input.caseId, input.playbookRunId)
     )
   );

@@ -8,9 +8,9 @@ import {
   updateQuestion,
 } from "@watchdog/core";
 
-import { mapDomainError } from "../map-domain-error";
-import { authed } from "../os";
-import { questionSchema } from "../schemas";
+import { withDomainError } from "../map-domain-error";
+import { authed, graphChildWrite } from "../os";
+import { questionSchema, userOverrideSchema } from "../schemas";
 
 export const list = authed
   .route({
@@ -26,13 +26,13 @@ export const list = authed
     })
   )
   .output(z.array(questionSchema))
-  .handler(async ({ input }) =>
-    mapDomainError(async () =>
+  .handler(
+    withDomainError(async ({ input }) =>
       listQuestionsForEntity(input.caseId, input.entityId)
     )
   );
 
-export const create = authed
+export const create = graphChildWrite
   .route({
     method: "POST",
     path: "/cases/{caseId}/entities/{entityId}/questions",
@@ -45,14 +45,13 @@ export const create = authed
       caseId: z.uuid(),
       entityId: z.uuid(),
       text: z.string().min(1),
+      userOverride: userOverrideSchema,
     })
   )
   .output(questionSchema)
-  .handler(async ({ input }) =>
-    mapDomainError(async () => createQuestion(input))
-  );
+  .handler(withDomainError(async ({ input }) => createQuestion(input)));
 
-export const update = authed
+export const update = graphChildWrite
   .route({
     method: "PATCH",
     path: "/cases/{caseId}/questions/{questionId}",
@@ -65,14 +64,13 @@ export const update = authed
       questionId: z.uuid(),
       text: z.string().min(1).optional(),
       resolvedNote: z.string().nullable().optional(),
+      userOverride: userOverrideSchema,
     })
   )
   .output(questionSchema)
-  .handler(async ({ input }) =>
-    mapDomainError(async () => updateQuestion(input))
-  );
+  .handler(withDomainError(async ({ input }) => updateQuestion(input)));
 
-export const resolve = authed
+export const resolve = graphChildWrite
   .route({
     method: "POST",
     path: "/cases/{caseId}/questions/{questionId}/resolve",
@@ -84,14 +82,13 @@ export const resolve = authed
       caseId: z.uuid(),
       questionId: z.uuid(),
       resolvedNote: z.string().optional(),
+      userOverride: userOverrideSchema,
     })
   )
   .output(questionSchema)
-  .handler(async ({ input }) =>
-    mapDomainError(async () => resolveQuestion(input))
-  );
+  .handler(withDomainError(async ({ input }) => resolveQuestion(input)));
 
-export const reopen = authed
+export const reopen = graphChildWrite
   .route({
     method: "POST",
     path: "/cases/{caseId}/questions/{questionId}/reopen",
@@ -102,9 +99,8 @@ export const reopen = authed
     z.object({
       caseId: z.uuid(),
       questionId: z.uuid(),
+      userOverride: userOverrideSchema,
     })
   )
   .output(questionSchema)
-  .handler(async ({ input }) =>
-    mapDomainError(async () => reopenQuestion(input))
-  );
+  .handler(withDomainError(async ({ input }) => reopenQuestion(input)));

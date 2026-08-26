@@ -9,7 +9,7 @@ import {
 } from "@watchdog/core";
 import { entityKindSchema } from "@watchdog/schemas";
 
-import { mapDomainError } from "../map-domain-error";
+import { withDomainError } from "../map-domain-error";
 import { authed } from "../os";
 import { entitySchema } from "../schemas";
 
@@ -22,8 +22,8 @@ export const list = authed
   })
   .input(z.object({ caseId: z.uuid() }))
   .output(z.array(entitySchema))
-  .handler(async ({ input }) =>
-    mapDomainError(async () => listEntitiesForCase(input.caseId))
+  .handler(
+    withDomainError(async ({ input }) => listEntitiesForCase(input.caseId))
   );
 
 export const get = authed
@@ -35,13 +35,14 @@ export const get = authed
   })
   .input(z.object({ caseId: z.uuid(), slug: z.string().min(1) }))
   .output(entitySchema)
-  .handler(async ({ input }) => {
-    const row = await mapDomainError(async () =>
-      getEntityByCaseSlug(input.caseId, input.slug)
-    );
-    if (!row) throw new ORPCError("NOT_FOUND", { message: "Entity not found" });
-    return row;
-  });
+  .handler(
+    withDomainError(async ({ input }) => {
+      const row = await getEntityByCaseSlug(input.caseId, input.slug);
+      if (!row)
+        throw new ORPCError("NOT_FOUND", { message: "Entity not found" });
+      return row;
+    })
+  );
 
 export const create = authed
   .route({
@@ -60,9 +61,7 @@ export const create = authed
     })
   )
   .output(entitySchema)
-  .handler(async ({ input }) =>
-    mapDomainError(async () => createEntity(input))
-  );
+  .handler(withDomainError(async ({ input }) => createEntity(input)));
 
 export const update = authed
   .route({
@@ -82,6 +81,4 @@ export const update = authed
     })
   )
   .output(entitySchema)
-  .handler(async ({ input }) =>
-    mapDomainError(async () => updateEntityFields(input))
-  );
+  .handler(withDomainError(async ({ input }) => updateEntityFields(input)));

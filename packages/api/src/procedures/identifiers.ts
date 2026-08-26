@@ -12,9 +12,13 @@ import {
   identifierTypeSchema,
 } from "@watchdog/schemas";
 
-import { mapDomainError } from "../map-domain-error";
-import { authed } from "../os";
-import { caseIdentifierSchema, identifierSchema } from "../schemas";
+import { withDomainError } from "../map-domain-error";
+import { authed, graphChildWrite } from "../os";
+import {
+  caseIdentifierSchema,
+  identifierSchema,
+  userOverrideSchema,
+} from "../schemas";
 
 export const list = authed
   .route({
@@ -30,8 +34,8 @@ export const list = authed
     })
   )
   .output(z.array(identifierSchema))
-  .handler(async ({ input }) =>
-    mapDomainError(async () =>
+  .handler(
+    withDomainError(async ({ input }) =>
       listIdentifiersForEntity(input.caseId, input.entityId)
     )
   );
@@ -45,11 +49,11 @@ export const listForCase = authed
   })
   .input(z.object({ caseId: z.uuid() }))
   .output(z.array(caseIdentifierSchema))
-  .handler(async ({ input }) =>
-    mapDomainError(async () => listIdentifiersForCase(input.caseId))
+  .handler(
+    withDomainError(async ({ input }) => listIdentifiersForCase(input.caseId))
   );
 
-export const create = authed
+export const create = graphChildWrite
   .route({
     method: "POST",
     path: "/cases/{caseId}/entities/{entityId}/identifiers",
@@ -68,14 +72,13 @@ export const create = authed
       status: identifierStatusSchema.default("unknown"),
       notes: z.string().optional(),
       evidenceIds: z.array(z.uuid()).optional(),
+      userOverride: userOverrideSchema,
     })
   )
   .output(identifierSchema)
-  .handler(async ({ input }) =>
-    mapDomainError(async () => createIdentifier(input))
-  );
+  .handler(withDomainError(async ({ input }) => createIdentifier(input)));
 
-export const update = authed
+export const update = graphChildWrite
   .route({
     method: "PATCH",
     path: "/cases/{caseId}/identifiers/{identifierId}",
@@ -93,9 +96,8 @@ export const update = authed
       confidence: confidenceTierSchema.optional(),
       notes: z.string().optional(),
       evidenceIds: z.array(z.uuid()).optional(),
+      userOverride: userOverrideSchema,
     })
   )
   .output(identifierSchema)
-  .handler(async ({ input }) =>
-    mapDomainError(async () => updateIdentifier(input))
-  );
+  .handler(withDomainError(async ({ input }) => updateIdentifier(input)));

@@ -11,7 +11,7 @@ import {
   type CapListItem,
   type PlaybookListItem,
 } from "@/domains/jobs/types";
-import { actorFromSession, orpcForActor } from "@/lib/orpc.server";
+import { orpcFromContext } from "@/lib/orpc.server";
 import { readArtifactBytes } from "@watchdog/core";
 import type { JobListRecord, JobRecord } from "@watchdog/core";
 
@@ -20,21 +20,21 @@ export type { JobListRecord, JobRecord } from "@watchdog/core";
 
 export const listCapabilitiesFn = createServerFn({ method: "GET" }).handler(
   async ({ context }): Promise<CapListItem[]> =>
-    orpcForActor(actorFromSession(context.session)).capabilities.list()
+    orpcFromContext(context).capabilities.list()
 );
 
 export const listPlaybooksFn = createServerFn({ method: "GET" }).handler(
   async ({ context }): Promise<PlaybookListItem[]> =>
-    orpcForActor(
-      actorFromSession(context.session)
-    ).capabilities.listPlaybooks() as Promise<PlaybookListItem[]>
+    orpcFromContext(context).capabilities.listPlaybooks() as Promise<
+      PlaybookListItem[]
+    >
 );
 
 export const listJobsFn = createServerFn({ method: "GET" })
   .validator(listJobsInputSchema)
   .handler(
     async ({ data, context }): Promise<JobListRecord[]> =>
-      orpcForActor(actorFromSession(context.session)).jobs.listForCase({
+      orpcFromContext(context).jobs.listForCase({
         caseId: data.caseId,
       })
   );
@@ -43,7 +43,7 @@ export const getJobFn = createServerFn({ method: "GET" })
   .validator(getJobInputSchema)
   .handler(
     async ({ data, context }): Promise<JobRecord> =>
-      orpcForActor(actorFromSession(context.session)).jobs.get({
+      orpcFromContext(context).jobs.get({
         caseId: data.caseId,
         jobId: data.jobId,
       })
@@ -53,26 +53,26 @@ export const startJobFn = createServerFn({ method: "POST" })
   .validator(startJobInputSchema)
   .handler(
     async ({ data, context }): Promise<JobRecord> =>
-      orpcForActor(actorFromSession(context.session)).jobs.start(data)
+      orpcFromContext(context).jobs.start(data)
   );
 
 export const cancelJobFn = createServerFn({ method: "POST" })
   .validator(cancelJobInputSchema)
   .handler(
     async ({ data, context }): Promise<JobRecord> =>
-      orpcForActor(actorFromSession(context.session)).jobs.cancel(data)
+      orpcFromContext(context).jobs.cancel(data)
   );
 
 export const startPlaybookFn = createServerFn({ method: "POST" })
   .validator(startPlaybookInputSchema)
   .handler(async ({ data, context }) =>
-    orpcForActor(actorFromSession(context.session)).jobs.startPlaybook(data)
+    orpcFromContext(context).jobs.startPlaybook(data)
   );
 
 export const cancelPlaybookFn = createServerFn({ method: "POST" })
   .validator(cancelPlaybookInputSchema)
   .handler(async ({ data, context }) =>
-    orpcForActor(actorFromSession(context.session)).jobs.cancelPlaybook(data)
+    orpcFromContext(context).jobs.cancelPlaybook(data)
   );
 
 /**

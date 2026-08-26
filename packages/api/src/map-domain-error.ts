@@ -32,3 +32,10 @@ export async function mapDomainError<T>(fn: () => Promise<T>): Promise<T> {
     }
   }
 }
+
+/** Wrap an oRPC handler so DomainError → ORPC/HTTP without inline try/catch. */
+export function withDomainError<TArgs extends unknown[], TResult>(
+  handler: (...args: TArgs) => Promise<TResult>
+): (...args: TArgs) => Promise<TResult> {
+  return async (...args: TArgs) => mapDomainError(() => handler(...args));
+}

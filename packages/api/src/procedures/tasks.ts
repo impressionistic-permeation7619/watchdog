@@ -11,7 +11,7 @@ import {
 } from "@watchdog/core";
 import { taskPrioritySchema, taskStatusSchema } from "@watchdog/schemas";
 
-import { mapDomainError } from "../map-domain-error";
+import { withDomainError } from "../map-domain-error";
 import { authed } from "../os";
 import { taskSchema } from "../schemas";
 
@@ -31,8 +31,8 @@ export const list = authed
     })
   )
   .output(z.array(taskSchema))
-  .handler(async ({ input }) =>
-    mapDomainError(async () =>
+  .handler(
+    withDomainError(async ({ input }) =>
       listTasksForCase(input.caseId, {
         entityId: input.entityId,
         status: input.status,
@@ -50,13 +50,13 @@ export const get = authed
   })
   .input(z.object({ caseId: z.uuid(), taskId: z.uuid() }))
   .output(taskSchema)
-  .handler(async ({ input }) => {
-    const row = await mapDomainError(async () =>
-      getTaskInCase(input.caseId, input.taskId)
-    );
-    if (!row) throw new ORPCError("NOT_FOUND", { message: "Task not found" });
-    return row;
-  });
+  .handler(
+    withDomainError(async ({ input }) => {
+      const row = await getTaskInCase(input.caseId, input.taskId);
+      if (!row) throw new ORPCError("NOT_FOUND", { message: "Task not found" });
+      return row;
+    })
+  );
 
 export const create = authed
   .route({
@@ -78,7 +78,7 @@ export const create = authed
     })
   )
   .output(taskSchema)
-  .handler(async ({ input }) => mapDomainError(async () => createTask(input)));
+  .handler(withDomainError(async ({ input }) => createTask(input)));
 
 export const update = authed
   .route({
@@ -111,7 +111,7 @@ export const update = authed
       )
   )
   .output(taskSchema)
-  .handler(async ({ input }) => mapDomainError(async () => updateTask(input)));
+  .handler(withDomainError(async ({ input }) => updateTask(input)));
 
 export const remove = authed
   .route({
@@ -122,8 +122,8 @@ export const remove = authed
   })
   .input(z.object({ caseId: z.uuid(), taskId: z.uuid() }))
   .output(z.object({ ok: z.literal(true) }))
-  .handler(async ({ input }) =>
-    mapDomainError(async () => {
+  .handler(
+    withDomainError(async ({ input }) => {
       await deleteTask(input.caseId, input.taskId);
       return { ok: true as const };
     })
@@ -144,6 +144,4 @@ export const reorder = authed
     })
   )
   .output(z.array(taskSchema))
-  .handler(async ({ input }) =>
-    mapDomainError(async () => reorderTasks(input))
-  );
+  .handler(withDomainError(async ({ input }) => reorderTasks(input)));

@@ -13,11 +13,7 @@ import {
   type CaseRecord,
   type CasesContext,
 } from "@/domains/cases/types";
-import {
-  actorFromSession,
-  orpcForActor,
-  orpcNullIfNotFound,
-} from "@/lib/orpc.server";
+import { orpcFromContext, orpcNullIfNotFound } from "@/lib/orpc.server";
 import {
   getCaseById,
   getCaseBySlug,
@@ -49,7 +45,7 @@ export const getCaseByIdFn = createServerFn({ method: "GET" })
   .handler(
     async ({ data, context }): Promise<CaseRecord | null> =>
       orpcNullIfNotFound(
-        orpcForActor(actorFromSession(context.session)).cases.get({
+        orpcFromContext(context).cases.get({
           caseId: data.caseId,
         })
       )
@@ -76,9 +72,7 @@ export const setActiveCaseIdFn = createServerFn({ method: "POST" })
 export const createCaseFn = createServerFn({ method: "POST" })
   .validator(createCaseInputSchema)
   .handler(async ({ data, context }): Promise<CaseRecord> => {
-    const created = await orpcForActor(
-      actorFromSession(context.session)
-    ).cases.create(data);
+    const created = await orpcFromContext(context).cases.create(data);
     writeActiveCaseId(created.id);
     return created;
   });
@@ -90,7 +84,7 @@ export const updateCaseFn = createServerFn({ method: "POST" })
 export const deleteCaseFn = createServerFn({ method: "POST" })
   .validator(deleteCaseInputSchema)
   .handler(async ({ data, context }): Promise<void> => {
-    await orpcForActor(actorFromSession(context.session)).cases.delete({
+    await orpcFromContext(context).cases.delete({
       caseId: data.id,
     });
     if (readActiveCaseId() === data.id) {

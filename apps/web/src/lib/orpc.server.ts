@@ -4,6 +4,8 @@ import { createRouterClient, type RouterClient } from "@orpc/server";
 import { router, type ApiActor, type AppRouter } from "@watchdog/api";
 import { peekRequestLogger } from "@watchdog/log";
 
+import { actorFromSession } from "@/auth/api-context.server";
+
 export { orpcNullIfNotFound } from "@/lib/orpc-null-if-not-found";
 
 export function orpcForActor(actor: ApiActor): RouterClient<AppRouter> {
@@ -11,9 +13,19 @@ export function orpcForActor(actor: ApiActor): RouterClient<AppRouter> {
     context: {
       headers: new Headers(),
       actor,
+      authMethod: "session",
       log: peekRequestLogger(),
     },
   });
 }
 
-export { actorFromSession } from "@/auth/api-context.server";
+type SessionForActor = Parameters<typeof actorFromSession>[0];
+
+/** ServerFn handler context → in-process oRPC client for the authenticated actor. */
+export function orpcFromContext(context: {
+  session: SessionForActor;
+}): RouterClient<AppRouter> {
+  return orpcForActor(actorFromSession(context.session));
+}
+
+export { actorFromSession };
