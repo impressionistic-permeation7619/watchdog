@@ -37,7 +37,7 @@ const ROOT_COMMANDS = [
   "questions",
 ] as const;
 
-const main = defineCommand({
+export const wdMain = defineCommand({
   meta: {
     name: "wd",
     version: "0.1.0",
@@ -82,9 +82,9 @@ const main = defineCommand({
   },
 });
 
-async function boot(): Promise<void> {
+export async function boot(): Promise<void> {
   try {
-    await runMain(wrapCommandTree(main));
+    await runMain(wrapCommandTree(wdMain));
   } catch (error: unknown) {
     if (error instanceof CliExitError) {
       process.exit(error.exitCode);
@@ -93,4 +93,6 @@ async function boot(): Promise<void> {
   }
 }
 
-void boot();
+if (process.env.VITEST !== "true") {
+  void boot();
+}

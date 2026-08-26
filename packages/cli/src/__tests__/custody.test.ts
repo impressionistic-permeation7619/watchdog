@@ -21,6 +21,7 @@ function runWd(args: string[]): {
       encoding: "utf-8",
       env: {
         ...process.env,
+        VITEST: undefined,
         WD_API_KEY: "test-key",
         WD_API_URL: "http://127.0.0.1:9/api/v1",
       },

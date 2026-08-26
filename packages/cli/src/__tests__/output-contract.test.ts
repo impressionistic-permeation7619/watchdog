@@ -19,7 +19,7 @@ function runWd(
   args: string[],
   extraEnv: Record<string, string | undefined> = {}
 ): { status: number | null; stdout: string; stderr: string } {
-  const env: NodeJS.ProcessEnv = { ...process.env };
+  const env: NodeJS.ProcessEnv = { ...process.env, VITEST: undefined };
   for (const [key, value] of Object.entries(extraEnv)) {
     if (value === undefined) {
       Reflect.deleteProperty(env, key);

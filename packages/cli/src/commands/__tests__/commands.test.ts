@@ -96,6 +96,31 @@ const mocks = vi.hoisted(() => {
     graph: {
       write: vi.fn().mockResolvedValue({ ok: true }),
     },
+    jobs: {
+      listForCase: vi.fn().mockResolvedValue([
+        {
+          id: "job-1",
+          capabilityId: "web.page.enrich",
+          status: "queued",
+          createdAt: "2026-01-01T12:00:00.000Z",
+        },
+      ]),
+    },
+    proposals: {
+      listForCase: vi.fn().mockResolvedValue([
+        {
+          id: "proposal-1",
+          status: "pending",
+          summary: "Add identifier",
+          createdAt: "2026-01-01T12:00:00.000Z",
+        },
+      ]),
+    },
+    questions: {
+      list: vi.fn().mockResolvedValue([
+        { id: "question-1", text: "Who owns this?", status: "open" },
+      ]),
+    },
   };
 
   const api = vi.fn(() => client);
@@ -139,6 +164,9 @@ import { evidenceCmd } from "../evidence";
 import { exportCmd } from "../export";
 import { graphCmd } from "../graph";
 import { identifiersCmd } from "../identifiers";
+import { jobsCmd } from "../jobs";
+import { proposalsCmd } from "../proposals";
+import { questionsCmd } from "../questions";
 
 describe("CLI noun commands", () => {
   it("capsCmd lists capabilities", async () => {
@@ -208,5 +236,25 @@ describe("CLI noun commands", () => {
     await write?.run?.({ args: { case: "case-1", patch: "[]" } } as never);
     expect(mocks.client.graph.write).toHaveBeenCalled();
     expect(mocks.emit).toHaveBeenCalled();
+  });
+
+  it("jobsCmd lists jobs for a case", async () => {
+    await jobsCmd.run?.({ args: { case: "case-1" } } as never);
+    expect(mocks.client.jobs.listForCase).toHaveBeenCalled();
+    expect(mocks.emitList).toHaveBeenCalled();
+  });
+
+  it("proposalsCmd lists pending proposals for a case", async () => {
+    await proposalsCmd.run?.({ args: { case: "case-1" } } as never);
+    expect(mocks.client.proposals.listForCase).toHaveBeenCalled();
+    expect(mocks.emitList).toHaveBeenCalled();
+  });
+
+  it("questionsCmd lists questions for a case entity", async () => {
+    await questionsCmd.run?.({
+      args: { case: "case-1", entity: "jane" },
+    } as never);
+    expect(mocks.client.questions.list).toHaveBeenCalled();
+    expect(mocks.emitList).toHaveBeenCalled();
   });
 });
