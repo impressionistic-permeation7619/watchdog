@@ -4,6 +4,7 @@ import {
   createCaseInputSchema,
   deleteCaseInputSchema,
   setActiveCaseIdInputSchema,
+  updateCaseInputSchema,
 } from "@/domains/cases/types";
 
 const CASE_ID = "550e8400-e29b-41d4-a716-446655440000";
@@ -26,5 +27,14 @@ describe("case input schemas", () => {
 
   it("parses delete case input", () => {
     expect(deleteCaseInputSchema.parse({ id: CASE_ID }).id).toBe(CASE_ID);
+  });
+
+  it("parses partial update case input", () => {
+    expect(
+      updateCaseInputSchema.parse({
+        id: CASE_ID,
+        allowThirdPartyEgress: true,
+      }).allowThirdPartyEgress
+    ).toBe(true);
   });
 });
