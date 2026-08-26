@@ -13,11 +13,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { createApiContext } from "@/auth/api-context.server";
+import {
+  applyWatchdogCors,
+  corsPreflightResponse,
+} from "@/lib/api-cors.server";
 import { isWatchdogEvent, listenForEvents } from "@watchdog/db";
 
 export const Route = createFileRoute("/api/events")({
   server: {
     handlers: {
+      OPTIONS: async ({ request }: { request: Request }) =>
+        corsPreflightResponse(request) ??
+        new Response(null, { status: 204 }),
       GET: async ({ request }: { request: Request }) => {
         const ctx = await createApiContext(request);
         if (!ctx.actor) {
@@ -80,14 +87,17 @@ export const Route = createFileRoute("/api/events")({
           },
         });
 
-        return new Response(stream, {
-          headers: {
-            "Content-Type": "text/event-stream",
-            "Cache-Control": "no-cache, no-transform",
-            Connection: "keep-alive",
-            "X-Accel-Buffering": "no",
-          },
-        });
+        return applyWatchdogCors(
+          request,
+          new Response(stream, {
+            headers: {
+              "Content-Type": "text/event-stream",
+              "Cache-Control": "no-cache, no-transform",
+              Connection: "keep-alive",
+              "X-Accel-Buffering": "no",
+            },
+          })
+        );
       },
     },
   },
