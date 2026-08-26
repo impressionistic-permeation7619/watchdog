@@ -30,7 +30,7 @@ function emitOnce(scope: string, fields: Record<string, unknown>): void {
   void log.emit();
 }
 
-async function main() {
+async function bootWorker() {
   const workerRoot = path.resolve(import.meta.dirname, "..");
   initWatchdogLogger({
     service: "watchdog-worker",
@@ -185,13 +185,17 @@ async function main() {
   });
 }
 
-try {
-  await main();
-} catch (error: unknown) {
-  const log = createLogger({ scope: "worker.fatal" });
-  log.error(error instanceof Error ? error : new Error(String(error)));
-  // Emit is sync for the wide-event seal; give the FS drain a tick before exit.
-  log.emit();
-  await scheduler.yield();
-  process.exit(1);
+export { bootWorker };
+
+if (process.env.VITEST !== "true") {
+  try {
+    await bootWorker();
+  } catch (error: unknown) {
+    const log = createLogger({ scope: "worker.fatal" });
+    log.error(error instanceof Error ? error : new Error(String(error)));
+    // Emit is sync for the wide-event seal; give the FS drain a tick before exit.
+    log.emit();
+    await scheduler.yield();
+    process.exit(1);
+  }
 }
