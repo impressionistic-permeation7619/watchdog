@@ -23,6 +23,5 @@ export async function removeCredentialSlot(
   userId: string,
   name: string
 ): Promise<void> {
-  const ok = await deleteCredential(userId, name);
-  if (!ok) throw new Error("Credential not found");
+  await deleteCredential(userId, name);
 }

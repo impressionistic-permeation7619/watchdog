@@ -23,8 +23,8 @@ export interface CreateEventInput {
 export interface UpdateEventInput {
   caseId: string;
   eventId: string;
-  when: string;
-  what: string;
+  when?: string;
+  what?: string;
   where?: string;
 }
 
@@ -71,9 +71,10 @@ export async function updateEvent(
   }
 
   const row = await eventsRepo.update(db, input.eventId, {
-    when: input.when,
-    what: input.what,
-    whereText: input.where ?? null,
+    when: input.when ?? existing.when,
+    what: input.what ?? existing.what,
+    whereText:
+      input.where === undefined ? existing.whereText : (input.where ?? null),
   });
   if (!row) throw new DomainError("invalid", "Failed to update Event");
   notifyEntityChanged(input.caseId);

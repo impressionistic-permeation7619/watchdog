@@ -182,7 +182,10 @@ export async function putCredential(input: {
 export async function deleteCredential(
   userId: string,
   name: string
-): Promise<boolean> {
+): Promise<void> {
   const n = assertCredentialName(name);
-  return credentialsRepo.deleteByName(db, userId, n);
+  const deleted = await credentialsRepo.deleteByName(db, userId, n);
+  if (!deleted) {
+    throw new DomainError("not_found", "Credential not found");
+  }
 }

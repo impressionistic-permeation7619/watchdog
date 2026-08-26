@@ -3,6 +3,7 @@ import { z } from "zod";
 import { listCapabilities, listPlaybookDescriptors } from "@watchdog/caps";
 import { jsonObjectSchema, PLAYBOOK_SEED_KINDS } from "@watchdog/schemas";
 
+import { withDomainError } from "../map-domain-error";
 import { authed } from "../os";
 
 const capIoKindSchema = z.object({
@@ -72,7 +73,7 @@ export const list = authed
     tags: ["capabilities"],
   })
   .output(z.array(capabilitySchema))
-  .handler(async () => listCapabilities());
+  .handler(withDomainError(async () => listCapabilities()));
 
 export const listPlaybooksProc = authed
   .route({
@@ -82,4 +83,4 @@ export const listPlaybooksProc = authed
     tags: ["capabilities"],
   })
   .output(z.array(playbookSchema))
-  .handler(async () => listPlaybookDescriptors());
+  .handler(withDomainError(async () => listPlaybookDescriptors()));

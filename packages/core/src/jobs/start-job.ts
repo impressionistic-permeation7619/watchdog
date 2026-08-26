@@ -108,7 +108,13 @@ export function toJobRecord(
 
 export async function startJob(input: StartJobInput): Promise<JobRecord> {
   await assertCaseExists(input.caseId);
-  const cap = getCapability(input.capabilityId);
+  let cap;
+  try {
+    cap = getCapability(input.capabilityId);
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    throw new DomainError("not_found", msg);
+  }
   const parsed = cap.input.safeParse(input.input);
   if (!parsed.success) {
     throw new DomainError(

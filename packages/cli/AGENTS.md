@@ -56,7 +56,7 @@ Noun with no subcommand = content-first list (or USAGE fail needing `-c`).
 - Evidence upload helpers live here; hashes/immutability still follow Intake rules.
 - `wd evidence process|enrich` is the Intake path (dedupe active Jobs; Enrich asserts http(s)). `wd jobs start --cap evidence.harvest` still works but skips that glue.
 - Export is outside `contract.json` — CLI checks `res.ok` before writing files.
-- `events update` requires **both** `--when` and `--what`.
+- `events update` accepts a partial patch — provide at least one of `--when`, `--what`, or `--where`.
 - Destructive verbs support `--dry-run` (prints planned JSON only — does **not** validate against the API).
 - Paste body: `--body`, `-b -`, `--stdin`, or non-TTY stdin.
 - Breaking: `wd caps` → `wd caps list` (also content-first `wd caps`).

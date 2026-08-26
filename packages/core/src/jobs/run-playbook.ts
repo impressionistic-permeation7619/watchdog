@@ -39,7 +39,13 @@ export async function runPlaybook(
   input: RunPlaybookInput
 ): Promise<PlaybookRunResult> {
   await assertCaseExists(input.caseId);
-  const playbook = getPlaybook(input.playbookId);
+  let playbook;
+  try {
+    playbook = getPlaybook(input.playbookId);
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    throw new DomainError("not_found", msg);
+  }
   const { seed } = input;
 
   if (seed.entityId !== undefined && seed.entityId !== "") {
@@ -51,7 +57,7 @@ export async function runPlaybook(
 
   const plan = planPlaybook(playbook, seed);
   if ("kind" in plan) {
-    throw new Error(formatPlanError(plan));
+    throw new DomainError("invalid", formatPlanError(plan));
   }
 
   const descriptor = toPlaybookDescriptor(playbook);
@@ -82,11 +88,13 @@ export async function runPlaybook(
   });
   if (!availability.ok) {
     if (availability.kind === "egress_blocked") {
-      throw new Error(
+      throw new DomainError(
+        "forbidden",
         `Case does not permit third-party egress — enable it in Case settings before running ${availability.capabilityId}`
       );
     }
-    throw new Error(
+    throw new DomainError(
+      "forbidden",
       `Missing credential — set one of ${availability.names.join(" | ")} in Settings before running this playbook`
     );
   }
@@ -101,7 +109,9 @@ export async function runPlaybook(
       status: "running",
       actorId: input.actorId,
     });
-    if (!run) throw new Error("Failed to create playbook run");
+    if (!run) {
+      throw new DomainError("invalid", "Failed to create playbook run");
+    }
 
     const row = await jobsRepo.create(tx, {
       caseId: input.caseId,
@@ -115,7 +125,8 @@ export async function runPlaybook(
       playbookFanIndex: 0,
     });
     if (!row) {
-      throw new Error(
+      throw new DomainError(
+        "invalid",
         `Failed to create Job for step ${plan.step.playbookStep}`
       );
     }

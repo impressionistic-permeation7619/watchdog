@@ -1,4 +1,3 @@
-import { ORPCError } from "@orpc/server";
 import { z } from "zod";
 
 import {
@@ -62,10 +61,7 @@ export const remove = authed
   .output(z.object({ ok: z.literal(true) }))
   .handler(
     withDomainError(async ({ input, context }) => {
-      const ok = await deleteCredential(context.actor.userId, input.name);
-      if (!ok) {
-        throw new ORPCError("NOT_FOUND", { message: "Credential not found" });
-      }
+      await deleteCredential(context.actor.userId, input.name);
       return { ok: true as const };
     })
   );

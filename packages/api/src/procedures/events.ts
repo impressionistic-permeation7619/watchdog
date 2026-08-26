@@ -60,14 +60,22 @@ export const update = graphChildWrite
     tags: ["events"],
   })
   .input(
-    z.object({
-      caseId: z.uuid(),
-      eventId: z.uuid(),
-      when: z.string().min(1),
-      what: z.string().min(1),
-      where: z.string().optional(),
-      userOverride: userOverrideSchema,
-    })
+    z
+      .object({
+        caseId: z.uuid(),
+        eventId: z.uuid(),
+        when: z.string().min(1).optional(),
+        what: z.string().min(1).optional(),
+        where: z.string().optional(),
+        userOverride: userOverrideSchema,
+      })
+      .refine(
+        (data) =>
+          data.when !== undefined ||
+          data.what !== undefined ||
+          data.where !== undefined,
+        { message: "At least one field is required" }
+      )
   )
   .output(eventSchema)
   .handler(withDomainError(async ({ input }) => updateEvent(input)));
