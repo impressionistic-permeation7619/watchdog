@@ -124,7 +124,9 @@ export function useEntityTable(active: CaseRecord) {
       }),
     onSuccess: async (_data, vars) => {
       toast.success("Connection added");
-      await invalidateAfterEntityChanged(queryClient, active.id, vars.centerId);
+      await invalidateAfterEntityChanged(queryClient, active.id, {
+        entityId: vars.centerId,
+      });
     },
   });
 
@@ -148,7 +150,9 @@ export function useEntityTable(active: CaseRecord) {
       }),
     onSuccess: async (_data, vars) => {
       toast.success("Connection updated");
-      await invalidateAfterEntityChanged(queryClient, active.id, vars.centerId);
+      await invalidateAfterEntityChanged(queryClient, active.id, {
+        entityId: vars.centerId,
+      });
     },
   });
 

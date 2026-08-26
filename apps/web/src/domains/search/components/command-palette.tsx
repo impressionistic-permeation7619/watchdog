@@ -1,17 +1,11 @@
 import {
-  useMutation,
   useQuery,
-  useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
 
-import { setActiveCaseIdFn } from "@/domains/cases/cases.functions";
-import { bumpActiveCaseHealEpoch } from "@/domains/cases/lib/active-case";
-import { casesContextQuery, casesKeys } from "@/domains/cases/queries";
-import type { CasesContext } from "@/domains/cases/types";
+import { casesContextQuery } from "@/domains/cases/queries";
 import { jumpNavItems } from "@/domains/search/lib/jump-nav";
 import { searchCaseQuery } from "@/domains/search/queries";
 import {
@@ -19,7 +13,7 @@ import {
   type SearchCaseResult,
 } from "@/domains/search/types";
 import { errMessage } from "@/lib/utils";
-import { invalidateAfterCaseSwitch } from "@/shared/lib/query-invalidation";
+import { useSelectActiveCase } from "@/shared/lib/use-select-active-case";
 import {
   Command,
   CommandDialog,
@@ -42,7 +36,6 @@ interface CommandPaletteProps {
 
 export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
 
@@ -78,51 +71,10 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     enabled: open && showResults && searchQuery.enabled,
   });
 
-  const switchCaseMutation = useMutation({
-    mutationFn: async (caseId: string) => {
-      await setActiveCaseIdFn({ data: { caseId } });
-      return caseId;
-    },
-    onMutate: async (
-      caseId
-    ): Promise<{
-      prev: CasesContext | undefined;
-      next: (typeof casesCtx.cases)[number] | undefined;
-    }> => {
-      const next = casesCtx.cases.find((c) => c.id === caseId);
-      if (!next) {
-        return { prev: undefined, next: undefined };
-      }
-      bumpActiveCaseHealEpoch();
-      await queryClient.cancelQueries({ queryKey: casesKeys.context() });
-      const prev = queryClient.getQueryData<CasesContext>(casesKeys.context());
-      if (prev) {
-        queryClient.setQueryData<CasesContext>(casesKeys.context(), {
-          ...prev,
-          active: next,
-        });
-      }
-      return { prev, next };
-    },
-    onError: (err, _id, ctx) => {
-      if (ctx?.prev) {
-        queryClient.setQueryData(casesKeys.context(), ctx.prev);
-      }
-      toast.error(errMessage(err, "Failed to switch case"));
-    },
-    onSuccess: async (_id, _vars, ctx) => {
-      await invalidateAfterCaseSwitch(queryClient);
-      const next = ctx?.next;
-      if (next) {
-        queryClient.setQueryData<CasesContext>(casesKeys.context(), (prev) =>
-          prev ? { ...prev, active: next } : prev
-        );
-        await navigate({
-          to: "/cases/$caseSlug",
-          params: { caseSlug: next.slug },
-        });
-      }
-    },
+  const switchCaseMutation = useSelectActiveCase({
+    cases: casesCtx.cases,
+    navigate,
+    navigateToOverview: true,
   });
 
   function handleOpenChange(next: boolean) {

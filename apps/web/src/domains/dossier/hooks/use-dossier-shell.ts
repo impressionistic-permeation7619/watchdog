@@ -97,12 +97,10 @@ export function useDossierShell(caseId: string, entity: EntityRecord) {
     useCallback(
       (event) => {
         if (event.type === "entity_changed") {
-          void invalidateAfterEntityChanged(
-            queryClient,
-            caseId,
-            entity.id,
-            entity.slug
-          );
+          void invalidateAfterEntityChanged(queryClient, caseId, {
+            entityId: entity.id,
+            slug: entity.slug,
+          });
         }
         if (event.type === "task_changed") {
           void invalidateAfterTaskMutation(queryClient, caseId);
@@ -119,12 +117,10 @@ export function useDossierShell(caseId: string, entity: EntityRecord) {
       }),
     onSuccess: async () => {
       toast.success("Updated");
-      await invalidateAfterEntityChanged(
-        queryClient,
-        caseId,
-        entity.id,
-        entity.slug
-      );
+      await invalidateAfterEntityChanged(queryClient, caseId, {
+        entityId: entity.id,
+        slug: entity.slug,
+      });
     },
     onError: (err) => {
       toast.error(errMessage(err, "Rename failed"));
@@ -147,12 +143,10 @@ export function useDossierShell(caseId: string, entity: EntityRecord) {
       setEditError(null);
       setEditOpen(false);
       toast.success("Updated");
-      await invalidateAfterEntityChanged(
-        queryClient,
-        caseId,
-        entity.id,
-        entity.slug
-      );
+      await invalidateAfterEntityChanged(queryClient, caseId, {
+        entityId: entity.id,
+        slug: entity.slug,
+      });
     },
     onError: (err) => {
       setEditError(errMessage(err, "Update failed"));

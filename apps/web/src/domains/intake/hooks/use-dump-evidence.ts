@@ -6,7 +6,7 @@ import { dumpPasteFn, dumpUrlFn } from "@/domains/intake/intake.functions";
 import { uploadFileEvidence } from "@/domains/intake/lib/upload-file";
 import type { EvidenceRecord } from "@/domains/intake/types";
 import { errMessage } from "@/lib/utils";
-import { invalidateEvidence } from "@/shared/lib/query-invalidation";
+import { invalidateAfterEvidenceMutation } from "@/shared/lib/query-invalidation";
 
 export interface UseDumpEvidenceOptions {
   caseId: string;
@@ -53,7 +53,7 @@ export function useDumpEvidence({
           ? "File uploaded"
           : `${created.length} files uploaded`
       );
-      await invalidateEvidence(queryClient, caseId);
+      await invalidateAfterEvidenceMutation(queryClient, caseId);
       onSuccess?.(created);
     },
     onError: (e) => {
@@ -76,7 +76,7 @@ export function useDumpEvidence({
     onSuccess: async (created) => {
       setDumpError(null);
       toast.success("Paste saved");
-      await invalidateEvidence(queryClient, caseId);
+      await invalidateAfterEvidenceMutation(queryClient, caseId);
       onSuccess?.([created]);
     },
     onError: (e) => {
@@ -92,7 +92,7 @@ export function useDumpEvidence({
     onSuccess: async (created) => {
       setDumpError(null);
       toast.success("URL saved");
-      await invalidateEvidence(queryClient, caseId);
+      await invalidateAfterEvidenceMutation(queryClient, caseId);
       onSuccess?.([created]);
     },
     onError: (e) => {

@@ -110,11 +110,9 @@ export function useIdentifiersTable(active: CaseRecord) {
       toast.success("Identifier added");
       reset();
       setComposing(false);
-      await invalidateAfterEntityChanged(
-        queryClient,
-        active.id,
-        value.entityId
-      );
+      await invalidateAfterEntityChanged(queryClient, active.id, {
+        entityId: value.entityId,
+      });
     } catch (error) {
       setSubmitError(errMessage(error, "Failed to add"));
     }
@@ -146,7 +144,9 @@ export function useIdentifiersTable(active: CaseRecord) {
     onSuccess: async (_data, vars) => {
       toast.success("Updated");
       const row = rows.find((r) => r.id === vars.identifierId);
-      await invalidateAfterEntityChanged(queryClient, active.id, row?.entityId);
+      await invalidateAfterEntityChanged(queryClient, active.id, {
+        entityId: row?.entityId,
+      });
     },
     onError: (e) => {
       toast.error(errMessage(e, "Update failed"));

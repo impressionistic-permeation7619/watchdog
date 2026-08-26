@@ -32,17 +32,14 @@ const twMerge = extendTailwindMerge({
   },
 });
 
+import { slugifyName as schemaSlugifyName } from "@watchdog/schemas";
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
 export function slugifyName(name: string): string {
-  return name
-    .trim()
-    .toLowerCase()
-    .replaceAll(/[^a-z0-9]+/g, "-")
-    .replaceAll(/^-|-$/g, "")
-    .slice(0, 64);
+  return schemaSlugifyName(name);
 }
 
 /** Keep slug in lockstep with name until the user edits it. */

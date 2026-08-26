@@ -1,0 +1,61 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+
+import { setActiveCaseIdFn } from "@/domains/cases/cases.functions";
+import type { CaseRecord } from "@/domains/cases/types";
+import { errMessage } from "@/lib/utils";
+import {
+  finalizeActiveCaseSwitch,
+  navigateAfterActiveCaseSwitch,
+  optimisticActiveCaseSwitch,
+  rollbackActiveCaseSwitch,
+} from "@/shared/lib/active-case-switch";
+
+type NavigateFn = (opts: {
+  to: string;
+  params?: Record<string, string>;
+  search?: Record<string, never>;
+  replace?: boolean;
+}) => Promise<void> | void;
+
+/** Optimistic Active Case switch shared by sidebar switcher and command palette. */
+export function useSelectActiveCase(input: {
+  cases: CaseRecord[];
+  pathname?: string;
+  entityId?: string;
+  navigate?: NavigateFn;
+  /** When set, always navigates to the selected case Overview after switch. */
+  navigateToOverview?: boolean;
+}) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (caseId: string) => {
+      await setActiveCaseIdFn({ data: { caseId } });
+      return caseId;
+    },
+    onMutate: async (caseId) =>
+      optimisticActiveCaseSwitch(queryClient, input.cases, caseId),
+    onError: (err, _caseId, ctx) => {
+      rollbackActiveCaseSwitch(queryClient, ctx?.prev);
+      toast.error(errMessage(err, "Failed to switch case"));
+    },
+    onSuccess: async (caseId, _vars, ctx) => {
+      const next = ctx?.next ?? input.cases.find((c) => c.id === caseId);
+      if (next && input.navigateToOverview && input.navigate) {
+        await input.navigate({
+          to: "/cases/$caseSlug",
+          params: { caseSlug: next.slug },
+        });
+      } else if (next && input.navigate && input.pathname !== undefined) {
+        await navigateAfterActiveCaseSwitch({
+          next,
+          pathname: input.pathname,
+          entityId: input.entityId,
+          navigate: input.navigate,
+        });
+      }
+      await finalizeActiveCaseSwitch(queryClient, next);
+    },
+  });
+}

@@ -14,7 +14,7 @@ import {
   putCredentialFn,
 } from "@/domains/settings/settings.functions";
 import { cn, errMessage } from "@/lib/utils";
-import { invalidateCredentials } from "@/shared/lib/query-invalidation";
+import { invalidateAfterCredentialMutation } from "@/shared/lib/query-invalidation";
 import { DestructiveConfirmDialog } from "@/shared/ui/destructive-confirm-dialog";
 import { FormInlineError } from "@/shared/ui/form-inline-message";
 import { SETTINGS_CARD_SURFACE } from "@/shared/ui/form-section";
@@ -305,7 +305,7 @@ export function SettingsCredentialsForm() {
     onSuccess: async () => {
       toast.success("Credential removed");
       setDeleteTarget(null);
-      await invalidateCredentials(queryClient);
+      await invalidateAfterCredentialMutation(queryClient);
     },
     onError: (e) => {
       setDeleteError(errMessage(e, "Delete failed"));
@@ -369,7 +369,7 @@ export function SettingsCredentialsForm() {
         onSaved={() => {
           setError(null);
           toast.success("Credential saved");
-          void invalidateCredentials(queryClient);
+          void invalidateAfterCredentialMutation(queryClient);
         }}
         onError={(message) => {
           setError(message);

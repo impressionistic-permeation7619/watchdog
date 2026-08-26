@@ -13,7 +13,10 @@ export function useInvalidateEntity({
   const queryClient = useQueryClient();
   return useCallback(
     async () =>
-      invalidateAfterEntityChanged(queryClient, caseId, entityId, entitySlug),
+      invalidateAfterEntityChanged(queryClient, caseId, {
+        entityId,
+        slug: entitySlug,
+      }),
     [queryClient, caseId, entityId, entitySlug]
   );
 }

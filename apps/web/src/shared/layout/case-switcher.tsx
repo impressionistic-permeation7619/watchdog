@@ -1,5 +1,4 @@
 import {
-  useMutation,
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
@@ -12,18 +11,12 @@ import {
   PlusIcon,
 } from "lucide-react";
 import { Suspense, useEffect } from "react";
-import { toast } from "sonner";
 
 import { CASE_NAV_ITEMS, pathActive } from "@/config/nav";
-import { setActiveCaseIdFn } from "@/domains/cases/cases.functions";
-import { bumpActiveCaseHealEpoch } from "@/domains/cases/lib/active-case";
-import { casesContextQuery, casesKeys } from "@/domains/cases/queries";
-import type { CaseRecord, CasesContext } from "@/domains/cases/types";
-import { errMessage } from "@/lib/utils";
-import {
-  bindCasesChangedInvalidation,
-  invalidateAfterCaseSwitch,
-} from "@/shared/lib/query-invalidation";
+import { casesContextQuery } from "@/domains/cases/queries";
+import type { CaseRecord } from "@/domains/cases/types";
+import { bindCasesChangedInvalidation } from "@/shared/lib/query-invalidation";
+import { useSelectActiveCase } from "@/shared/lib/use-select-active-case";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,11 +31,6 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/shared/ui/shadcn/sidebar";
-
-/** True on `/cases/$caseSlug` (Overview) — not Manage `/cases`. */
-function isCaseOverviewPath(pathname: string): boolean {
-  return /^\/cases\/[^/]+/.test(pathname);
-}
 
 function CaseSwitcherSkeleton() {
   return (
@@ -160,54 +148,11 @@ function CaseSwitcherReady() {
   const active = data.active;
   const collapsed = state === "collapsed" && !isMobile;
 
-  const selectMutation = useMutation({
-    mutationFn: async (id: string) => {
-      await setActiveCaseIdFn({ data: { caseId: id } });
-      return id;
-    },
-    onMutate: async (id) => {
-      const next = cases.find((c) => c.id === id);
-      if (!next) {
-        // oxlint-disable-next-line unicorn/no-useless-undefined -- onMutate context is { prev } | undefined
-        return undefined;
-      }
-      bumpActiveCaseHealEpoch();
-      await queryClient.cancelQueries({ queryKey: casesKeys.context() });
-      const prev = queryClient.getQueryData<CasesContext>(casesKeys.context());
-      if (prev) {
-        queryClient.setQueryData<CasesContext>(casesKeys.context(), {
-          ...prev,
-          active: next,
-        });
-      }
-      return { prev };
-    },
-    onError: (err, _id, ctx) => {
-      if (ctx?.prev) {
-        queryClient.setQueryData(casesKeys.context(), ctx.prev);
-      }
-      toast.error(errMessage(err, "Failed to switch case"));
-    },
-    onSuccess: async (id) => {
-      const next = cases.find((c) => c.id === id);
-      // Overview heals cookie from the URL — follow the new slug.
-      if (next && isCaseOverviewPath(pathname)) {
-        await navigate({
-          to: "/cases/$caseSlug",
-          params: { caseSlug: next.slug },
-          replace: true,
-        });
-      } else if (pathname === "/tasks" && entityId) {
-        await navigate({ to: "/tasks", search: {}, replace: true });
-      }
-      await invalidateAfterCaseSwitch(queryClient);
-      // Refetch can lag the cookie write.
-      if (next) {
-        queryClient.setQueryData<CasesContext>(casesKeys.context(), (prev) =>
-          prev ? { ...prev, active: next } : prev
-        );
-      }
-    },
+  const selectMutation = useSelectActiveCase({
+    cases,
+    pathname,
+    entityId,
+    navigate,
   });
 
   function selectCase(id: string) {
