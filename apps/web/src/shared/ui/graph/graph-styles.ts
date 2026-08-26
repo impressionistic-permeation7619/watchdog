@@ -1,5 +1,7 @@
+import type { ConfidenceTier, EntityKind } from "@watchdog/schemas";
+
 /** Stroke color for canvas edges — greenfield tiers only (no probable). */
-export function confidenceStroke(confidence: string): string {
+export function confidenceStroke(confidence: ConfidenceTier): string {
   if (confidence === "confirmed") {
     return "var(--confidence-confirmed)";
   }
@@ -10,7 +12,7 @@ export function confidenceStroke(confidence: string): string {
 }
 
 /** Node border from entity kind CSS tokens (person | infra | org). */
-export function kindBorder(kind: string): string {
+export function kindBorder(kind: EntityKind): string {
   if (kind === "person") {
     return "var(--kind-person)";
   }

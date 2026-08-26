@@ -23,8 +23,8 @@ describe("case-graph-layout", () => {
         id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
         fromId: entities[0].id,
         toId: entities[1].id,
-        predicate: "owns",
-        confidence: "possible",
+        predicate: "owns" as const,
+        confidence: "possible" as const,
       },
     ];
 

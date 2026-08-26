@@ -96,7 +96,7 @@ export const identifiersCmd = defineNounCommand({
       },
       run: async ({ args }) => {
         requireUserOverride(args["user-override"]);
-        refuseConfirmed(args.confidence);
+        refuseConfirmed(confidenceTierSchema.parse(args.confidence));
         const entityId = await resolveEntityId(args.case, args.entity);
         const evidenceIds = parseIdList(args.evidence);
         const row = await api().identifiers.create({
@@ -145,7 +145,7 @@ export const identifiersCmd = defineNounCommand({
       },
       run: async ({ args }) => {
         requireUserOverride(args["user-override"]);
-        refuseConfirmed(args.confidence);
+        refuseConfirmed(confidenceTierSchema.parse(args.confidence));
         const evidenceIds = parseIdList(args.evidence);
         const typeValue =
           args.type !== undefined && args.type !== ""

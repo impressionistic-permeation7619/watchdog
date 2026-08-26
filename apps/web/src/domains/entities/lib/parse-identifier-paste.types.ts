@@ -1,4 +1,5 @@
 import {
+  CONFIDENCE_TIERS,
   IDENTIFIER_STATUSES,
   IDENTIFIER_TYPES,
   type ConfidenceTier,
@@ -183,7 +184,7 @@ export const STATUS_BY_TOKEN = buildTokenMap(
   STATUS_LABELS
 );
 export const CONFIDENCE_BY_TOKEN = buildTokenMap(
-  ["unverified", "possible", "confirmed"] as const,
+  CONFIDENCE_TIERS,
   CONFIDENCE_LABELS
 );
 

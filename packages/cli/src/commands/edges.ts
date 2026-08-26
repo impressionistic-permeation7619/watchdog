@@ -91,7 +91,7 @@ export const edgesCmd = defineNounCommand({
       },
       run: async ({ args }) => {
         requireUserOverride(args["user-override"]);
-        refuseConfirmed(args.confidence);
+        refuseConfirmed(confidenceTierSchema.parse(args.confidence));
         const fromId = await resolveEntityId(args.case, args.from);
         const toId = await resolveEntityId(args.case, args.to);
         const evidenceIds = parseIdList(args.evidence);

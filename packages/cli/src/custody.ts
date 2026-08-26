@@ -1,5 +1,7 @@
 /** Custody gates for dossier-child Graph writes from the CLI. */
 
+import type { ConfidenceTier } from "@watchdog/schemas";
+
 import { fail } from "./io";
 
 export const userOverrideArg = {
@@ -28,7 +30,7 @@ export function requireUserOverride(enabled: boolean): void {
 }
 
 /** Core only checks evidence count for confirmed — CLI refuses it outright. */
-export function refuseConfirmed(confidence: string | undefined): void {
+export function refuseConfirmed(confidence: ConfidenceTier | undefined): void {
   if (confidence === "confirmed") {
     fail(
       "CUSTODY",

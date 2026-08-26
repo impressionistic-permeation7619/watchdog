@@ -1,6 +1,10 @@
 import type { Edge, Node } from "@xyflow/react";
 
-import type { EntityKind } from "@watchdog/schemas";
+import type {
+  ConfidenceTier,
+  EdgePredicate,
+  EntityKind,
+} from "@watchdog/schemas";
 
 export interface EntityNodeData extends Record<string, unknown> {
   label: string;
@@ -12,8 +16,8 @@ export interface EntityNodeData extends Record<string, unknown> {
 }
 
 export interface PredicateEdgeData extends Record<string, unknown> {
-  predicate: string;
-  confidence: string;
+  predicate: EdgePredicate;
+  confidence: ConfidenceTier;
   edgeId: string;
 }
 

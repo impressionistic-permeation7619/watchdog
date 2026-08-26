@@ -6,7 +6,11 @@ import {
   forceSimulation,
 } from "d3-force";
 
-import type { EntityKind } from "@watchdog/schemas";
+import type {
+  ConfidenceTier,
+  EdgePredicate,
+  EntityKind,
+} from "@watchdog/schemas";
 
 import { confidenceStroke } from "../../../../shared/ui/graph/graph-styles.ts";
 import type {
@@ -25,8 +29,8 @@ export interface CaseGraphEdgeInput {
   id: string;
   fromId: string;
   toId: string;
-  predicate: string;
-  confidence: string;
+  predicate: EdgePredicate;
+  confidence: ConfidenceTier;
 }
 
 export const CASE_GRAPH_ENTITY_CAP = 150;
