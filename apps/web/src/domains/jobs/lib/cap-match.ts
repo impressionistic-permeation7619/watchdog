@@ -205,7 +205,7 @@ export function matchCaps(
 ): CapListItem[] {
   const pasteKind = filters.paste?.kind;
   const compatible =
-    filters.paste && pasteKind !== undefined && pasteKind !== "unknown"
+    filters.paste && pasteKind !== "unknown"
       ? pasteCompatibleKinds(filters.paste)
       : null;
 

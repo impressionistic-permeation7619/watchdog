@@ -3,7 +3,7 @@ import type { PatchOp } from "@watchdog/schemas";
 
 import { DomainError } from "../../infra/domain-error";
 import { assertEntityInCase } from "./guards";
-import { requireString } from "./apply-patch-helpers";
+import { requireDomainString } from "./apply-patch-helpers";
 
 export async function applyEventOp(
   tx: DbTx,
@@ -13,10 +13,10 @@ export async function applyEventOp(
   if (op.op !== "create") {
     throw new DomainError("invalid", "event only supports create");
   }
-  const entityId = requireString(op.data, "entityId");
+  const entityId = requireDomainString(op.data, "entityId");
   await assertEntityInCase(caseId, entityId, tx);
-  const when = requireString(op.data, "when");
-  const what = requireString(op.data, "what");
+  const when = requireDomainString(op.data, "when");
+  const what = requireDomainString(op.data, "what");
   const whereText =
     typeof op.data.where === "string" ? op.data.where : null;
   await eventsRepo.create(tx, {

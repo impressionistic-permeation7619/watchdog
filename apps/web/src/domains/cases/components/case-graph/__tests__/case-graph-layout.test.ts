@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import { caseGraphLayout } from "../cases/components/case-graph/case-graph-layout.ts";
+import { caseGraphLayout } from "../case-graph-layout";
 
 describe("case-graph-layout", () => {
   it("caseGraphLayout emits one node per entity and one edge per relation", () => {

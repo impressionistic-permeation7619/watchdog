@@ -12,7 +12,7 @@ import {
 } from "@watchdog/schemas";
 
 import { DomainError } from "../../infra/domain-error";
-import { requireEnum, requireString } from "./apply-patch-helpers";
+import { requireDomainEnum, requireDomainString } from "./apply-patch-helpers";
 
 export async function applyEdgeOp(
   tx: DbTx,
@@ -24,10 +24,10 @@ export async function applyEdgeOp(
   if (op.op !== "create" && op.op !== "upsert") {
     throw new DomainError("invalid", "edge supports create/upsert");
   }
-  const fromId = requireString(op.data, "fromId");
-  const toId = requireString(op.data, "toId");
-  const predicate = requireEnum(
-    requireString(op.data, "predicate"),
+  const fromId = requireDomainString(op.data, "fromId");
+  const toId = requireDomainString(op.data, "toId");
+  const predicate = requireDomainEnum(
+    requireDomainString(op.data, "predicate"),
     EDGE_PREDICATES,
     "edge predicate"
   );

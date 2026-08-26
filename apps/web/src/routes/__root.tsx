@@ -6,10 +6,10 @@ import {
   createRootRouteWithContext,
 } from "@tanstack/react-router";
 
-import { Providers } from "#/shared/layout/providers";
-import { Button } from "#/shared/ui/shadcn/button";
-import { Toaster } from "#/shared/ui/shadcn/sonner";
-import { TooltipProvider } from "#/shared/ui/shadcn/tooltip";
+import { Providers } from "@/shared/layout/providers";
+import { Button } from "@/shared/ui/shadcn/button";
+import { Toaster } from "@/shared/ui/shadcn/sonner";
+import { TooltipProvider } from "@/shared/ui/shadcn/tooltip";
 
 import appCss from "../styles.css?url";
 

@@ -1,8 +1,8 @@
 import {
   checkPlaybookAvailability,
   formatPlanError,
-  getCapability,
-  getPlaybook,
+  requireCapability,
+  requirePlaybook,
   planPlaybook,
   playbookCapabilityIds,
   seedValuesToJson,
@@ -42,7 +42,7 @@ export async function runPlaybook(
   await assertCaseExists(input.caseId);
   let playbook;
   try {
-    playbook = getPlaybook(input.playbookId);
+    playbook = requirePlaybook(input.playbookId);
   } catch (error) {
     const msg = errorMessage(error);
     throw new DomainError("not_found", msg);
@@ -63,7 +63,7 @@ export async function runPlaybook(
 
   const descriptor = toPlaybookDescriptor(playbook);
   const thirdPartyCapabilityId = playbookCapabilityIds(playbook).find(
-    (id) => (getCapability(id).egress ?? "none") === "third_party"
+    (id) => (requireCapability(id).egress ?? "none") === "third_party"
   );
 
   const credNames = new Set<string>();

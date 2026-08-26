@@ -63,7 +63,7 @@ export function listPlaybookDescriptors(): PlaybookDescriptor[] {
   return PLAYBOOKS.map(toPlaybookDescriptor);
 }
 
-export function getPlaybook(id: string): PlaybookDef {
+export function requirePlaybook(id: string): PlaybookDef {
   const found = PLAYBOOKS.find((p) => p.id === id);
   if (!found) throw new Error(`Unknown playbook: ${id}`);
   return found;

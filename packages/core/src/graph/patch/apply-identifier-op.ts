@@ -14,7 +14,7 @@ import {
 
 import { DomainError } from "../../infra/domain-error";
 import { assertEntityInCase } from "./guards";
-import { requireEnum, requireString } from "./apply-patch-helpers";
+import { requireDomainEnum, requireDomainString } from "./apply-patch-helpers";
 
 export async function applyIdentifierOp(
   tx: DbTx,
@@ -26,16 +26,16 @@ export async function applyIdentifierOp(
   if (op.op !== "create" && op.op !== "upsert") {
     throw new DomainError("invalid", "identifier supports create/upsert");
   }
-  const entityId = requireString(op.data, "entityId");
+  const entityId = requireDomainString(op.data, "entityId");
   await assertEntityInCase(caseId, entityId, tx);
-  const type = requireEnum(
-    requireString(op.data, "type"),
+  const type = requireDomainEnum(
+    requireDomainString(op.data, "type"),
     IDENTIFIER_TYPES,
     "identifier type"
   );
   const written = validateIdentifierWrite({
     type,
-    value: requireString(op.data, "value"),
+    value: requireDomainString(op.data, "value"),
     platform:
       typeof op.data.platform === "string" ? op.data.platform : "",
   });
@@ -45,7 +45,7 @@ export async function applyIdentifierOp(
   const { value, platform } = written;
   const status =
     typeof op.data.status === "string"
-      ? requireEnum(
+      ? requireDomainEnum(
           op.data.status,
           IDENTIFIER_STATUSES,
           "identifier status"

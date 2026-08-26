@@ -1,4 +1,4 @@
-import { getCapability } from "@watchdog/caps";
+import { requireCapability } from "@watchdog/caps";
 import {
   db,
   jobsRepo,
@@ -111,7 +111,7 @@ export async function startJob(input: StartJobInput): Promise<JobRecord> {
   await assertCaseExists(input.caseId);
   let cap;
   try {
-    cap = getCapability(input.capabilityId);
+    cap = requireCapability(input.capabilityId);
   } catch (error) {
     const msg = errorMessage(error);
     throw new DomainError("not_found", msg);

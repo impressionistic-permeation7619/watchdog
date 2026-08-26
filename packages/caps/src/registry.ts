@@ -8,7 +8,7 @@ import {
 } from "@watchdog/cap-sdk";
 
 import { commoncrawlLookup } from "./archive/commoncrawl.lookup/cap";
-import { archiveUrlSubmit } from "./archive/url.submit/cap";
+import { urlSubmit } from "./archive/url.submit/cap";
 import { waybackFetch } from "./archive/wayback.fetch/cap";
 import { waybackLookup } from "./archive/wayback.lookup/cap";
 import { dehashedLookup } from "./breach/dehashed.lookup/cap";
@@ -16,9 +16,9 @@ import { hibpLookup } from "./breach/hibp.lookup/cap";
 import { hudsonrockLookup } from "./breach/hudsonrock.lookup/cap";
 import { snusbaseLookup } from "./breach/snusbase.lookup/cap";
 import { emlAnalyze } from "./evidence/eml.analyze/cap";
-import { evidenceExtractAi } from "./evidence/extract.ai/cap";
+import { extractAi } from "./evidence/extract.ai/cap";
 import { fileAnalyze } from "./evidence/file.analyze/cap";
-import { evidenceHarvest } from "./evidence/harvest/cap";
+import { harvest } from "./evidence/harvest/cap";
 import { emailLookup } from "./identity/email.lookup/cap";
 import { emailrepLookup } from "./identity/emailrep.lookup/cap";
 import { githubLookup } from "./identity/github.lookup/cap";
@@ -44,7 +44,7 @@ import { mnemonicLookup } from "./network/mnemonic.lookup/cap";
 import { shodanLookup } from "./network/shodan.lookup/cap";
 import { torExitLookup } from "./network/tor_exit.lookup/cap";
 import { trancoLookup } from "./network/tranco.lookup/cap";
-import { networkUrlEnrich } from "./network/url.enrich/cap";
+import { urlEnrich } from "./network/url.enrich/cap";
 import { urlscanLookup } from "./network/urlscan.lookup/cap";
 import { urlscanSubmit } from "./network/urlscan.submit/cap";
 import { whoisLookup } from "./network/whois.lookup/cap";
@@ -97,10 +97,10 @@ export const CAPABILITIES: CapabilityDef<z.ZodType>[] = [
   leakixLookup,
   torExitLookup,
   trancoLookup,
-  networkUrlEnrich,
+  urlEnrich,
   waybackLookup,
   waybackFetch,
-  archiveUrlSubmit,
+  urlSubmit,
   commoncrawlLookup,
   urlUnshorten,
   pageEnrich,
@@ -132,13 +132,13 @@ export const CAPABILITIES: CapabilityDef<z.ZodType>[] = [
   xforceLookup,
   greedybearLookup,
   honeydbLookup,
-  evidenceHarvest,
-  evidenceExtractAi,
+  harvest,
+  extractAi,
   fileAnalyze,
   emlAnalyze,
 ];
 
-export function getCapability(id: string) {
+export function requireCapability(id: string) {
   const found = CAPABILITIES.find((c) => c.id === id);
   if (!found) throw new Error(`Unknown Capability: ${id}`);
   return found;

@@ -8,7 +8,7 @@ import {
 
 import { DomainError } from "../../infra/domain-error";
 import { assertEntityInCase } from "./guards";
-import { requireEnum, requireString } from "./apply-patch-helpers";
+import { requireDomainEnum, requireDomainString } from "./apply-patch-helpers";
 
 export async function applyClaimOp(
   tx: DbTx,
@@ -20,12 +20,12 @@ export async function applyClaimOp(
   if (op.op !== "create") {
     throw new DomainError("invalid", "claim only supports create");
   }
-  const entityId = requireString(op.data, "entityId");
+  const entityId = requireDomainString(op.data, "entityId");
   await assertEntityInCase(caseId, entityId, tx);
-  const text = requireString(op.data, "text");
+  const text = requireDomainString(op.data, "text");
   const claimClass =
     typeof op.data.class === "string"
-      ? requireEnum(op.data.class, CLAIM_CLASSES, "claim class")
+      ? requireDomainEnum(op.data.class, CLAIM_CLASSES, "claim class")
       : ("observation" satisfies ClaimClass);
   if (!confidence) {
     throw new DomainError("invalid", "confidence required for claim");

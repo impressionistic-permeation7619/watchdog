@@ -14,14 +14,14 @@ export function asDomainInvalid<T>(fn: () => T): T {
   }
 }
 
-export function requireString(
+export function requireDomainString(
   data: Record<string, JsonValue>,
   key: string
 ): string {
   return asDomainInvalid(() => requireStringPolicy(data, key));
 }
 
-export function requireEnum<T extends string>(
+export function requireDomainEnum<T extends string>(
   value: string,
   allowed: readonly T[],
   label: string

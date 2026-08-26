@@ -1,5 +1,5 @@
 import { capTimeoutMs } from "@watchdog/cap-sdk";
-import { capTimeoutCeilingMs, getCapability } from "@watchdog/caps";
+import { capTimeoutCeilingMs, requireCapability } from "@watchdog/caps";
 
 /**
  * Headroom after a Cap's abort timer for post-run work (upload, landEvidence,
@@ -10,7 +10,7 @@ export const POST_RUN_SLACK_MS = 60_000;
 
 /** Per-job pg-boss `expireInSeconds` derived from that Cap's timeoutMs. */
 export function capExpireSeconds(capabilityId: string): number {
-  const cap = getCapability(capabilityId);
+  const cap = requireCapability(capabilityId);
   return Math.ceil((capTimeoutMs(cap) + POST_RUN_SLACK_MS) / 1000);
 }
 

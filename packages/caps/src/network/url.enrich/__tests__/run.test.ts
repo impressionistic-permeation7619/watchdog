@@ -4,7 +4,7 @@ import { ENRICHED_MD_ARTIFACT } from "@watchdog/schemas";
 import { createCapRunHarness, testId } from "@watchdog/test-kit";
 import { http, HttpResponse, mockServer } from "@watchdog/test-kit/http";
 
-import { networkUrlEnrich } from "../cap.ts";
+import { urlEnrich } from "../cap.ts";
 
 describe("network.url.enrich run", () => {
   beforeAll(() => {
@@ -29,7 +29,7 @@ describe("network.url.enrich run", () => {
       )
     );
     const harness = createCapRunHarness();
-    const result = await networkUrlEnrich.run({
+    const result = await urlEnrich.run({
       ...harness.ctx,
       input: { url: "https://mailhost.test/live", entityId: testId(20) },
     });

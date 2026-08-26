@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { getCapability } from "@watchdog/caps";
+import { requireCapability } from "@watchdog/caps";
 import { db, evidenceRepo, jobsRepo } from "@watchdog/db";
 import { resetTestDb, seedCase, seedJob } from "@watchdog/test-kit/db";
 
@@ -16,7 +16,7 @@ function sha(): string {
 async function stateFor(jobId: string): Promise<PreflightState> {
   const job = await jobsRepo.get(db, jobId);
   if (!job) throw new Error("job missing");
-  const cap = getCapability("network.dns.lookup");
+  const cap = requireCapability("network.dns.lookup");
   return {
     jobId,
     job,

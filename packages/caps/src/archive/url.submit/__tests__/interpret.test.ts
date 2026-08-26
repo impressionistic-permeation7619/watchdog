@@ -6,7 +6,7 @@ import {
   testId,
 } from "@watchdog/test-kit";
 
-import { archiveUrlSubmit } from "../cap.ts";
+import { urlSubmit } from "../cap.ts";
 import { interpretArchiveUrlSubmitReport } from "../interpret.ts";
 
 describe("interpret", () => {
@@ -43,7 +43,7 @@ describe("interpret", () => {
   });
 
   itRejectsIncompleteReport(
-    archiveUrlSubmit,
+    urlSubmit,
     { url: "https://example.com/" },
     { url: "https://example.com/" }
   );

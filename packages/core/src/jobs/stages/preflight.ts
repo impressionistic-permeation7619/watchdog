@@ -5,7 +5,7 @@ import type {
   CapJobPolicy,
   JsonObject,
 } from "@watchdog/cap-sdk";
-import { getCapability } from "@watchdog/caps";
+import { requireCapability } from "@watchdog/caps";
 import { db, jobsRepo, type JobArtifact, type JobRow } from "@watchdog/db";
 import { isJsonObject } from "@watchdog/schemas";
 
@@ -74,7 +74,7 @@ export async function preflight(jobId: string): Promise<PreflightResult> {
 
   let cap: CapabilityDef<z.ZodType>;
   try {
-    cap = getCapability(job.capabilityId);
+    cap = requireCapability(job.capabilityId);
   } catch (error) {
     const msg = errorMessage(error);
     await failJob(jobId, msg);

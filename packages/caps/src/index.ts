@@ -22,7 +22,7 @@ export {
 } from "@watchdog/cap-sdk";
 export {
   CAPABILITIES,
-  getCapability,
+  requireCapability,
   listCapabilities,
   capTimeoutCeilingMs,
 } from "./registry";
@@ -30,7 +30,7 @@ export {
   PLAYBOOKS,
   listPlaybooks,
   listPlaybookDescriptors,
-  getPlaybook,
+  requirePlaybook,
   planPlaybook,
   toPlaybookDescriptor,
   checkPlaybookAvailability,

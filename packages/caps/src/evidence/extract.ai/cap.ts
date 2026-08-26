@@ -115,7 +115,7 @@ async function resolveProvider(
   );
 }
 
-export const evidenceExtractAi = defineCapability({
+export const extractAi = defineCapability({
   id: EVIDENCE_EXTRACT_AI_CAPABILITY_ID,
   version: "1",
   title: "Extract Evidence (AI)",

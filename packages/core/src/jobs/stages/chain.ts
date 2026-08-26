@@ -1,6 +1,6 @@
 import {
   decidePlaybookAdvance,
-  getPlaybook,
+  requirePlaybook,
   normalizePlaybookStep,
   predecessorFromJob,
   seedValuesFromJson,
@@ -137,7 +137,7 @@ export async function advancePlaybookRun(input: {
       return { jobs: [] as ReleasedJob[], caseId: input.caseId };
     }
 
-    const playbook = getPlaybook(run.playbookId);
+    const playbook = requirePlaybook(run.playbookId);
     const seed = isJsonObject(run.seed) ? seedValuesFromJson(run.seed) : {};
     const jobs = await jobsRepo.listForPlaybookRun(tx, playbookRunId);
     const predecessors = jobs.map((row) => predecessorFromJob(row));

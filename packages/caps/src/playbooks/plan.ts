@@ -13,7 +13,7 @@ import {
   type PlaybookSeedKind,
 } from "@watchdog/schemas";
 
-import { CAPABILITIES, getCapability } from "../registry";
+import { CAPABILITIES, requireCapability } from "../registry";
 import {
   presentSeedKinds,
   seedKindToCapIo,
@@ -186,7 +186,7 @@ function parseCapInput(
   capabilityId: string,
   candidate: Record<string, unknown>
 ): JsonObject | PlanError {
-  const cap = getCapability(capabilityId);
+  const cap = requireCapability(capabilityId);
   const parsed = cap.input.safeParse(candidate);
   if (!parsed.success) {
     return {
@@ -270,7 +270,7 @@ export function planPlaybook(
 
   for (let i = 0; i < defs.length; i += 1) {
     const def = defs[i];
-    const cap = getCapability(def.capabilityId);
+    const cap = requireCapability(def.capabilityId);
     const consumes = cap.consumes ?? [];
     const deferInput = def.bind !== undefined || def.fanOut !== undefined;
     if (consumes.length > 0 && !deferInput) {
@@ -414,7 +414,7 @@ export function derivePlaybookRequires(
   let egress: CapEgress = "none";
 
   for (const id of playbookCapabilityIds(playbook)) {
-    const desc = toCapDescriptor(getCapability(id));
+    const desc = toCapDescriptor(requireCapability(id));
     if (desc.egress === "third_party") egress = "third_party";
     for (const f of desc.flags ?? []) flags.add(f);
     for (const c of desc.credentials ?? []) {

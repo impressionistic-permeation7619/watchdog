@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { getCapability } from "@watchdog/caps";
+import { requireCapability } from "@watchdog/caps";
 import { cancelJob } from "@watchdog/core";
 import { db, evidenceRepo, jobsRepo } from "@watchdog/db";
 import {
@@ -17,7 +17,7 @@ import type { PreflightState } from "../stages/preflight.ts";
 async function harvestState(jobId: string): Promise<PreflightState> {
   const job = await jobsRepo.get(db, jobId);
   if (!job) throw new Error("job missing");
-  const cap = getCapability("evidence.harvest");
+  const cap = requireCapability("evidence.harvest");
   return {
     jobId,
     job,

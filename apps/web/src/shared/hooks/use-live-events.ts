@@ -1,6 +1,10 @@
 import { useEffect, useEffectEvent } from "react";
 
-import { isWatchdogEvent, type WatchdogEvent } from "@watchdog/schemas";
+import {
+  isWatchdogEvent,
+  WATCHDOG_EVENT_TYPES,
+  type WatchdogEvent,
+} from "@watchdog/schemas";
 
 type EventHandler = (event: WatchdogEvent) => void;
 
@@ -44,29 +48,16 @@ export function useLiveEvents(
       }
     }
 
-    const onJobUpdate = (e: Event) => {
-      handleMessage(e, "job_update");
-    };
-    const onProposalCreated = (e: Event) => {
-      handleMessage(e, "proposal_created");
-    };
-    const onEntityChanged = (e: Event) => {
-      handleMessage(e, "entity_changed");
-    };
-    const onTaskChanged = (e: Event) => {
-      handleMessage(e, "task_changed");
-    };
-
-    es.addEventListener("job_update", onJobUpdate);
-    es.addEventListener("proposal_created", onProposalCreated);
-    es.addEventListener("entity_changed", onEntityChanged);
-    es.addEventListener("task_changed", onTaskChanged);
+    const listeners = WATCHDOG_EVENT_TYPES.map((type) => {
+      const listener = (event: Event) => handleMessage(event, type);
+      es.addEventListener(type, listener);
+      return { type, listener };
+    });
 
     return () => {
-      es.removeEventListener("job_update", onJobUpdate);
-      es.removeEventListener("proposal_created", onProposalCreated);
-      es.removeEventListener("entity_changed", onEntityChanged);
-      es.removeEventListener("task_changed", onTaskChanged);
+      for (const { type, listener } of listeners) {
+        es.removeEventListener(type, listener);
+      }
       es.close();
     };
   }, [caseId]);
