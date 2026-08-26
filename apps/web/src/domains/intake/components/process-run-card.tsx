@@ -83,7 +83,9 @@ export function ProcessRunCard({
             {orderJobArtifacts(job.output).map((art, i) => (
               <ArtifactContent
                 key={`${art.sha256}-${art.name}`}
-                uri={art.uri}
+                caseId={job.caseId}
+                jobId={job.id}
+                sha256={art.sha256}
                 mime={art.mime}
                 name={art.name}
                 defaultOpen={artifactDefaultOpen(art.name, i)}

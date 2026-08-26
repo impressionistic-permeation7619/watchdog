@@ -34,10 +34,12 @@ export function useEvidenceBlob(
   });
 
   const blobQuery = useQuery({
-    ...artifactContentQuery(
-      evidence?.uri ?? "",
-      evidence?.mime ?? "text/plain"
-    ),
+    ...artifactContentQuery({
+      source: "evidence",
+      caseId,
+      evidenceId: evidence?.id ?? "",
+      mime: evidence?.mime ?? "text/plain",
+    }),
     enabled: needsBlobText,
   });
 

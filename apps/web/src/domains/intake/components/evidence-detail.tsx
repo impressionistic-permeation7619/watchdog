@@ -68,9 +68,11 @@ export interface EvidenceDetailProps {
 }
 
 function EvidenceOutputTab({
+  caseId,
   enrichPending,
   enrichOutput,
 }: {
+  caseId: string;
   enrichPending: boolean;
   enrichOutput: ReturnType<typeof latestEnrichOutput>;
 }) {
@@ -93,7 +95,9 @@ function EvidenceOutputTab({
             : ` · fallback ${enrichOutput.artifact.name}`}
         </p>
         <ArtifactContent
-          uri={enrichOutput.artifact.uri}
+          caseId={caseId}
+          jobId={enrichOutput.job.id}
+          sha256={enrichOutput.artifact.sha256}
           mime={enrichOutput.artifact.mime}
           name={enrichOutput.artifact.name}
         />
@@ -397,6 +401,7 @@ export function EvidenceDetail({
           <TabsContent value="output" className="mt-0">
             <ActiveTabBody active={tab === "output"}>
               <EvidenceOutputTab
+                caseId={caseId}
                 enrichPending={enrichPending}
                 enrichOutput={enrichOutput}
               />

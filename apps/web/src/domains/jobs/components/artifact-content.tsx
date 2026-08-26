@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 
 import { artifactContentQuery } from "@/domains/jobs/queries";
+import type { GetArtifactContentInput } from "@/domains/jobs/types";
 import {
   ARTIFACT_LOADING,
   artifactBodyFromContent,
@@ -9,8 +10,7 @@ import {
 import { ArtifactPreview } from "@/shared/ui/artifact-preview";
 import { IdChip } from "@/shared/ui/id-chip";
 
-interface ArtifactContentProps {
-  uri: string;
+type ArtifactContentProps = {
   mime: string;
   name: string;
   /** When set, shows a sha256 IdChip in the artifact header. */
@@ -19,23 +19,43 @@ interface ArtifactContentProps {
   headerAction?: ReactNode;
   /** Forwarded to ArtifactPreview — start open or collapsed. */
   defaultOpen?: boolean;
-}
+} & (
+  | {
+      caseId: string;
+      jobId: string;
+      sha256: string;
+    }
+  | {
+      caseId: string;
+      evidenceId: string;
+    }
+);
 
 /**
  * Fetches artifact bytes via Query + `getArtifactContentFn`.
  * Shared by Jobs + Intake Detail.
  */
-export function ArtifactContent({
-  uri,
-  mime,
-  name,
-  sha256,
-  className,
-  headerAction,
-  defaultOpen,
-}: ArtifactContentProps) {
+export function ArtifactContent(props: ArtifactContentProps) {
+  const { mime, name, sha256, className, headerAction, defaultOpen } = props;
+
+  const contentInput: GetArtifactContentInput =
+    "jobId" in props
+      ? {
+          source: "job",
+          caseId: props.caseId,
+          jobId: props.jobId,
+          sha256: props.sha256,
+          mime,
+        }
+      : {
+          source: "evidence",
+          caseId: props.caseId,
+          evidenceId: props.evidenceId,
+          mime,
+        };
+
   const { data, isPending, isError } = useQuery(
-    artifactContentQuery(uri, mime)
+    artifactContentQuery(contentInput)
   );
 
   let content: string | null | typeof ARTIFACT_LOADING;

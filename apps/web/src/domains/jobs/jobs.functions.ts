@@ -9,6 +9,7 @@ import {
   startJobInputSchema,
   startPlaybookInputSchema,
   type CapListItem,
+  type GetArtifactContentInput,
   type PlaybookListItem,
 } from "@/domains/jobs/types";
 import { orpcFromContext } from "@/lib/orpc.server";
@@ -75,26 +76,69 @@ export const cancelPlaybookFn = createServerFn({ method: "POST" })
     orpcFromContext(context).jobs.cancelPlaybook(data)
   );
 
+function isTextMime(mime: string): boolean {
+  return (
+    mime.startsWith("text/") ||
+    mime.includes("json") ||
+    mime.includes("xml") ||
+    mime.includes("javascript")
+  );
+}
+
+function truncateArtifactText(text: string): string {
+  return text.length > 50_000 ? `${text.slice(0, 50_000)}\n…(truncated)` : text;
+}
+
+function caseScopedArtifactUri(caseId: string, uri: string): string | null {
+  const prefix = `${caseId}/`;
+  return uri.startsWith(prefix) ? uri : null;
+}
+
+async function resolveJobArtifactUri(
+  data: GetArtifactContentInput & { source: "job" },
+  context: { session: Parameters<typeof orpcFromContext>[0]["session"] }
+): Promise<string | null> {
+  const job = await orpcFromContext(context).jobs.get({
+    caseId: data.caseId,
+    jobId: data.jobId,
+  });
+  const artifact = job.output?.find((row) => row.sha256 === data.sha256);
+  if (artifact?.uri === undefined || artifact.uri === "") return null;
+  return caseScopedArtifactUri(data.caseId, artifact.uri);
+}
+
+async function fetchEvidenceBlobText(
+  data: GetArtifactContentInput & { source: "evidence" },
+  context: { session: Parameters<typeof orpcFromContext>[0]["session"] }
+): Promise<string | null> {
+  const { url } = await orpcFromContext(context).evidence.downloadUrl({
+    caseId: data.caseId,
+    evidenceId: data.evidenceId,
+  });
+  if (url === null || url === "") return null;
+
+  const res = await fetch(url);
+  if (!res.ok) return null;
+  const bytes = new Uint8Array(await res.arrayBuffer());
+  return truncateArtifactText(new TextDecoder().decode(bytes));
+}
+
 /**
  * Fetch artifact content from MinIO for display in the job Detail.
  * Returns text content for JSON/text artifacts, null for binary.
  */
 export const getArtifactContentFn = createServerFn({ method: "POST" })
   .validator(getArtifactContentInputSchema)
-  .handler(async ({ data }): Promise<{ text: string | null }> => {
-    const isText =
-      data.mime.startsWith("text/") ||
-      data.mime.includes("json") ||
-      data.mime.includes("xml") ||
-      data.mime.includes("javascript");
+  .handler(async ({ data, context }): Promise<{ text: string | null }> => {
+    if (!isTextMime(data.mime)) return { text: null };
 
-    if (!isText) return { text: null };
+    if (data.source === "evidence") {
+      return { text: await fetchEvidenceBlobText(data, context) };
+    }
 
-    const bytes = await readArtifactBytes(data.uri);
-    const text = new TextDecoder().decode(bytes);
-    // Truncate very large artifacts
-    return {
-      text:
-        text.length > 50_000 ? `${text.slice(0, 50_000)}\n…(truncated)` : text,
-    };
+    const uri = await resolveJobArtifactUri(data, context);
+    if (uri === null) return { text: null };
+
+    const bytes = await readArtifactBytes(uri);
+    return { text: truncateArtifactText(new TextDecoder().decode(bytes)) };
   });

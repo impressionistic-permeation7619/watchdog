@@ -7,6 +7,7 @@ import {
   listJobsFn,
   listPlaybooksFn,
 } from "@/domains/jobs/jobs.functions";
+import type { GetArtifactContentInput } from "@/domains/jobs/types";
 import {
   GC_DEFAULT,
   GC_REALTIME,
@@ -20,7 +21,14 @@ export const jobsKeys = {
   all: (caseId: string) => ["jobs", caseId] as const,
   detail: (caseId: string, jobId: string) =>
     ["jobs", caseId, "detail", jobId] as const,
-  artifact: (uri: string, mime: string) => ["artifact", uri, mime] as const,
+  jobArtifact: (
+    caseId: string,
+    jobId: string,
+    sha256: string,
+    mime: string
+  ) => ["artifact", "job", caseId, jobId, sha256, mime] as const,
+  evidenceArtifact: (caseId: string, evidenceId: string, mime: string) =>
+    ["artifact", "evidence", caseId, evidenceId, mime] as const,
 };
 
 const capabilitiesKeys = {
@@ -63,12 +71,32 @@ export const playbooksListQuery = () =>
     gcTime: GC_STABLE,
   });
 
-export const artifactContentQuery = (uri: string, mime: string) =>
-  queryOptions({
-    queryKey: jobsKeys.artifact(uri, mime),
-    queryFn: async () => getArtifactContentFn({ data: { uri, mime } }),
+export function artifactContentQuery(input: GetArtifactContentInput) {
+  const queryKey =
+    input.source === "job"
+      ? jobsKeys.jobArtifact(
+          input.caseId,
+          input.jobId,
+          input.sha256,
+          input.mime
+        )
+      : jobsKeys.evidenceArtifact(
+          input.caseId,
+          input.evidenceId,
+          input.mime
+        );
+
+  const enabled =
+    input.source === "job"
+      ? input.sha256.length > 0
+      : input.evidenceId.length > 0;
+
+  return queryOptions({
+    queryKey,
+    queryFn: async () => getArtifactContentFn({ data: input }),
     staleTime: STALE_DEFAULT,
     gcTime: GC_DEFAULT,
-    enabled: uri.length > 0,
+    enabled,
     meta: { silentError: true },
   });
+}

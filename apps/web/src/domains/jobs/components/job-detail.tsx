@@ -171,9 +171,13 @@ function JobInputTabBody({ input }: { input: JobRecord["input"] }) {
 }
 
 function JobOutputTabBody({
+  caseId,
+  jobId,
   orderedOutput,
   live,
 }: {
+  caseId: string;
+  jobId: string;
   orderedOutput: NonNullable<JobRecord["output"]>;
   live: boolean;
 }) {
@@ -197,10 +201,11 @@ function JobOutputTabBody({
       {orderedOutput.map((art, i) => (
         <ArtifactContent
           key={`${art.sha256}-${art.name}`}
-          uri={art.uri}
+          caseId={caseId}
+          jobId={jobId}
+          sha256={art.sha256}
           mime={art.mime}
           name={art.name}
-          sha256={art.sha256}
           defaultOpen={artifactDefaultOpen(art.name, i)}
         />
       ))}
@@ -515,6 +520,8 @@ export function JobDetail({
             <TabsContent value="output" className="mt-0">
               <ActiveTabBody active={tab === "output"}>
                 <JobOutputTabBody
+                  caseId={job.caseId}
+                  jobId={job.id}
                   orderedOutput={orderedOutput}
                   live={view.live}
                 />
