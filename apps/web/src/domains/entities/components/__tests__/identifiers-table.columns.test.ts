@@ -1,0 +1,53 @@
+import type { Row } from "@tanstack/react-table";
+import { describe, expect, it, vi } from "vitest";
+import { testId } from "@watchdog/test-kit";
+
+import {
+  createIdentifiersTableColumns,
+  identifiersGlobalFilterFn,
+} from "@/domains/entities/components/identifiers-table.columns";
+import type { CaseIdentifierRecord } from "@/domains/entities/identifiers/types";
+
+const ROW: CaseIdentifierRecord = {
+  id: testId(1),
+  entityId: testId(20),
+  entityName: "Alpha Entity",
+  entitySlug: "alpha",
+  entityKind: "person",
+  type: "email",
+  platform: "",
+  value: "user@example.com",
+  confidence: "possible",
+  status: "current",
+  notes: "work email",
+  evidenceIds: [],
+};
+
+function asRow(record: CaseIdentifierRecord): Row<CaseIdentifierRecord> {
+  return { original: record } as Row<CaseIdentifierRecord>;
+}
+
+describe("identifiers-table.columns", () => {
+  it("filters rows by value entity labels and metadata", () => {
+    expect(
+      identifiersGlobalFilterFn(asRow(ROW), "value", "user@example.com", () => {})
+    ).toBe(true);
+    expect(
+      identifiersGlobalFilterFn(asRow(ROW), "value", "work email", () => {})
+    ).toBe(true);
+    expect(
+      identifiersGlobalFilterFn(asRow(ROW), "value", "missing", () => {})
+    ).toBe(false);
+  });
+
+  it("builds expected identifier table columns", () => {
+    const columns = createIdentifiersTableColumns({
+      evidenceOptions: [],
+      updateField: vi.fn(),
+      saveEvidence: vi.fn(),
+    });
+
+    expect(columns).toHaveLength(8);
+    expect(columns.some((column) => column.id === "evidence")).toBe(true);
+  });
+});
