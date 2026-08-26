@@ -5,7 +5,7 @@ import { type ChangeEvent, useRef, useState } from "react"
 import { toast } from "sonner"
 
 import { UserAvatar } from "@/auth/ui/user/user-avatar"
-import { cn } from "@/lib/utils"
+import { cn, errMessage } from "@/lib/utils"
 import { Button } from "@/shared/ui/shadcn/button"
 import { Field } from "@/shared/ui/shadcn/field"
 import { Label } from "@/shared/ui/shadcn/label"
@@ -51,9 +51,7 @@ export function ChangeAvatar({ className }: ChangeAvatarProps) {
         }
       )
     } catch (error) {
-      if (error instanceof Error) {
-        toast.error(error.message)
-      }
+      toast.error(errMessage(error, "Avatar upload failed"))
     }
 
     setIsUploading(false)

@@ -15,6 +15,7 @@ import {
 
 import { assertCaseExists, assertEntityInCase } from "../graph/guards";
 import { DomainError, errorMessage } from "../infra/domain-error";
+import { logProcess } from "../infra/process-log";
 import { enqueueCapJob } from "./boss";
 import { assertCapAvailability } from "./cap-availability";
 import { setJobStatus } from "./set-job-status";
@@ -177,7 +178,8 @@ export async function getJobForCase(
 
 export async function cancelJob(
   caseId: string,
-  jobId: string
+  jobId: string,
+  opts?: { actorId?: string }
 ): Promise<JobRecord> {
   const row = await jobsRepo.getInCase(db, caseId, jobId);
   if (!row) throw new DomainError("not_found", "Job not found");
@@ -192,6 +194,13 @@ export async function cancelJob(
     finishedAt: new Date(),
   });
   if (!updated) throw new Error("Cancel failed");
+  if (opts?.actorId) {
+    logProcess("job.cancel", "Job cancelled", {
+      caseId,
+      jobId,
+      actorId: opts.actorId,
+    });
+  }
   return toJobRecord(updated, row.playbookId, row.playbookRunStatus);
 }
 

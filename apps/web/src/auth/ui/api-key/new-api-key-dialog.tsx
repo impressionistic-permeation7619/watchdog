@@ -6,6 +6,8 @@ import { Check, Copy, Key } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
 
+import { errMessage } from "@/lib/utils"
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -49,7 +51,7 @@ export function NewApiKeyDialog({
       setCopied(true)
       setTimeout(() => setCopied(false), 1500)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : String(error))
+      toast.error(errMessage(error, "Copy failed"))
     }
   }
 

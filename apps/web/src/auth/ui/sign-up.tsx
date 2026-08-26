@@ -25,7 +25,7 @@ import {
 } from "@/shared/ui/shadcn/input-group"
 import { Label } from "@/shared/ui/shadcn/label"
 import { Spinner } from "@/shared/ui/shadcn/spinner"
-import { cn } from "@/lib/utils"
+import { cn, errMessage } from "@/lib/utils"
 import { AdditionalField } from "./additional-field"
 import { ProviderButtons, type SocialLayout } from "./provider-buttons"
 
@@ -145,7 +145,7 @@ export function SignUp({
         try {
           await field.validate(value)
         } catch (error) {
-          toast.error(error instanceof Error ? error.message : String(error))
+          toast.error(errMessage(error, "Validation failed"))
           return
         }
       }

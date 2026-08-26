@@ -86,7 +86,9 @@ export const cancel = authed
   )
   .output(jobSchema)
   .handler(
-    withDomainError(async ({ input }) => cancelJob(input.caseId, input.jobId))
+    withDomainError(async ({ input, context }) =>
+      cancelJob(input.caseId, input.jobId, { actorId: context.actor.userId })
+    )
   );
 
 export const startPlaybook = authed
@@ -151,7 +153,9 @@ export const cancelPlaybook = authed
     })
   )
   .handler(
-    withDomainError(async ({ input }) =>
-      cancelPlaybookRun(input.caseId, input.playbookRunId)
+    withDomainError(async ({ input, context }) =>
+      cancelPlaybookRun(input.caseId, input.playbookRunId, {
+        actorId: context.actor.userId,
+      })
     )
   );

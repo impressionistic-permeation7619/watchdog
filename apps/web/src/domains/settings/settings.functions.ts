@@ -1,10 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 
-import {
-  listCredentialSlots,
-  removeCredentialSlot,
-  upsertCredentialSlot,
-} from "@/domains/settings/settings.server";
+import { orpcFromContext } from "@/lib/orpc.server";
 import {
   deleteCredentialInputSchema,
   putCredentialInputSchema,
@@ -15,22 +11,23 @@ export { type CredentialSlot } from "@/domains/settings/types";
 
 export const listCredentialsFn = createServerFn({ method: "GET" }).handler(
   async ({ context }): Promise<CredentialSlot[]> =>
-    listCredentialSlots(context.session.user.id)
+    orpcFromContext(context).credentials.list()
 );
 
 export const putCredentialFn = createServerFn({ method: "POST" })
   .validator(putCredentialInputSchema)
   .handler(
     async ({ data, context }): Promise<CredentialSlot> =>
-      upsertCredentialSlot({
-        userId: context.session.user.id,
-        ...data,
+      orpcFromContext(context).credentials.put({
+        name: data.name,
+        secret: data.secret,
+        label: data.label,
       })
   );
 
 export const deleteCredentialFn = createServerFn({ method: "POST" })
   .validator(deleteCredentialInputSchema)
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
-    await removeCredentialSlot(context.session.user.id, data.name);
+    await orpcFromContext(context).credentials.delete({ name: data.name });
     return { ok: true };
   });

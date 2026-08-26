@@ -17,6 +17,7 @@ import {
   assertEvidenceInCase,
 } from "../graph/guards";
 import { DomainError, errorMessage } from "../infra/domain-error";
+import { logProcess } from "../infra/process-log";
 import { hasCredential } from "../infra/vault";
 import { enqueueCapJob } from "./boss";
 import { toJobRecord, type JobRecord } from "./start-job";
@@ -152,11 +153,12 @@ export async function runPlaybook(
 
 export async function cancelPlaybookRun(
   caseId: string,
-  playbookRunId: string
+  playbookRunId: string,
+  opts?: { actorId?: string }
 ): Promise<{ playbookRunId: string; cancelledJobIds: string[] }> {
   await assertCaseExists(caseId);
   const now = new Date();
-  return db.transaction(async (tx) => {
+  const result = await db.transaction(async (tx) => {
     const run = await playbookRunsRepo.lock(tx, playbookRunId);
     if (!run || run.caseId !== caseId) {
       throw new DomainError("not_found", "Playbook run not found");
@@ -185,4 +187,13 @@ export async function cancelPlaybookRun(
     );
     return { playbookRunId, cancelledJobIds };
   });
+  if (opts?.actorId) {
+    logProcess("playbook.cancel", "Playbook run cancelled", {
+      caseId,
+      playbookRunId,
+      actorId: opts.actorId,
+      cancelledJobCount: result.cancelledJobIds.length,
+    });
+  }
+  return result;
 }

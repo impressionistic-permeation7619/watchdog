@@ -13,6 +13,7 @@ import {
 import { type SyntheticEvent, useState } from "react"
 import { toast } from "sonner"
 
+import { errMessage } from "@/lib/utils"
 import { Button } from "@/shared/ui/shadcn/button"
 import { Field, FieldError } from "@/shared/ui/shadcn/field"
 import { FormSection } from "@/shared/ui/form-section"
@@ -64,7 +65,7 @@ export function UserProfile({ className }: UserProfileProps) {
         try {
           await field.validate(value)
         } catch (error) {
-          toast.error(error instanceof Error ? error.message : String(error))
+          toast.error(errMessage(error, "Validation failed"))
           return
         }
       }

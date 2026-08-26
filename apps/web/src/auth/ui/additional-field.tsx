@@ -10,6 +10,7 @@ import { CalendarIcon, Check, ChevronDownIcon, Copy } from "lucide-react"
 import { type ComponentType, useRef, useState } from "react"
 import { toast } from "sonner"
 
+import { errMessage } from "@/lib/utils"
 import { buttonVariants } from "@/shared/ui/shadcn/button"
 import { Calendar } from "@/shared/ui/shadcn/calendar"
 import { Checkbox } from "@/shared/ui/shadcn/checkbox"
@@ -98,7 +99,7 @@ function CopyButton({
       setCopied(true)
       setTimeout(() => setCopied(false), 1500)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : String(error))
+      toast.error(errMessage(error, "Copy failed"))
     }
   }
 

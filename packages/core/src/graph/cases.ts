@@ -9,7 +9,7 @@ import {
   renameCaseExportDir,
   scheduleCaseExport,
 } from "../infra/export-sync";
-import { logSwallowed } from "../infra/process-log";
+import { logProcess, logSwallowed } from "../infra/process-log";
 
 const SLUG_UNIQUE_INDEX = "cases_slug_unique";
 
@@ -154,12 +154,21 @@ export async function updateCase(input: {
   }
 }
 
-export async function deleteCase(id: string): Promise<void> {
+export async function deleteCase(
+  id: string,
+  opts?: { actorId?: string }
+): Promise<void> {
   const existing = await casesRepo.getById(db, id);
   if (!existing) throw new DomainError("not_found", "Case not found");
 
   const deleted = await casesRepo.delete(db, id);
   if (!deleted) throw new DomainError("invalid", "Failed to delete Case");
+  if (opts?.actorId) {
+    logProcess("case.delete", "Case deleted", {
+      caseId: id,
+      actorId: opts.actorId,
+    });
+  }
   notifyEntityChanged(id);
 
   try {

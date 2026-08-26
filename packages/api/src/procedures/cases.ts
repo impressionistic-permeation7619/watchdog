@@ -91,8 +91,8 @@ export const remove = authed
   .input(z.object({ caseId: z.uuid() }))
   .output(z.object({ ok: z.literal(true) }))
   .handler(
-    withDomainError(async ({ input }) => {
-      await deleteCase(input.caseId);
+    withDomainError(async ({ input, context }) => {
+      await deleteCase(input.caseId, { actorId: context.actor.userId });
       return { ok: true as const };
     })
   );
