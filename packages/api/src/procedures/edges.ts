@@ -116,9 +116,10 @@ export const remove = graphChildWrite
       userOverride: userOverrideSchema,
     })
   )
-  .output(z.void())
+  .output(z.object({ ok: z.literal(true) }))
   .handler(
-    withDomainError(async ({ input }) =>
-      deleteEdge(input.caseId, input.edgeId)
-    )
+    withDomainError(async ({ input }) => {
+      await deleteEdge(input.caseId, input.edgeId);
+      return { ok: true as const };
+    })
   );
