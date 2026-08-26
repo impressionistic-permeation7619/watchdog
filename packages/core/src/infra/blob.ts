@@ -13,6 +13,8 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { env } from "@watchdog/env/server";
 import { MAX_UPLOAD_BYTES, sha256HexSchema } from "@watchdog/schemas";
 
+import { DomainError } from "./domain-error";
+
 export { MAX_UPLOAD_BYTES } from "@watchdog/schemas";
 
 const PRESIGN_EXPIRES_IN = 900;
@@ -122,10 +124,13 @@ export async function createPresignedPut(input: {
   const sha256 = assertSha256Hex(input.sha256);
   const mime = input.mime.trim() || "application/octet-stream";
   if (!Number.isInteger(input.byteLength) || input.byteLength < 1) {
-    throw new Error("byteLength must be a positive integer");
+    throw new DomainError("invalid", "byteLength must be a positive integer");
   }
   if (input.byteLength > MAX_UPLOAD_BYTES) {
-    throw new Error(`File exceeds ${MAX_UPLOAD_BYTES} byte limit`);
+    throw new DomainError(
+      "invalid",
+      `File exceeds ${MAX_UPLOAD_BYTES} byte limit`
+    );
   }
 
   const cfg = s3Config();
@@ -170,10 +175,10 @@ export async function assertUploadedObject(input: {
 
   const metaSha = head.Metadata?.sha256?.toLowerCase();
   if (metaSha !== sha256) {
-    throw new Error("Uploaded object sha256 metadata mismatch");
+    throw new DomainError("invalid", "Uploaded object sha256 metadata mismatch");
   }
   if (head.ContentLength !== input.byteLength) {
-    throw new Error("Uploaded object size mismatch");
+    throw new DomainError("invalid", "Uploaded object size mismatch");
   }
   const contentType = head.ContentType?.split(";")[0]?.trim().toLowerCase();
   const expected = input.mime.split(";")[0]?.trim().toLowerCase();
@@ -184,7 +189,7 @@ export async function assertUploadedObject(input: {
     expected !== "" &&
     contentType !== expected
   ) {
-    throw new Error("Uploaded object Content-Type mismatch");
+    throw new DomainError("invalid", "Uploaded object Content-Type mismatch");
   }
 }
 

@@ -152,7 +152,7 @@ export async function dumpPaste(
     sourceUrl: input.sourceUrl ?? null,
     actorId: input.actorId,
   });
-  if (!row) throw new Error("Failed to create Evidence");
+  if (!row) throw new DomainError("invalid", "Failed to create Evidence");
   return toRecord(row);
 }
 
@@ -171,7 +171,7 @@ export async function dumpUrl(input: DumpUrlInput): Promise<EvidenceRecord> {
     text: input.sourceUrl,
     actorId: input.actorId,
   });
-  if (!row) throw new Error("Failed to create Evidence");
+  if (!row) throw new DomainError("invalid", "Failed to create Evidence");
   return toRecord(row);
 }
 
@@ -251,7 +251,7 @@ export async function confirmFileUpload(
     sha256: input.sha256,
     actorId,
   });
-  if (!row) throw new Error("Failed to create Evidence");
+  if (!row) throw new DomainError("invalid", "Failed to create Evidence");
   return toRecord(row);
 }
 

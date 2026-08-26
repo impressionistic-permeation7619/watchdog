@@ -68,10 +68,18 @@ async function applyOp(
 }
 
 export async function applyPatch(opts: ApplyPatchOpts): Promise<void> {
-  assertPatchGates(opts.patch, {
-    confidence: opts.confidence,
-    sharedEvidenceIds: opts.sharedEvidenceIds,
-  });
+  try {
+    assertPatchGates(opts.patch, {
+      confidence: opts.confidence,
+      sharedEvidenceIds: opts.sharedEvidenceIds,
+    });
+  } catch (error) {
+    if (error instanceof DomainError) throw error;
+    throw new DomainError(
+      "invalid",
+      error instanceof Error ? error.message : "Patch gate rejected"
+    );
+  }
 
   const run = async (tx: DbTx) => {
     for (const op of opts.patch) {
