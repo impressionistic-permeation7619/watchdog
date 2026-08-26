@@ -4,6 +4,8 @@ packages:
 
 overrides:
   zod: "^4.4.3"
+  better-auth: "1.6.25"
+  "@better-auth/core": "1.6.25"
 
 allowBuilds:
   esbuild: true

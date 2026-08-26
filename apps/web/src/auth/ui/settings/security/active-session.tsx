@@ -7,29 +7,7 @@ import { toast } from "sonner"
 import { Button } from "@/shared/ui/shadcn/button"
 import { Card, CardContent } from "@/shared/ui/shadcn/card"
 import { Spinner } from "@/shared/ui/shadcn/spinner"
-
-function timeAgo(date: Date) {
-  const seconds = Math.floor((Date.now() - date.getTime()) / 1000)
-  const rtf = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" })
-
-  const UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
-    ["year", 31536000],
-    ["month", 2592000],
-    ["week", 604800],
-    ["day", 86400],
-    ["hour", 3600],
-    ["minute", 60],
-    ["second", 1]
-  ]
-
-  for (const [unit, threshold] of UNITS) {
-    if (seconds >= threshold) {
-      return rtf.format(-Math.floor(seconds / threshold), unit)
-    }
-  }
-
-  return rtf.format(0, "second")
-}
+import { formatRelativeTime } from "@/shared/ui/relative-time"
 
 export type ActiveSessionProps = {
   activeSession: Session
@@ -84,7 +62,7 @@ export function ActiveSession({ activeSession }: ActiveSessionProps) {
           ) : (
             activeSession.createdAt && (
               <span className="text-xs text-muted-foreground capitalize">
-                {timeAgo(activeSession.createdAt)}
+                {formatRelativeTime(activeSession.createdAt)}
               </span>
             )
           )}

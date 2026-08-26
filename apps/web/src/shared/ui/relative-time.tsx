@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import { Timestamp } from "@/shared/ui/timestamp";
 
-function formatRelativeTime(input: Date | string): string {
+export function formatRelativeTime(input: Date | string): string {
   const d = typeof input === "string" ? new Date(input) : input;
   if (Number.isNaN(d.getTime())) return "—";
 
