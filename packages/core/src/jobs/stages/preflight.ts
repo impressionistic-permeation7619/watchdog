@@ -1,11 +1,11 @@
 import type { z } from "zod";
 
-import {
-  getCapability,
-  type CapabilityDef,
-  type CapJobPolicy,
-  type JsonObject,
-} from "@watchdog/caps";
+import type {
+  CapabilityDef,
+  CapJobPolicy,
+  JsonObject,
+} from "@watchdog/cap-sdk";
+import { getCapability } from "@watchdog/caps";
 import { db, jobsRepo, type JobArtifact, type JobRow } from "@watchdog/db";
 import { isJsonObject } from "@watchdog/schemas";
 

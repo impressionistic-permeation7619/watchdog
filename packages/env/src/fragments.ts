@@ -1,5 +1,9 @@
 import { z } from "zod";
 
+import { loadRepoEnv } from "./load";
+
+loadRepoEnv();
+
 const DEFAULT_AUTH_URL = "http://127.0.0.1:3000";
 const DEFAULT_API_URL = "http://localhost:3000/api/v1";
 

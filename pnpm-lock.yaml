@@ -484,6 +484,9 @@ importers:
       '@aws-sdk/s3-request-presigner':
         specifier: ^3.1092.0
         version: 3.1092.0
+      '@watchdog/cap-sdk':
+        specifier: workspace:*
+        version: link:../cap-sdk
       '@watchdog/caps':
         specifier: workspace:*
         version: link:../caps

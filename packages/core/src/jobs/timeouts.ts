@@ -1,8 +1,5 @@
-import {
-  capTimeoutCeilingMs,
-  capTimeoutMs,
-  getCapability,
-} from "@watchdog/caps";
+import { capTimeoutMs } from "@watchdog/cap-sdk";
+import { capTimeoutCeilingMs, getCapability } from "@watchdog/caps";
 
 /**
  * Headroom after a Cap's abort timer for post-run work (upload, landEvidence,

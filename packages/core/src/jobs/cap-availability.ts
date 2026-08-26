@@ -1,11 +1,11 @@
 import type { z } from "zod";
 
+import type { CapabilityDef } from "@watchdog/cap-sdk";
 import {
   checkCapabilityAvailability,
   toCapDescriptor,
   type AvailabilityError,
   type AvailabilityResult,
-  type CapabilityDef,
 } from "@watchdog/caps";
 import { casesRepo, db } from "@watchdog/db";
 

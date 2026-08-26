@@ -2,7 +2,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
-import { capTimeoutMs, type CapContext } from "@watchdog/caps";
+import { capTimeoutMs, type CapContext } from "@watchdog/cap-sdk";
 import { db, jobsRepo, type JobArtifact } from "@watchdog/db";
 import type { EvidenceSnapshot } from "@watchdog/schemas";
 
