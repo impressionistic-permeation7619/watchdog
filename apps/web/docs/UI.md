@@ -5,6 +5,8 @@
 
 Code SoT: `src/styles.css` + `src/shared/ui/` (hand-owned) + `src/shared/ui/shadcn/` (registry). Style guide / library: **`/ui`** (Foundations · Atoms) — not Storybook.
 
+`src/auth/ui/` is vendored [Better Auth UI](https://better-auth-ui.com/) held at upstream style — excluded from oxlint/oxfmt/desloppify like `shared/ui/shadcn/`; patch minimally and prefer shared `@/lib/utils` helpers when touching error handling.
+
 ## Delivery
 
 Greenfield Foundations/atoms on `/ui` **before** inventing chrome inside live product pages. `shared/ui` = presentational only (**no I/O**). Domains wire data via hooks/serverFns. Extract named generics at the **second** call site.
