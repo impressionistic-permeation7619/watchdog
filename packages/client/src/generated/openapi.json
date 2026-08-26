@@ -3802,13 +3802,14 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "anyOf": [
-                    {
-                      "not": {}
-                    },
-                    {
-                      "not": {}
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "const": true
                     }
+                  },
+                  "required": [
+                    "ok"
                   ]
                 }
               }
