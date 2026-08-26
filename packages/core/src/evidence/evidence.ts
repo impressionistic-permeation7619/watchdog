@@ -8,7 +8,7 @@ import {
 import type { EvidenceKind } from "@watchdog/schemas";
 import { normalizeIdList, trimmedOrUndefined } from "@watchdog/schemas";
 
-import { assertCaseExists, assertEntityInCase } from "../graph/guards";
+import { assertCaseExists, assertEntityInCase } from "../graph/patch/guards";
 import {
   assertUploadedObject,
   createPresignedGet,

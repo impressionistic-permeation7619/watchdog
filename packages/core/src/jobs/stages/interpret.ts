@@ -1,7 +1,7 @@
 import type { JobArtifact, JobHandoff } from "@watchdog/db";
 import type { PatchOp } from "@watchdog/schemas";
 
-import { tryParsePatch } from "../../graph/patch";
+import { tryParsePatch } from "../../graph/patch/patch";
 import { readArtifactBytes } from "../../infra/blob";
 import { errorMessage } from "../../infra/domain-error";
 import { loadCapReport } from "../load-cap-report";

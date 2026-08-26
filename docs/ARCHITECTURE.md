@@ -19,7 +19,7 @@
 | `@watchdog/cap-sdk` | schemas | db, caps, core, api, apps, tools |
 | `@watchdog/tools` | schemas (only if needed; prefer zero) | db, caps, core, ai, cap-sdk, api, apps |
 | `@watchdog/caps` | schemas, ai, **cap-sdk**, **tools** | **db**, core, api, apps |
-| `@watchdog/core` | db (**repos only** — no `drizzle-orm`), caps, schemas, **policy**, **env**, **log** | api, apps — layout: `jobs/` (`run-job.ts`, `run-paths.ts`, `stages/`) · `graph/` (`apply-patch.ts` + `apply-*-op.ts`, `edge-update.ts`) · `evidence/` · `infra/` |
+| `@watchdog/core` | db (**repos only** — no `drizzle-orm`), caps, cap-sdk, schemas, **policy**, **env**, **log** | api, apps — layout: `jobs/` · `cases/` · `proposals/` (Inbox accept/reject) · `graph/` (entity services + `graph/patch/` apply pipeline) · `tasks/` · `search/` · `activity/` · `evidence/` · `infra/`; worker imports `@watchdog/core/worker` |
 | `@watchdog/log` | (nothing in-workspace; pin `evlog`) | apps, cli, client, core, api, db, caps, … |
 | `@watchdog/api` | core (+ schemas), **caps** (catalog descriptors only), **log** (`ApiContext.log?`) | apps, **db**, drizzle-orm |
 | `@watchdog/client` | api (**types only** at import) + minified contract JSON | apps, db, caps, core, **log** |

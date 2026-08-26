@@ -19,7 +19,7 @@ import {
 import { assertEvidenceInCase } from "../evidence/evidence";
 import { DomainError, isUniqueViolation } from "../infra/domain-error";
 import { notifyEntityChanged } from "../infra/events";
-import { assertCaseExists, assertConfidenceEvidence, assertEntityInCase } from "./guards";
+import { assertCaseExists, assertConfidenceEvidence, assertEntityInCase } from "./patch/guards";
 
 const NATURAL_KEY_INDEX = "identifiers_natural_uidx";
 const DUPLICATE_MESSAGE = "That Identifier already exists on this Entity";

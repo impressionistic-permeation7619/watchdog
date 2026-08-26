@@ -11,7 +11,7 @@ import {
 } from "@watchdog/schemas";
 
 import { DomainError } from "../infra/domain-error";
-import { assertConfidenceEvidence, assertEntityInCase } from "./guards";
+import { assertConfidenceEvidence, assertEntityInCase } from "./patch/guards";
 import type { UpdateEdgeInput } from "./edges";
 
 export interface ValidatedEdgeUpdate {

@@ -13,7 +13,7 @@ import {
   type PlaybookRunStatus,
 } from "@watchdog/schemas";
 
-import { assertCaseExists, assertEntityInCase } from "../graph/guards";
+import { assertCaseExists, assertEntityInCase } from "../graph/patch/guards";
 import { DomainError, errorMessage } from "../infra/domain-error";
 import { logProcess } from "../infra/process-log";
 import { enqueueCapJob } from "./boss";

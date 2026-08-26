@@ -14,12 +14,12 @@ import { trimmedOrNull } from "@watchdog/schemas";
 import { assertEvidenceInCase, createAttestation } from "../evidence/evidence";
 import { DomainError } from "../infra/domain-error";
 import { notifyEntityChanged } from "../infra/events";
-import { applyPatch } from "./apply-patch";
+import { applyPatch } from "../graph/patch/apply-patch";
 import { recordRejectedFingerprints } from "./finding-suppress";
 import {
   loadIdentifierCollisions,
   type IdentifierCollision,
-} from "./identifier-collisions";
+} from "../graph/identifier-collisions";
 
 export interface ProposalRecord {
   id: string;

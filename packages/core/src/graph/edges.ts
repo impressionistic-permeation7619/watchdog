@@ -19,7 +19,7 @@ import {
   assertEdgeKindsAllowed,
   validateEdgeUpdate,
 } from "./edge-update";
-import { assertCaseExists, assertConfidenceEvidence, assertEntityInCase } from "./guards";
+import { assertCaseExists, assertConfidenceEvidence, assertEntityInCase } from "./patch/guards";
 
 const NATURAL_KEY_INDEX = "edges_natural_uidx";
 

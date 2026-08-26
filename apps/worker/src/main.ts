@@ -14,7 +14,7 @@ import {
   listActiveJobIds,
   reconcileStaleJobs,
   reconcileStuckPlaybookRuns,
-} from "@watchdog/core";
+} from "@watchdog/core/worker";
 import "@watchdog/env/server";
 import {
   createLogger,

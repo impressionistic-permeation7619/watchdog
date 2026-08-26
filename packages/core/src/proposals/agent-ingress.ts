@@ -6,11 +6,11 @@ import { DomainError, isUniqueViolation } from "../infra/domain-error";
 import { notifyEvent } from "../infra/events";
 import { logSwallowed } from "../infra/process-log";
 import { proposeStage } from "../jobs/stages/propose";
-import { applyPatch } from "./apply-patch";
+import { applyPatch } from "../graph/patch/apply-patch";
 import { suppressKnownFindings } from "./finding-suppress";
-import { assertCaseExists } from "./guards";
-import { getProposalForCase, type ProposalRecord } from "./inbox";
-import { parseAgentPatch } from "./parse-agent-patch";
+import { assertCaseExists } from "../graph/patch/guards";
+import { getProposalForCase, type ProposalRecord } from "./proposals";
+import { parseAgentPatch } from "../graph/patch/parse-agent-patch";
 
 const GRAPH_WRITE_IDEMPOTENCY_INDEX = "graph_writes_case_actor_idem_uidx";
 

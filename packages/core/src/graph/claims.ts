@@ -9,7 +9,7 @@ import { normalizeIdList } from "@watchdog/schemas";
 import { assertEvidenceInCase } from "../evidence/evidence";
 import { DomainError } from "../infra/domain-error";
 import { notifyEntityChanged } from "../infra/events";
-import { assertConfidenceEvidence, assertEntityInCase } from "./guards";
+import { assertConfidenceEvidence, assertEntityInCase } from "./patch/guards";
 
 export interface ClaimRecord {
   id: string;

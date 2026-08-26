@@ -21,7 +21,7 @@ export async function setJobStatus(
   const updated = await jobsRepo.update(
     db,
     jobId,
-    { ...patch, updatedAt: patch.updatedAt ?? new Date() },
+    { ...patch },
     {
       unlessCancelled: opts?.unlessCancelled,
       onlyStatuses: opts?.onlyStatuses,

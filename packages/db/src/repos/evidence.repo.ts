@@ -288,7 +288,7 @@ export const evidenceRepo = {
   ): Promise<boolean> {
     const updated = await exec
       .update(evidence)
-      .set({ processedAt: new Date(), updatedAt: new Date() })
+      .set({ processedAt: new Date() })
       .where(
         and(
           eq(evidence.id, evidenceId),

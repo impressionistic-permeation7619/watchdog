@@ -1,6 +1,6 @@
 import type { PatchOp } from "@watchdog/schemas";
 
-import { suppressKnownFindings } from "../../graph/finding-suppress";
+import { suppressKnownFindings } from "../../proposals/finding-suppress";
 import type { JobLog } from "./helpers";
 
 export interface SuppressResult {

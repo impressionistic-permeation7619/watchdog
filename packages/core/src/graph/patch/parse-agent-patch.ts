@@ -1,7 +1,7 @@
 import { assertPatchShape } from "@watchdog/policy";
 import { trimmedOrNull, type PatchOp } from "@watchdog/schemas";
 
-import { errorMessage } from "../infra/domain-error";
+import { errorMessage } from "../../infra/domain-error";
 import { tryParsePatch } from "./patch";
 
 export interface ParsedAgentPatch {

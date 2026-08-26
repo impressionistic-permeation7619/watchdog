@@ -6,7 +6,7 @@ import {
   type PatchOp,
 } from "@watchdog/schemas";
 
-import { DomainError } from "../infra/domain-error";
+import { DomainError } from "../../infra/domain-error";
 import { assertEntityInCase } from "./guards";
 import { requireEnum, requireString } from "./apply-patch-helpers";
 

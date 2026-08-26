@@ -1,3 +1,4 @@
+/** Cap SPI re-export for catalog implementations; runtime services should import `@watchdog/cap-sdk` directly. */
 export {
   defineCapability,
   DEFAULT_CAP_TIMEOUT_MS,

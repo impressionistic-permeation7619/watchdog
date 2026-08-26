@@ -95,7 +95,7 @@ export type {
   FindingSuppressionRow,
   NewFindingSuppression,
 } from "./finding-suppressions.repo";
-export { tasksRepo, compareTaskRows, taskPriorityRank } from "./tasks.repo";
+export { tasksRepo } from "./tasks.repo";
 export type {
   ListTasksRowsOpts,
   NewTask,

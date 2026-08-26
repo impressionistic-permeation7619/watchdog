@@ -7,7 +7,7 @@ import {
 } from "@watchdog/db";
 import type { ConfidenceTier } from "@watchdog/schemas";
 
-import { DomainError } from "../infra/domain-error";
+import { DomainError } from "../../infra/domain-error";
 
 export async function assertCaseExists(
   caseId: string,

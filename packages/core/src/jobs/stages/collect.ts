@@ -184,7 +184,6 @@ export async function collect(
             output: artifacts,
             evidenceIds,
             logs: jobLog.lines,
-            updatedAt: new Date(),
           });
         }
       }

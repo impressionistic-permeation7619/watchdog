@@ -2,7 +2,7 @@ import { db, type DbTx } from "@watchdog/db";
 import { assertPatchGates } from "@watchdog/policy";
 import type { ConfidenceTier, PatchOp } from "@watchdog/schemas";
 
-import { DomainError, errorMessage } from "../infra/domain-error";
+import { DomainError, errorMessage } from "../../infra/domain-error";
 import { applyClaimOp } from "./apply-claim-op";
 import { applyEdgeOp } from "./apply-edge-op";
 import { applyEntityOp } from "./apply-entity-op";

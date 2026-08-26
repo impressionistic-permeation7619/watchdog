@@ -79,7 +79,6 @@ export type JobPatch = Partial<
     | "input"
     | "startedAt"
     | "finishedAt"
-    | "updatedAt"
   >
 >;
 
@@ -353,7 +352,6 @@ export const jobsRepo = {
       .set({
         status: "cancelled",
         finishedAt: now,
-        updatedAt: now,
         error,
       })
       .where(
@@ -371,7 +369,6 @@ export const jobsRepo = {
       .set({
         status: "cancelled",
         finishedAt,
-        updatedAt: finishedAt,
       })
       .where(
         and(eq(jobs.id, jobId), inArray(jobs.status, CANCELLABLE_STATUSES))

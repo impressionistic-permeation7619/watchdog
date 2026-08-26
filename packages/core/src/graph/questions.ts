@@ -8,7 +8,7 @@ import type { EntityKind, QuestionStatus } from "@watchdog/schemas";
 
 import { DomainError } from "../infra/domain-error";
 import { notifyEntityChanged } from "../infra/events";
-import { assertEntityInCase } from "./guards";
+import { assertEntityInCase } from "./patch/guards";
 
 export interface QuestionRecord {
   id: string;

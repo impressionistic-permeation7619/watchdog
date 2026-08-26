@@ -30,21 +30,21 @@ export {
   reconcileStaleJobs,
   reconcileStuckPlaybookRuns,
 } from "./jobs/reconcile-stale-jobs";
-export { parsePatch, tryParsePatch } from "./graph/patch";
+export { parsePatch, tryParsePatch } from "./graph/patch/patch";
 export {
   applyPatch,
   type ApplyPatchOpts,
   type ApplyPatchTx,
-} from "./graph/apply-patch";
+} from "./graph/patch/apply-patch";
 export {
   suppressKnownFindings,
   recordRejectedFingerprints,
-} from "./graph/finding-suppress";
-export { parseAgentPatch } from "./graph/parse-agent-patch";
+} from "./proposals/finding-suppress";
+export { parseAgentPatch } from "./graph/patch/parse-agent-patch";
 export {
   createAgentProposal,
   writeGraphFromAgent,
-} from "./graph/agent-ingress";
+} from "./proposals/agent-ingress";
 export {
   executeJob,
   abortActiveJob,
@@ -89,7 +89,7 @@ export {
   acceptProposal,
   rejectProposal,
   type ProposalRecord,
-} from "./graph/inbox";
+} from "./proposals/proposals";
 export type { IdentifierCollision } from "./graph/identifier-collisions";
 export {
   VaultError,
@@ -115,7 +115,7 @@ export {
   deleteCase,
   type CaseRecord,
   type CreateCaseInput,
-} from "./graph/cases";
+} from "./cases/cases";
 export {
   listClaimsForEntity,
   createClaim,
@@ -174,7 +174,7 @@ export {
   assertCaseExists,
   assertEntityInCase,
   assertConfidenceEvidence,
-} from "./graph/guards";
+} from "./graph/patch/guards";
 export {
   listEntitiesForCase,
   getEntityByCaseSlug,

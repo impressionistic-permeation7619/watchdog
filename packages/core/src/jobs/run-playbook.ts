@@ -15,7 +15,7 @@ import {
   assertCaseExists,
   assertEntityInCase,
   assertEvidenceInCase,
-} from "../graph/guards";
+} from "../graph/patch/guards";
 import { DomainError, errorMessage } from "../infra/domain-error";
 import { logProcess } from "../infra/process-log";
 import { hasCredential } from "../infra/vault";

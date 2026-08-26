@@ -4,7 +4,7 @@ import {
 } from "@watchdog/policy";
 import type { JsonValue } from "@watchdog/schemas";
 
-import { DomainError, errorMessage } from "../infra/domain-error";
+import { DomainError, errorMessage } from "../../infra/domain-error";
 
 export function asDomainInvalid<T>(fn: () => T): T {
   try {

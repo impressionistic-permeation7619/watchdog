@@ -1,7 +1,7 @@
 import { entitiesRepo, type DbTx } from "@watchdog/db";
 import { ENTITY_KINDS, type PatchOp } from "@watchdog/schemas";
 
-import { DomainError } from "../infra/domain-error";
+import { DomainError } from "../../infra/domain-error";
 import { requireEnum, requireString } from "./apply-patch-helpers";
 
 export async function applyEntityOp(

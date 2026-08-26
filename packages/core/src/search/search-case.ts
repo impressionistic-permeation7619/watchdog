@@ -17,7 +17,7 @@ import type {
 } from "@watchdog/schemas";
 import { SEARCH_MIN_QUERY_LENGTH } from "@watchdog/schemas";
 
-import { assertCaseExists } from "../graph/guards";
+import { assertCaseExists } from "../graph/patch/guards";
 
 const DEFAULT_LIMIT = 24;
 const DEFAULT_PER_GROUP = 8;
