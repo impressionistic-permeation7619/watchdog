@@ -4,6 +4,7 @@ import { trimmedOrNull } from "@watchdog/schemas";
 import { assertEvidenceInCase, createAttestation } from "../evidence/evidence";
 import { DomainError, isUniqueViolation } from "../infra/domain-error";
 import { notifyEvent } from "../infra/events";
+import { logSwallowed } from "../infra/process-log";
 import { proposeStage } from "../jobs/stages/propose";
 import { applyPatch } from "./apply-patch";
 import { suppressKnownFindings } from "./finding-suppress";
@@ -69,6 +70,11 @@ export async function createAgentProposal(input: {
     type: "proposal_created",
     caseId: input.caseId,
     proposalId: proposed.proposalId,
+  }).catch((error: unknown) => {
+    logSwallowed("notify.proposal_created", error, {
+      caseId: input.caseId,
+      proposalId: proposed.proposalId,
+    });
   });
 
   const proposal = await getProposalForCase(input.caseId, proposed.proposalId);
@@ -168,6 +174,8 @@ export async function writeGraphFromAgent(input: {
     void notifyEvent({
       type: "entity_changed",
       caseId: input.caseId,
+    }).catch((error: unknown) => {
+      logSwallowed("notify.entity_changed", error, { caseId: input.caseId });
     });
 
     return {
