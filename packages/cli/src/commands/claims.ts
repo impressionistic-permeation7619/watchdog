@@ -21,6 +21,8 @@ import {
   dryRunArg,
   entityArg,
   pickDefined,
+  requiredCaseArg,
+  requiredEntityArg,
 } from "../noun";
 
 const LIST_COLUMNS = ["id", "confidence", "class", "text", "retracted"];
@@ -79,18 +81,8 @@ export const claimsCmd = defineNounCommand({
         ]),
       },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
-        entity: {
-          type: "string",
-          alias: "e",
-          description: "Entity slug or UUID",
-          required: true,
-        },
+        ...requiredCaseArg,
+        ...requiredEntityArg,
         text: { type: "string", description: "Claim text", required: true },
         confidence: {
           type: "string",
@@ -131,12 +123,7 @@ export const claimsCmd = defineNounCommand({
         description: "Update a claim (--user-override required)",
       },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
+        ...requiredCaseArg,
         claim: {
           type: "positional",
           description: "Claim ID",
@@ -186,12 +173,7 @@ export const claimsCmd = defineNounCommand({
         description: "Retract a claim (--user-override required)",
       },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
+        ...requiredCaseArg,
         claim: {
           type: "positional",
           description: "Claim ID",

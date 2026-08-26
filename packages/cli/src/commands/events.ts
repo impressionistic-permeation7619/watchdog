@@ -10,6 +10,8 @@ import {
   dryRunArg,
   entityArg,
   pickDefined,
+  requiredCaseArg,
+  requiredEntityArg,
 } from "../noun";
 
 const LIST_COLUMNS = ["id", "when", "what", "where"];
@@ -53,18 +55,8 @@ export const eventsCmd = defineNounCommand({
         description: "Create a timeline event (--user-override required)",
       },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
-        entity: {
-          type: "string",
-          alias: "e",
-          description: "Entity slug or UUID",
-          required: true,
-        },
+        ...requiredCaseArg,
+        ...requiredEntityArg,
         when: {
           type: "string",
           description: "When (freeform / ISO)",
@@ -99,12 +91,7 @@ export const eventsCmd = defineNounCommand({
           "Update a timeline event (partial patch; --user-override required)",
       },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
+        ...requiredCaseArg,
         event: {
           type: "positional",
           description: "Event ID",
@@ -147,12 +134,7 @@ export const eventsCmd = defineNounCommand({
         description: "Delete a timeline event (--user-override required)",
       },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
+        ...requiredCaseArg,
         event: {
           type: "positional",
           description: "Event ID",

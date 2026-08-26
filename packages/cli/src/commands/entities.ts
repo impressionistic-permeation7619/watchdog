@@ -4,7 +4,14 @@ import { entityKindSchema } from "@watchdog/schemas";
 
 import { api, emit, emitList, fail } from "../client";
 import { resolveEntityId } from "../ids";
-import { asBoolean, caseArg, defineNounCommand, pickDefined } from "../noun";
+import {
+  asBoolean,
+  caseArg,
+  defineNounCommand,
+  pickDefined,
+  requiredCaseArg,
+  requiredEntityArg,
+} from "../noun";
 
 const LIST_COLUMNS = ["id", "kind", "name", "slug"];
 
@@ -34,12 +41,7 @@ export const entitiesCmd = defineNounCommand({
     get: defineCommand({
       meta: { name: "get", description: "Get entity by slug" },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
+        ...requiredCaseArg,
         slug: {
           type: "positional",
           description: "Entity slug",
@@ -57,12 +59,7 @@ export const entitiesCmd = defineNounCommand({
     create: defineCommand({
       meta: { name: "create", description: "Create an entity" },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
+        ...requiredCaseArg,
         kind: {
           type: "string",
           alias: "k",
@@ -99,18 +96,8 @@ export const entitiesCmd = defineNounCommand({
         description: "Update entity summary/notes",
       },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
-        entity: {
-          type: "string",
-          alias: "e",
-          description: "Entity slug or UUID",
-          required: true,
-        },
+        ...requiredCaseArg,
+        ...requiredEntityArg,
         summary: {
           type: "string",
           description: "Summary markdown (optional)",

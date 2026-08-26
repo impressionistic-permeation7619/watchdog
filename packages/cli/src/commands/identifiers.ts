@@ -19,6 +19,8 @@ import {
   defineNounCommand,
   entityArg,
   pickDefined,
+  requiredCaseArg,
+  requiredEntityArg,
 } from "../noun";
 
 const LIST_COLUMNS = ["id", "type", "value", "confidence", "status"];
@@ -62,18 +64,8 @@ export const identifiersCmd = defineNounCommand({
         description: "Create an identifier (--user-override required)",
       },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
-        entity: {
-          type: "string",
-          alias: "e",
-          description: "Entity slug or UUID",
-          required: true,
-        },
+        ...requiredCaseArg,
+        ...requiredEntityArg,
         type: {
           type: "string",
           description: "Identifier type",
@@ -130,12 +122,7 @@ export const identifiersCmd = defineNounCommand({
         description: "Update an identifier (--user-override required)",
       },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
+        ...requiredCaseArg,
         identifier: {
           type: "positional",
           description: "Identifier ID",

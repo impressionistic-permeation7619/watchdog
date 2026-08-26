@@ -30,6 +30,14 @@ export const entityArg = {
   },
 } as const;
 
+export const requiredCaseArg = {
+  case: { ...caseArg.case, required: true },
+} as const;
+
+export const requiredEntityArg = {
+  entity: { ...entityArg.entity, required: true },
+} as const;
+
 /** Narrow a `list` handler's untyped boolean flag (e.g. `--table`) safely. */
 export function asBoolean(value: unknown): boolean | undefined {
   return typeof value === "boolean" ? value : undefined;
@@ -49,8 +57,6 @@ export function pickDefined(
 }
 
 function flagLabel(key: string): string {
-  if (key === "case") return "--case";
-  if (key === "entity") return "--entity";
   return `--${key}`;
 }
 

@@ -16,6 +16,7 @@ import {
   dryRunArg,
   entityArg,
   pickDefined,
+  requiredCaseArg,
 } from "../noun";
 
 const LIST_COLUMNS = ["id", "from", "to", "predicate", "confidence"];
@@ -60,12 +61,7 @@ export const edgesCmd = defineNounCommand({
         description: "Create an edge (--user-override required)",
       },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
+        ...requiredCaseArg,
         from: {
           type: "string",
           description: "From entity slug or UUID",
@@ -117,12 +113,7 @@ export const edgesCmd = defineNounCommand({
         description: "Delete an edge (--user-override required)",
       },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
+        ...requiredCaseArg,
         edge: {
           type: "positional",
           description: "Edge ID",

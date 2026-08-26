@@ -11,6 +11,7 @@ import {
   defineNounCommand,
   dryRunArg,
   pickDefined,
+  requiredCaseArg,
 } from "../noun";
 import { uploadEvidenceFile } from "../upload-file";
 
@@ -84,12 +85,7 @@ export const evidenceCmd = defineNounCommand({
         ),
       },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
+        ...requiredCaseArg,
         body: {
           type: "string",
           alias: "b",
@@ -144,12 +140,7 @@ export const evidenceCmd = defineNounCommand({
     url: defineCommand({
       meta: { name: "url", description: "Dump a URL reference as evidence" },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
+        ...requiredCaseArg,
         source: {
           type: "positional",
           description: "URL to dump",
@@ -182,12 +173,7 @@ export const evidenceCmd = defineNounCommand({
           "Upload a local file as evidence (hash → presign → PUT → confirm)",
       },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
+        ...requiredCaseArg,
         path: {
           type: "positional",
           description: "Local file path",
@@ -223,12 +209,7 @@ export const evidenceCmd = defineNounCommand({
         description: "Soft-delete evidence (Hidden filter / restore later)",
       },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
+        ...requiredCaseArg,
         evidence: {
           type: "positional",
           description: "Evidence ID",
@@ -254,12 +235,7 @@ export const evidenceCmd = defineNounCommand({
         description: "Restore soft-deleted evidence to the active queue",
       },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
+        ...requiredCaseArg,
         evidence: {
           type: "positional",
           description: "Evidence ID",
@@ -280,12 +256,7 @@ export const evidenceCmd = defineNounCommand({
         description: "Print a short-lived download URL for evidence",
       },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
+        ...requiredCaseArg,
         evidence: {
           type: "positional",
           description: "Evidence ID",
@@ -326,12 +297,7 @@ export const evidenceCmd = defineNounCommand({
         ),
       },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
+        ...requiredCaseArg,
         evidence: {
           type: "positional",
           description: "Evidence ID",
@@ -355,12 +321,7 @@ export const evidenceCmd = defineNounCommand({
     enrich: defineCommand({
       meta: { name: "enrich", description: "Start URL Enrich for evidence" },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
+        ...requiredCaseArg,
         evidence: {
           type: "positional",
           description: "Evidence ID",

@@ -4,6 +4,7 @@ import { api, emit, fail } from "../client";
 import { withExamples } from "../examples";
 import { parseIdList } from "../ids";
 import { loadPatch } from "../load-patch";
+import { requiredCaseArg } from "../noun";
 
 export const graphCmd = defineCommand({
   meta: {
@@ -28,12 +29,7 @@ export const graphCmd = defineCommand({
         ),
       },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
+        ...requiredCaseArg,
         patch: {
           type: "string",
           description: "Patch JSON array string ('-' or omit for stdin)",
