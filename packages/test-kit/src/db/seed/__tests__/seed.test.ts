@@ -6,6 +6,10 @@ const mocks = vi.hoisted(() => ({
   createEvidence: vi.fn(),
   createGraphWrite: vi.fn(),
   createIdentifier: vi.fn(),
+  createJob: vi.fn(),
+  createPlaybookRun: vi.fn(),
+  createProposal: vi.fn(),
+  insertManySuppression: vi.fn(),
 }));
 
 vi.mock("@watchdog/db", () => ({
@@ -14,6 +18,10 @@ vi.mock("@watchdog/db", () => ({
   evidenceRepo: { create: mocks.createEvidence },
   graphWritesRepo: { create: mocks.createGraphWrite },
   identifiersRepo: { create: mocks.createIdentifier },
+  jobsRepo: { create: mocks.createJob },
+  playbookRunsRepo: { create: mocks.createPlaybookRun },
+  proposalsRepo: { create: mocks.createProposal },
+  findingSuppressionsRepo: { insertMany: mocks.insertManySuppression },
 }));
 
 import type { DbExec } from "@watchdog/db";
@@ -25,6 +33,10 @@ import { seedEntity } from "../entity";
 import { seedEvidence } from "../evidence";
 import { seedGraphWrite } from "../graph-write";
 import { seedIdentifier } from "../identifier";
+import { seedJob } from "../job";
+import { seedPlaybookRun } from "../playbook-run";
+import { seedProposal } from "../proposal";
+import { seedFindingSuppression } from "../suppression";
 
 const exec = {} as DbExec;
 
@@ -88,5 +100,49 @@ describe("test-kit db seeds", () => {
     });
     expect(row.value).toBe("a@b.com");
     expect(mocks.createIdentifier).toHaveBeenCalled();
+  });
+
+  it("seedJob creates queued cap jobs", async () => {
+    mocks.createJob.mockResolvedValueOnce({
+      id: "job-1",
+      capabilityId: "network.dns.lookup",
+    });
+    const row = await seedJob(exec, "case-1");
+    expect(row.id).toBe("job-1");
+    expect(mocks.createJob).toHaveBeenCalled();
+  });
+
+  it("seedPlaybookRun creates running playbook runs", async () => {
+    mocks.createPlaybookRun.mockResolvedValueOnce({
+      id: "run-1",
+      playbookId: "url-capture",
+    });
+    const row = await seedPlaybookRun(exec, "case-1");
+    expect(row.playbookId).toBe("url-capture");
+    expect(mocks.createPlaybookRun).toHaveBeenCalled();
+  });
+
+  it("seedProposal inserts pending proposals", async () => {
+    mocks.createProposal.mockResolvedValueOnce({ id: "prop-1" });
+    const patch = [buildClaimCreateOp(testId(21), "claim text")];
+    const row = await seedProposal(exec, "case-1", patch);
+    expect(row.id).toBe("prop-1");
+    expect(mocks.createProposal).toHaveBeenCalled();
+  });
+
+  it("seedFindingSuppression inserts suppression rows", async () => {
+    mocks.insertManySuppression.mockResolvedValueOnce(undefined);
+    await seedFindingSuppression(exec, {
+      caseId: "case-1",
+      fingerprint: "fp-1",
+      reason: "rejected_fp",
+      proposalId: "prop-1",
+    });
+    expect(mocks.insertManySuppression).toHaveBeenCalledWith(
+      exec,
+      expect.arrayContaining([
+        expect.objectContaining({ fingerprint: "fp-1" }),
+      ])
+    );
   });
 });
