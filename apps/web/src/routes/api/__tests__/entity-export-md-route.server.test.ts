@@ -1,0 +1,79 @@
+import { describe, expect, it, vi } from "vitest";
+import { testId } from "@watchdog/test-kit";
+
+const createApiContextMock = vi.hoisted(() =>
+  vi.fn().mockResolvedValue({ actor: { id: "actor-1" } })
+);
+const getEntityByCaseSlugMock = vi.hoisted(() => vi.fn());
+const renderEntityMarkdownMock = vi.hoisted(() => vi.fn());
+
+vi.mock("@tanstack/react-router", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@tanstack/react-router")>();
+  return {
+    ...actual,
+    createFileRoute: () => (options: Record<string, unknown>) => ({ options }),
+  };
+});
+
+vi.mock("@/auth/api-context.server", () => ({
+  createApiContext: createApiContextMock,
+}));
+
+vi.mock("@watchdog/core", () => ({
+  getEntityByCaseSlug: getEntityByCaseSlugMock,
+  renderEntityMarkdown: renderEntityMarkdownMock,
+}));
+
+import { Route } from "@/routes/api/v1/cases.$caseId.entities.$slug.export[.]md";
+
+const CASE_ID = testId(10);
+const handlers = (
+  Route.options as {
+    server: {
+      handlers: Record<
+        string,
+        (ctx: { request: Request; params: { caseId: string; slug: string } }) => Promise<Response>
+      >;
+    };
+  }
+).server.handlers;
+
+describe("entity export markdown route", () => {
+  it("returns 401 when unauthenticated", async () => {
+    createApiContextMock.mockResolvedValueOnce({ actor: null });
+
+    const response = await handlers.GET({
+      request: new Request("http://localhost/api/v1/cases/x/entities/y/export.md"),
+      params: { caseId: CASE_ID, slug: "target" },
+    });
+
+    expect(response.status).toBe(401);
+  });
+
+  it("returns markdown when the entity export succeeds", async () => {
+    createApiContextMock.mockResolvedValueOnce({ actor: { id: "actor-1" } });
+    getEntityByCaseSlugMock.mockResolvedValueOnce({ id: testId(20) });
+    renderEntityMarkdownMock.mockResolvedValueOnce({ markdown: "# Target\n" });
+
+    const response = await handlers.GET({
+      request: new Request("http://localhost/api/v1/cases/x/entities/target/export.md"),
+      params: { caseId: CASE_ID, slug: "target" },
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Content-Type")).toContain("text/markdown");
+    expect(await response.text()).toBe("# Target\n");
+  });
+
+  it("returns 404 when the entity is missing", async () => {
+    createApiContextMock.mockResolvedValueOnce({ actor: { id: "actor-1" } });
+    getEntityByCaseSlugMock.mockResolvedValueOnce(null);
+
+    const response = await handlers.GET({
+      request: new Request("http://localhost/api/v1/cases/x/entities/missing/export.md"),
+      params: { caseId: CASE_ID, slug: "missing" },
+    });
+
+    expect(response.status).toBe(404);
+  });
+});
