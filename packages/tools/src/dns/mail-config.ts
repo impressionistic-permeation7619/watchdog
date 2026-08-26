@@ -1,6 +1,9 @@
 import { Resolver } from "node:dns/promises";
 
-import { abortedToolsError } from "../errors/tools-error";
+import {
+  assertNotAborted,
+  withAbortableResolver,
+} from "./abortable-resolver";
 import {
   mailConfigSnapshotSchema,
   type MailConfigSnapshot,
@@ -25,31 +28,6 @@ function flattenTxt(chunks: string[][]): string[] {
   return chunks.map((parts) => parts.join(""));
 }
 
-function withResolverAbort(signal: AbortSignal): {
-  resolver: Resolver;
-  cleanup: () => void;
-} {
-  const resolver = new Resolver();
-  const onAbort = () => {
-    try {
-      resolver.cancel();
-    } catch {
-      // already cancelled / idle
-    }
-  };
-  if (signal.aborted) {
-    onAbort();
-    throw abortedToolsError("Mail config lookup aborted");
-  }
-  signal.addEventListener("abort", onAbort, { once: true });
-  return {
-    resolver,
-    cleanup: () => {
-      signal.removeEventListener("abort", onAbort);
-    },
-  };
-}
-
 async function resolveTxtFlat(
   resolver: Resolver,
   name: string
@@ -67,7 +45,10 @@ export async function fetchMailConfig(
   signal: AbortSignal,
   options?: { dkimSelectors?: readonly string[] }
 ): Promise<MailConfigSnapshot> {
-  const { resolver, cleanup } = withResolverAbort(signal);
+  const { resolver, cleanup } = withAbortableResolver(
+    signal,
+    "Mail config lookup aborted"
+  );
   try {
     const selectors = options?.dkimSelectors ?? DEFAULT_DKIM_SELECTORS;
     const [mx, txtRoot, txtDmarc, ...dkimResults] = await Promise.all([
@@ -87,7 +68,7 @@ export async function fetchMailConfig(
       }),
     ]);
 
-    if (signal.aborted) throw abortedToolsError("Mail config lookup aborted");
+    assertNotAborted(signal, "Mail config lookup aborted");
 
     const spfRecords = txtRoot.filter((r) => /v=spf1/i.test(r));
     const dmarcRecords = txtDmarc.filter((r) => /v=DMARC1/i.test(r));

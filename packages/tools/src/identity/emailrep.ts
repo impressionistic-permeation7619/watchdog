@@ -3,11 +3,11 @@ import { z } from "zod";
 import { asBool, asNumber, asString, isRecord } from "../parse/coerce";
 import {
   httpToolsError,
-  missingApiKey,
   parseToolsError,
   rateLimitedToolsError,
   validationToolsError,
 } from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
 
 export const emailrepLookupSnapshotSchema = z.object({
   email: z.string().min(1),
@@ -99,7 +99,7 @@ export async function fetchEmailrepLookup(
   if (!email.includes("@")) throw validationToolsError(`Invalid email: ${emailRaw}`);
 
   const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+identity.emailrep.lookup; OSINT)";
+    options?.userAgent ?? watchdogUserAgent("identity.emailrep.lookup");
   const key = options?.apiKey?.trim() ?? "";
 
   const headers: Record<string, string> = {

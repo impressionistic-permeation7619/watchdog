@@ -6,6 +6,7 @@ import {
   rateLimitedToolsError,
 } from "../errors/tools-error";
 import { normalizeHost } from "../whois/normalize";
+import { watchdogUserAgent } from "../errors/user-agent";
 
 export const certspotterIssuanceSchema = z.object({
   id: z.string(),
@@ -42,7 +43,7 @@ export async function fetchCertspotterLookup(
   const host = normalizeHost(hostRaw);
   const limit = options?.limit ?? 100;
   const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+network.certspotter.lookup; OSINT)";
+    options?.userAgent ?? watchdogUserAgent("network.certspotter.lookup");
 
   const url = new URL("https://api.certspotter.com/v1/issuances");
   url.searchParams.set("domain", host);

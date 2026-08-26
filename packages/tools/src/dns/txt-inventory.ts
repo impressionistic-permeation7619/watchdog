@@ -1,6 +1,7 @@
-import { Resolver } from "node:dns/promises";
-
-import { abortedToolsError } from "../errors/tools-error";
+import {
+  assertNotAborted,
+  withAbortableResolver,
+} from "./abortable-resolver";
 import {
   txtInventorySnapshotSchema,
   type TxtInventorySnapshot,
@@ -162,24 +163,15 @@ export async function fetchTxtInventory(
   host: string,
   signal: AbortSignal
 ): Promise<TxtInventorySnapshot> {
-  const resolver = new Resolver();
-  const onAbort = () => {
-    try {
-      resolver.cancel();
-    } catch {
-      // already cancelled / idle
-    }
-  };
-  if (signal.aborted) {
-    onAbort();
-    throw abortedToolsError("TXT inventory aborted");
-  }
-  signal.addEventListener("abort", onAbort, { once: true });
+  const { resolver, cleanup } = withAbortableResolver(
+    signal,
+    "TXT inventory aborted"
+  );
   try {
     const chunks = await resolver
       .resolveTxt(host)
       .catch(() => [] as string[][]);
-    if (signal.aborted) throw abortedToolsError("TXT inventory aborted");
+    assertNotAborted(signal, "TXT inventory aborted");
     const records = flattenTxt(chunks);
     const tokens = records.map(classifyRecord);
     return txtInventorySnapshotSchema.parse({
@@ -189,6 +181,6 @@ export async function fetchTxtInventory(
       tokens,
     });
   } finally {
-    signal.removeEventListener("abort", onAbort);
+    cleanup();
   }
 }

@@ -1,13 +1,10 @@
 import { z } from "zod";
 
 import { normalizeIp } from "../dns/reverse";
-import {
-  httpToolsError,
-  missingApiKey,
-  parseToolsError,
-  rateLimitedToolsError,
-} from "../errors/tools-error";
-import { asString, isRecord } from "../parse/coerce";
+import { missingApiKey } from "../errors/tools-error";
+import { fetchJsonObject } from "../http/fetch-json";
+import { asString } from "../parse/coerce";
+import { watchdogUserAgent } from "../errors/user-agent";
 
 export const ipinfoLookupSnapshotSchema = z.object({
   ip: z.string().min(1),
@@ -41,32 +38,21 @@ export async function fetchIpinfoLookup(
   if (!token) throw missingApiKey("IPINFO_API_TOKEN");
   const ip = normalizeIp(ipRaw);
   const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+network.ipinfo.lookup; OSINT)";
+    options?.userAgent ?? watchdogUserAgent("network.ipinfo.lookup");
 
   const url = new URL(`https://ipinfo.io/${ip}/json`);
   url.searchParams.set("token", token);
 
-  const res = await fetch(url, {
-    method: "GET",
+  const body = await fetchJsonObject({
+    url,
+    init: {
+      method: "GET",
+      headers: { Accept: "application/json", "User-Agent": ua },
+    },
     signal,
-    headers: { Accept: "application/json", "User-Agent": ua },
+    service: "IPinfo",
+    subject: ip,
   });
-
-  if (res.status === 429) {
-    throw rateLimitedToolsError("IPinfo", ip);
-  }
-  if (!res.ok) {
-    throw httpToolsError(
-      "IPinfo API",
-      res.status,
-      `IPinfo API ${res.status} for ${ip}`
-    );
-  }
-
-  const body: unknown = await res.json();
-  if (!isRecord(body)) {
-    throw parseToolsError("IPinfo", ip);
-  }
 
   return ipinfoLookupSnapshotSchema.parse({
     ip,

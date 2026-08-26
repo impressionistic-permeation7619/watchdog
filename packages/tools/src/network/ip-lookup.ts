@@ -1,13 +1,13 @@
-import { Resolver } from "node:dns/promises";
 import { isIP } from "node:net";
 
 import { z } from "zod";
 
-import { normalizeIp } from "../dns/reverse";
 import {
-  abortedToolsError,
-  validationToolsError,
-} from "../errors/tools-error";
+  assertNotAborted,
+  withAbortableResolver,
+} from "../dns/abortable-resolver";
+import { normalizeIp } from "../dns/reverse";
+import { validationToolsError } from "../errors/tools-error";
 
 export const ipLookupSnapshotSchema = z.object({
   ip: z.string().min(1),
@@ -76,25 +76,16 @@ export async function fetchIpLookup(
   signal: AbortSignal
 ): Promise<IpLookupSnapshot> {
   const ip = normalizeIp(ipRaw);
-  const resolver = new Resolver();
-  const onAbort = () => {
-    try {
-      resolver.cancel();
-    } catch {
-      // already cancelled / idle
-    }
-  };
-  if (signal.aborted) {
-    onAbort();
-    throw abortedToolsError("IP lookup aborted");
-  }
-  signal.addEventListener("abort", onAbort, { once: true });
+  const { resolver, cleanup } = withAbortableResolver(
+    signal,
+    "IP lookup aborted"
+  );
   try {
     const originName = originLookupName(ip);
     const originChunks = await resolver
       .resolveTxt(originName)
       .catch(() => [] as string[][]);
-    if (signal.aborted) throw abortedToolsError("IP lookup aborted");
+    assertNotAborted(signal, "IP lookup aborted");
 
     const rawOrigin =
       originChunks.length > 0
@@ -150,6 +141,6 @@ export async function fetchIpLookup(
       rawAs,
     });
   } finally {
-    signal.removeEventListener("abort", onAbort);
+    cleanup();
   }
 }

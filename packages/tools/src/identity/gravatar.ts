@@ -5,6 +5,7 @@ import { z } from "zod";
 import { httpToolsError } from "../errors/tools-error";
 import { asString, isRecord, recordRows } from "../parse/coerce";
 import { normalizeEmail } from "./email-lookup";
+import { watchdogUserAgent } from "../errors/user-agent";
 
 export const gravatarAccountSchema = z.object({
   shortname: z.string().nullable(),
@@ -122,7 +123,7 @@ export async function fetchGravatarLookup(
   const { email } = normalizeEmail(emailRaw);
   const hash = gravatarEmailHash(email);
   const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+identity.gravatar.lookup; OSINT)";
+    options?.userAgent ?? watchdogUserAgent("identity.gravatar.lookup");
 
   const url = `https://secure.gravatar.com/${hash}.json`;
   const res = await fetch(url, {

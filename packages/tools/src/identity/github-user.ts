@@ -6,6 +6,7 @@ import {
   parseToolsError,
   validationToolsError,
 } from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
 
 export const githubUserSnapshotSchema = z.object({
   handle: z.string().min(1),
@@ -46,7 +47,7 @@ export async function fetchGithubUser(
 ): Promise<GithubUserSnapshot> {
   const handle = normalizeGithubHandle(handleRaw);
   const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+identity.github.lookup; OSINT)";
+    options?.userAgent ?? watchdogUserAgent("identity.github.lookup");
   const headers: Record<string, string> = {
     Accept: "application/vnd.github+json",
     "User-Agent": ua,

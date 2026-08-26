@@ -2,6 +2,8 @@ import { isIP, isIPv4 } from "node:net";
 
 import { z } from "zod";
 
+import { errorMessage } from "../errors/tools-error";
+
 export const unshortenSnapshotSchema = z.object({
   url: z.string().min(1),
   queriedAt: z.string().min(1),
@@ -116,10 +118,7 @@ export async function fetchUnshorten(
       }
       break;
     } catch (caughtError) {
-      error =
-        caughtError instanceof Error
-          ? caughtError.message
-          : String(caughtError);
+      error = errorMessage(caughtError);
       break;
     }
   }

@@ -2,13 +2,11 @@ import { isIP } from "node:net";
 
 import { z } from "zod";
 
-import {
-  httpToolsError,
-  parseToolsError,
-  validationToolsError,
-} from "../errors/tools-error";
+import { parseToolsError, validationToolsError } from "../errors/tools-error";
+import { fetchJsonObject } from "../http/fetch-json";
 import { asString, isRecord } from "../parse/coerce";
 import { normalizeHost } from "../whois/normalize";
+import { watchdogUserAgent } from "../errors/user-agent";
 
 export const keybaseProofSchema = z.object({
   platform: z.string(),
@@ -216,24 +214,20 @@ export async function fetchKeybaseLookup(
 ): Promise<KeybaseLookupSnapshot> {
   const { kind, value, param } = classifyQuery(queryRaw);
   const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+identity.keybase.lookup; OSINT)";
+    options?.userAgent ?? watchdogUserAgent("identity.keybase.lookup");
 
   const url = new URL("https://keybase.io/_/api/1.0/user/lookup.json");
   url.searchParams.set(param, value);
 
-  const res = await fetch(url, {
-    method: "GET",
+  const body = await fetchJsonObject({
+    url,
+    init: {
+      method: "GET",
+      headers: { Accept: "application/json", "User-Agent": ua },
+    },
     signal,
-    headers: { Accept: "application/json", "User-Agent": ua },
+    service: "Keybase",
+    subject: value,
   });
-  if (!res.ok) {
-    throw httpToolsError(
-      "Keybase API",
-      res.status,
-      `Keybase API ${res.status} for ${value}`
-    );
-  }
-
-  const body: unknown = await res.json();
   return parseKeybaseBody(value, kind, new Date().toISOString(), body);
 }

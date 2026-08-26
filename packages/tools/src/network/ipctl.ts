@@ -1,10 +1,7 @@
 import { z } from "zod";
 
 import { normalizeIp } from "../dns/reverse";
-import {
-  httpToolsError,
-  parseToolsError,
-} from "../errors/tools-error";
+import { fetchJsonObject } from "../http/fetch-json";
 import {
   asBool,
   asNumber,
@@ -12,6 +9,7 @@ import {
   isRecord,
   recordRows,
 } from "../parse/coerce";
+import { watchdogUserAgent } from "../errors/user-agent";
 
 export const ipctlLookupSnapshotSchema = z.object({
   ip: z.string().min(1),
@@ -94,27 +92,19 @@ export async function fetchIpctlLookup(
 ): Promise<IpctlLookupSnapshot> {
   const ip = normalizeIp(ipRaw);
   const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+network.ipctl.lookup; OSINT)";
+    options?.userAgent ?? watchdogUserAgent("network.ipctl.lookup");
 
   const url = `https://api.ipctl.io/v1/ip/${encodeURIComponent(ip)}`;
-  const res = await fetch(url, {
-    method: "GET",
+  const body = await fetchJsonObject({
+    url,
+    init: {
+      method: "GET",
+      headers: { Accept: "application/json", "User-Agent": ua },
+    },
     signal,
-    headers: { Accept: "application/json", "User-Agent": ua },
+    service: "ipctl",
+    subject: ip,
   });
-
-  if (!res.ok) {
-    throw httpToolsError(
-      "ipctl API",
-      res.status,
-      `ipctl API ${res.status} for ${ip}`
-    );
-  }
-
-  const body: unknown = await res.json();
-  if (!isRecord(body)) {
-    throw parseToolsError("ipctl", ip);
-  }
   const data = isRecord(body.data) ? body.data : {};
   return parseIpctlBody(ip, new Date().toISOString(), data);
 }

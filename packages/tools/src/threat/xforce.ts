@@ -10,6 +10,7 @@ import {
 } from "../errors/tools-error";
 import { isRecord } from "../parse/coerce";
 import { normalizeHost } from "../whois/normalize";
+import { watchdogUserAgent } from "../errors/user-agent";
 
 export const xforceLookupSnapshotSchema = z.object({
   query: z.string().min(1),
@@ -77,7 +78,7 @@ export async function fetchXforceLookup(
 
   const { kind, value } = classifyXforceQuery(queryRaw);
   const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+threat.xforce.lookup; OSINT)";
+    options?.userAgent ?? watchdogUserAgent("threat.xforce.lookup");
   const headers: Record<string, string> = {
     Accept: "application/json",
     Authorization: authHeader(key, password),

@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { z } from "zod";
 
 import { fetchBytes } from "../http/fetch-bytes";
+import { errorMessage } from "../errors/tools-error";
 
 const SECURITY_HEADER_NAMES = [
   "strict-transport-security",
@@ -148,7 +149,7 @@ export async function fetchHttpProbe(
       originBase = `${new URL(res.finalUrl).origin}/`;
       if (res.status > 0) break;
     } catch (error) {
-      lastError = error instanceof Error ? error.message : String(error);
+      lastError = errorMessage(error);
     }
   }
 

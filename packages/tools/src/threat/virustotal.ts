@@ -7,6 +7,7 @@ import {
   parseToolsError,
 } from "../errors/tools-error";
 import { isRecord } from "../parse/coerce";
+import { watchdogUserAgent } from "../errors/user-agent";
 
 export const virusTotalLookupSnapshotSchema = z.object({
   query: z.string().min(1),
@@ -47,7 +48,7 @@ export async function fetchVirusTotalLookup(
   if (!key) throw missingApiKey("VIRUSTOTAL_API_KEY");
 
   const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+threat.virustotal.lookup; OSINT)";
+    options?.userAgent ?? watchdogUserAgent("threat.virustotal.lookup");
   const path =
     kind === "ip"
       ? `ip_addresses/${encodeURIComponent(value)}`

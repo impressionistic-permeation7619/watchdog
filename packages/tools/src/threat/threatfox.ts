@@ -2,13 +2,12 @@ import { z } from "zod";
 
 import { classifyIpOrHost } from "../parse/classify-ip-or-host";
 import {
-  httpToolsError,
   missingApiKey,
-  parseToolsError,
-  rateLimitedToolsError,
   ToolsError,
 } from "../errors/tools-error";
+import { fetchJsonObject } from "../http/fetch-json";
 import { asString, isRecord } from "../parse/coerce";
+import { watchdogUserAgent } from "../errors/user-agent";
 
 export const threatfoxIocSchema = z.object({
   id: z.string().nullable(),
@@ -75,39 +74,28 @@ export async function fetchThreatfoxLookup(
   if (!key) throw missingApiKey("THREATFOX_API_KEY");
 
   const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+threat.threatfox.lookup; OSINT)";
+    options?.userAgent ?? watchdogUserAgent("threat.threatfox.lookup");
 
-  const res = await fetch("https://threatfox-api.abuse.ch/api/v1/", {
-    method: "POST",
-    signal,
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      "Auth-Key": key,
-      "User-Agent": ua,
+  const body = await fetchJsonObject({
+    url: "https://threatfox-api.abuse.ch/api/v1/",
+    init: {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        "Auth-Key": key,
+        "User-Agent": ua,
+      },
+      body: JSON.stringify({
+        query: "search_ioc",
+        search_term: value,
+        exact_match: true,
+      }),
     },
-    body: JSON.stringify({
-      query: "search_ioc",
-      search_term: value,
-      exact_match: true,
-    }),
+    signal,
+    service: "ThreatFox",
+    subject: value,
   });
-
-  if (res.status === 429) {
-    throw rateLimitedToolsError("ThreatFox", value);
-  }
-  if (!res.ok) {
-    throw httpToolsError(
-      "ThreatFox API",
-      res.status,
-      `ThreatFox API ${res.status} for ${value}`
-    );
-  }
-
-  const body: unknown = await res.json();
-  if (!isRecord(body)) {
-    throw parseToolsError("ThreatFox", value);
-  }
   const queryStatus =
     typeof body.query_status === "string" ? body.query_status : "unknown";
 

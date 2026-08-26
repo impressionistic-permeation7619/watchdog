@@ -204,6 +204,7 @@ export {
 export type { DbTx, DbExec } from "@watchdog/db";
 export {
   DomainError,
+  errorMessage,
   isUniqueViolation,
   type DomainErrorCode,
 } from "./infra/domain-error";

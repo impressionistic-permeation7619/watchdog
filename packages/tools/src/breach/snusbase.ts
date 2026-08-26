@@ -2,12 +2,9 @@ import { z } from "zod";
 
 import { classifyBreachQuery } from "../parse/classify-breach-query";
 import { asString, isRecord } from "../parse/coerce";
-import {
-  httpToolsError,
-  missingApiKey,
-  parseToolsError,
-  rateLimitedToolsError,
-} from "../errors/tools-error";
+import { missingApiKey } from "../errors/tools-error";
+import { fetchJsonObject } from "../http/fetch-json";
+import { watchdogUserAgent } from "../errors/user-agent";
 
 const TABLES_CAP = 15;
 const ENTRIES_CAP = 100;
@@ -117,35 +114,25 @@ export async function fetchSnusbaseLookup(
 
   const { kind, value, type } = classifySnusbaseQuery(queryRaw);
   const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+breach.snusbase.lookup; OSINT)";
+    options?.userAgent ?? watchdogUserAgent("breach.snusbase.lookup");
 
-  const res = await fetch("https://api.snusbase.com/data/search", {
-    method: "POST",
-    signal,
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      Auth: key,
-      "User-Agent": ua,
+  const body = await fetchJsonObject({
+    url: "https://api.snusbase.com/data/search",
+    init: {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Auth: key,
+        "User-Agent": ua,
+      },
+      body: JSON.stringify({ terms: [value], types: [type] }),
     },
-    body: JSON.stringify({ terms: [value], types: [type] }),
+    signal,
+    service: "Snusbase",
+    subject: value,
+    acceptStatus: (status) => status < 400,
   });
-
-  if (res.status === 429) {
-    throw rateLimitedToolsError("Snusbase", value);
-  }
-  if (res.status >= 400) {
-    throw httpToolsError(
-      "Snusbase API",
-      res.status,
-      `Snusbase API ${res.status} for ${value}`
-    );
-  }
-
-  const body: unknown = await res.json();
-  if (!isRecord(body)) {
-    throw parseToolsError("Snusbase", value);
-  }
   const { tables, entries } = flattenSearchResults(body.results);
   const total =
     typeof body.size === "number"

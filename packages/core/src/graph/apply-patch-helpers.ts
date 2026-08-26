@@ -4,16 +4,13 @@ import {
 } from "@watchdog/policy";
 import type { JsonValue } from "@watchdog/schemas";
 
-import { DomainError } from "../infra/domain-error";
+import { DomainError, errorMessage } from "../infra/domain-error";
 
 export function asDomainInvalid<T>(fn: () => T): T {
   try {
     return fn();
   } catch (error) {
-    throw new DomainError(
-      "invalid",
-      error instanceof Error ? error.message : "invalid"
-    );
+    throw new DomainError("invalid", errorMessage(error, "invalid"));
   }
 }
 

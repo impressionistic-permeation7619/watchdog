@@ -2,6 +2,7 @@ import { db, jobsRepo, playbookRunsRepo } from "@watchdog/db";
 import { isOpenJobStatus } from "@watchdog/schemas";
 
 import { logSwallowed } from "../infra/process-log";
+import { errorMessage } from "../infra/domain-error";
 import { advancePlaybookRun } from "./stages/chain";
 import { failJob } from "./stages/helpers";
 import { capExpireSeconds } from "./timeouts";
@@ -19,7 +20,7 @@ async function reconcileStaleJob(
   try {
     expireSeconds = capExpireSeconds(row.capabilityId);
   } catch (error) {
-    const msg = error instanceof Error ? error.message : String(error);
+    const msg = errorMessage(error);
     await failJob(row.id, `Unknown Capability ${row.capabilityId}: ${msg}`);
     if (row.playbookRunId !== null) {
       await advancePlaybookRun({

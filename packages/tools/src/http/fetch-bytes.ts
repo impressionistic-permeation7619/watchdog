@@ -1,3 +1,5 @@
+import { errorMessage } from "../errors/tools-error";
+
 export interface FetchBytesOptions {
   /** User-Agent header (Cap OPSEC policy — pass from Cap, never hardcode Cap id here). */
   userAgent: string;
@@ -57,7 +59,7 @@ export async function fetchBytes(
       bytes: new Uint8Array(),
       contentType: null,
       finalUrl: url,
-      error: error instanceof Error ? error.message : String(error),
+      error: errorMessage(error),
     };
   }
 }

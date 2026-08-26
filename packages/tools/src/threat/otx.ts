@@ -12,6 +12,7 @@ import {
 } from "../errors/tools-error";
 import { asString, isRecord, recordRows } from "../parse/coerce";
 import { normalizeHost } from "../whois/normalize";
+import { watchdogUserAgent } from "../errors/user-agent";
 
 export const otxLookupSnapshotSchema = z.object({
   query: z.string().min(1),
@@ -116,7 +117,7 @@ export async function fetchOtxLookup(
   if (!key) throw missingApiKey("OTX_API_KEY");
 
   const { kind, otxType, value } = classifyOtxIndicator(queryRaw);
-  const ua = options?.userAgent ?? "Watchdog/1.0 (+threat.otx.lookup; OSINT)";
+  const ua = options?.userAgent ?? watchdogUserAgent("threat.otx.lookup");
   const url = `https://otx.alienvault.com/api/v1/indicators/${otxType}/${encodeURIComponent(value)}/general`;
 
   const res = await fetch(url, {

@@ -3,6 +3,7 @@ import type { PatchOp } from "@watchdog/schemas";
 
 import { tryParsePatch } from "../../graph/patch";
 import { readArtifactBytes } from "../../infra/blob";
+import { errorMessage } from "../../infra/domain-error";
 import { loadCapReport } from "../load-cap-report";
 import type { CollectRuntime } from "./collect";
 import type { JobLog } from "./helpers";
@@ -85,7 +86,7 @@ export async function interpretStage(
       interpretError = `interpret patch invalid: ${parsedPatch.error}`;
     }
   } catch (error) {
-    interpretError = error instanceof Error ? error.message : String(error);
+    interpretError = errorMessage(error);
   }
 
   return {

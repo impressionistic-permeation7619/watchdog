@@ -6,6 +6,7 @@ import {
   validationToolsError,
 } from "../errors/tools-error";
 import { normalizeHost } from "../whois/normalize";
+import { watchdogUserAgent } from "../errors/user-agent";
 
 export const commoncrawlHitSchema = z.object({
   url: z.string(),
@@ -91,7 +92,7 @@ export async function fetchCommoncrawlLookup(
   const indexCount = Math.min(Math.max(options?.indexes ?? 2, 1), 6);
   const limit = Math.min(Math.max(options?.limit ?? 40, 1), 200);
   const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+archive.commoncrawl.lookup; OSINT)";
+    options?.userAgent ?? watchdogUserAgent("archive.commoncrawl.lookup");
 
   const collRes = await fetch("https://index.commoncrawl.org/collinfo.json", {
     method: "GET",

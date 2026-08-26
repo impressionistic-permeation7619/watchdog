@@ -7,6 +7,7 @@ import {
 } from "../errors/tools-error";
 import { isRecord } from "../parse/coerce";
 import { normalizeHost } from "../whois/normalize";
+import { watchdogUserAgent } from "../errors/user-agent";
 
 export const whoxyLookupSnapshotSchema = z.object({
   host: z.string().min(1),
@@ -50,7 +51,7 @@ export async function fetchWhoxyWhois(
   if (!key) throw missingApiKey("WHOXY_API_KEY");
 
   const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+network.whoxy.lookup; OSINT)";
+    options?.userAgent ?? watchdogUserAgent("network.whoxy.lookup");
   const url = new URL("https://api.whoxy.com/");
   url.searchParams.set("key", key);
   url.searchParams.set("whois", host);

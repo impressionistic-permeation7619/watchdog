@@ -7,6 +7,7 @@ import {
 } from "../errors/tools-error";
 import { isRecord } from "../parse/coerce";
 import { normalizeHost } from "../whois/normalize";
+import { watchdogUserAgent } from "../errors/user-agent";
 
 export const trancoLookupSnapshotSchema = z.object({
   domain: z.string().min(1),
@@ -55,7 +56,7 @@ export async function fetchTrancoLookup(
 ): Promise<TrancoLookupSnapshot> {
   const domain = normalizeHost(domainRaw);
   const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+network.tranco.lookup; OSINT)";
+    options?.userAgent ?? watchdogUserAgent("network.tranco.lookup");
 
   const res = await fetch(
     `https://tranco-list.eu/api/ranks/domain/${encodeURIComponent(domain)}`,

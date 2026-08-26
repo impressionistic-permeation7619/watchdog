@@ -7,6 +7,7 @@ import {
   validationToolsError,
 } from "../errors/tools-error";
 import { asString, isRecord, recordRows } from "../parse/coerce";
+import { watchdogUserAgent } from "../errors/user-agent";
 
 export const HASHLOOKUP_ALGOS = ["md5", "sha1", "sha256", "sha512"] as const;
 export type HashlookupAlgo = (typeof HASHLOOKUP_ALGOS)[number];
@@ -80,7 +81,7 @@ export async function fetchHashlookup(
   const hash = normalizeHashlookupHash(hashRaw);
   const algo = algoForHash(hash);
   const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+threat.hashlookup.lookup; OSINT)";
+    options?.userAgent ?? watchdogUserAgent("threat.hashlookup.lookup");
 
   const res = await fetch(
     `https://hashlookup.circl.lu/lookup/${algo}/${hash}`,

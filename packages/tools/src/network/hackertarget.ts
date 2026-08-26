@@ -6,6 +6,7 @@ import {
   rateLimitedToolsError,
 } from "../errors/tools-error";
 import { normalizeHost } from "../whois/normalize";
+import { watchdogUserAgent } from "../errors/user-agent";
 
 export const hackertargetLookupSnapshotSchema = z.object({
   ip: z.string().min(1),
@@ -32,7 +33,7 @@ export async function fetchHackertargetReverseIp(
   const ip = normalizeIp(ipRaw);
   const limit = options?.limit ?? 200;
   const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+network.hackertarget.lookup; OSINT)";
+    options?.userAgent ?? watchdogUserAgent("network.hackertarget.lookup");
 
   const url = new URL("https://api.hackertarget.com/reverseiplookup/");
   url.searchParams.set("q", ip);

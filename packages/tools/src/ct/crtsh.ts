@@ -1,7 +1,9 @@
 import {
   httpToolsError,
   parseToolsError,
+  errorMessage,
 } from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
 import { asStringEmpty as asString, isRecord } from "../parse/coerce";
 import { normalizeHost } from "../whois/normalize";
 import {
@@ -81,7 +83,7 @@ export async function fetchCrtShLookup(
   const normalized = normalizeHost(host);
   const limit = options.limit ?? 50;
   const userAgent =
-    options.userAgent ?? "Watchdog/1.0 (+network.ct.lookup; OSINT)";
+    options.userAgent ?? watchdogUserAgent("network.ct.lookup");
 
   const url = new URL(CRT_SH_URL);
   url.searchParams.set("q", `%.${normalized}`);
@@ -102,7 +104,7 @@ export async function fetchCrtShLookup(
     throw parseToolsError(
       "crt.sh",
       normalized,
-      `crt.sh read failed: ${error instanceof Error ? error.message : String(error)}`
+      `crt.sh read failed: ${errorMessage(error)}`
     );
   }
   const rows = parseCrtShJson(payloadText);

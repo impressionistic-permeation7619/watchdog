@@ -8,6 +8,7 @@ import {
 } from "../errors/tools-error";
 import { classifyIpOrHost } from "../parse/classify-ip-or-host";
 import { asString, isRecord } from "../parse/coerce";
+import { watchdogUserAgent } from "../errors/user-agent";
 
 export const leakixLookupSnapshotSchema = z.object({
   query: z.string().min(1),
@@ -49,7 +50,7 @@ export async function fetchLeakixLookup(
 
   const { kind, value } = classifyIpOrHost(queryRaw);
   const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+network.leakix.lookup; OSINT)";
+    options?.userAgent ?? watchdogUserAgent("network.leakix.lookup");
   const path = kind === "ip" ? "host" : "domain";
   const url = `https://leakix.net/${path}/${encodeURIComponent(value)}`;
 

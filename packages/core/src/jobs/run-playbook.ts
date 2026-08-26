@@ -16,7 +16,7 @@ import {
   assertEntityInCase,
   assertEvidenceInCase,
 } from "../graph/guards";
-import { DomainError } from "../infra/domain-error";
+import { DomainError, errorMessage } from "../infra/domain-error";
 import { hasCredential } from "../infra/vault";
 import { enqueueCapJob } from "./boss";
 import { toJobRecord, type JobRecord } from "./start-job";
@@ -43,7 +43,7 @@ export async function runPlaybook(
   try {
     playbook = getPlaybook(input.playbookId);
   } catch (error) {
-    const msg = error instanceof Error ? error.message : String(error);
+    const msg = errorMessage(error);
     throw new DomainError("not_found", msg);
   }
   const { seed } = input;

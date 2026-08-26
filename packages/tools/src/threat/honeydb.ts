@@ -8,6 +8,7 @@ import {
   validationToolsError,
 } from "../errors/tools-error";
 import { asString, isRecord } from "../parse/coerce";
+import { watchdogUserAgent } from "../errors/user-agent";
 
 export const honeydbLookupSnapshotSchema = z.object({
   ip: z.string().min(1),
@@ -63,7 +64,7 @@ export async function fetchHoneydbLookup(
   }
 
   const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+threat.honeydb.lookup; OSINT)";
+    options?.userAgent ?? watchdogUserAgent("threat.honeydb.lookup");
   const res = await fetch(
     `https://honeydb.io/api/ip-context/${encodeURIComponent(ip)}`,
     {

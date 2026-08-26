@@ -7,6 +7,7 @@ import {
   rateLimitedToolsError,
 } from "../errors/tools-error";
 import { isRecord } from "../parse/coerce";
+import { watchdogUserAgent } from "../errors/user-agent";
 
 export const urlscanSubmitVisibilitySchema = z.enum([
   "public",
@@ -47,7 +48,7 @@ export async function submitUrlscan(
   if (!key) throw missingApiKey("URLSCAN_API_KEY");
   const target = url.trim();
   const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+network.urlscan.submit; OSINT)";
+    options?.userAgent ?? watchdogUserAgent("network.urlscan.submit");
 
   const res = await fetch("https://urlscan.io/api/v1/scan/", {
     method: "POST",

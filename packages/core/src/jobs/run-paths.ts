@@ -1,6 +1,7 @@
 import { db, jobsRepo, playbookRunsRepo, type JobRow } from "@watchdog/db";
 
 import { logSwallowed } from "../infra/process-log";
+import { errorMessage } from "../infra/domain-error";
 import { storeCacheStage } from "./stages/cache";
 import { advancePlaybookRun } from "./stages/chain";
 import type { CollectResult } from "./stages/collect";
@@ -89,7 +90,7 @@ export async function runFailedPath(opts: {
   caseId?: string;
 }): Promise<void> {
   const { jobId, error, jobLog, playbookRunId, caseId } = opts;
-  const msg = error instanceof Error ? error.message : String(error);
+  const msg = errorMessage(error);
   jobLog.log(`run failed: ${msg}`);
   await failJob(jobId, msg, jobLog.lines);
   if (playbookRunId !== null) {

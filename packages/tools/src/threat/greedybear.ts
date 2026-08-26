@@ -4,6 +4,7 @@ import { createTtlCache } from "../cache/ttl-memory";
 import { httpToolsError, ToolsError } from "../errors/tools-error";
 import { classifyIpOrHost } from "../parse/classify-ip-or-host";
 import { asString, isRecord } from "../parse/coerce";
+import { watchdogUserAgent } from "../errors/user-agent";
 
 export const greedybearLookupSnapshotSchema = z.object({
   query: z.string().min(1),
@@ -76,7 +77,7 @@ export async function fetchGreedybearLookup(
 ): Promise<GreedybearLookupSnapshot> {
   const { kind, value } = classifyIpOrHost(queryRaw);
   const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+threat.greedybear.lookup; OSINT)";
+    options?.userAgent ?? watchdogUserAgent("threat.greedybear.lookup");
 
   const feed = await fetchScannerFeed(signal, ua);
 

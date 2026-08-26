@@ -8,6 +8,7 @@ import {
   rateLimitedToolsError,
   validationToolsError,
 } from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
 
 export const hudsonrockLookupSnapshotSchema = z.object({
   query: z.string().min(1),
@@ -87,7 +88,7 @@ export async function fetchHudsonrockLookup(
 
   const { kind, value } = classifyHudsonrockQuery(queryRaw);
   const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+breach.hudsonrock.lookup; OSINT)";
+    options?.userAgent ?? watchdogUserAgent("breach.hudsonrock.lookup");
 
   let path: string;
   let body: Record<string, unknown>;

@@ -1,12 +1,9 @@
 import { z } from "zod";
 
-import {
-  httpToolsError,
-  parseToolsError,
-  rateLimitedToolsError,
-} from "../errors/tools-error";
+import { fetchJsonObject } from "../http/fetch-json";
 import { asString, isRecord } from "../parse/coerce";
 import { normalizeHost } from "../whois/normalize";
+import { watchdogUserAgent } from "../errors/user-agent";
 
 export const urlscanHitSchema = z.object({
   uuid: z.string(),
@@ -48,33 +45,22 @@ export async function fetchUrlscanSearch(
   const host = normalizeHost(hostRaw);
   const size = Math.min(Math.max(options?.size ?? 20, 1), 100);
   const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+network.urlscan.lookup; OSINT)";
+    options?.userAgent ?? watchdogUserAgent("network.urlscan.lookup");
 
   const url = new URL("https://urlscan.io/api/v1/search/");
   url.searchParams.set("q", `page.domain:${host}`);
   url.searchParams.set("size", String(size));
 
-  const res = await fetch(url, {
-    method: "GET",
+  const body = await fetchJsonObject({
+    url,
+    init: {
+      method: "GET",
+      headers: { Accept: "application/json", "User-Agent": ua },
+    },
     signal,
-    headers: { Accept: "application/json", "User-Agent": ua },
+    service: "URLScan",
+    subject: host,
   });
-
-  if (res.status === 429) {
-    throw rateLimitedToolsError("URLScan", host);
-  }
-  if (!res.ok) {
-    throw httpToolsError(
-      "URLScan API",
-      res.status,
-      `URLScan API ${res.status} for ${host}`
-    );
-  }
-
-  const body: unknown = await res.json();
-  if (!isRecord(body)) {
-    throw parseToolsError("URLScan", host);
-  }
   const rows = Array.isArray(body.results) ? body.results : [];
   const hits: UrlscanHit[] = [];
   const urls: string[] = [];

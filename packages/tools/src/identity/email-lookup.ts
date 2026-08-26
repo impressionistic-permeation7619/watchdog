@@ -1,8 +1,10 @@
-import { Resolver } from "node:dns/promises";
-
 import { z } from "zod";
 
-import { abortedToolsError, validationToolsError } from "../errors/tools-error";
+import { validationToolsError } from "../errors/tools-error";
+import {
+  assertNotAborted,
+  withAbortableResolver,
+} from "../dns/abortable-resolver";
 
 export const emailLookupSnapshotSchema = z.object({
   email: z.string().min(1),
@@ -90,19 +92,10 @@ export async function fetchEmailLookup(
   signal: AbortSignal
 ): Promise<EmailLookupSnapshot> {
   const { email, domain } = normalizeEmail(emailRaw);
-  const resolver = new Resolver();
-  const onAbort = () => {
-    try {
-      resolver.cancel();
-    } catch {
-      // already cancelled / idle
-    }
-  };
-  if (signal.aborted) {
-    onAbort();
-    throw abortedToolsError("Email lookup aborted");
-  }
-  signal.addEventListener("abort", onAbort, { once: true });
+  const { resolver, cleanup } = withAbortableResolver(
+    signal,
+    "Email lookup aborted"
+  );
   try {
     const [mx, txtRoot, txtDmarc] = await Promise.all([
       resolver
@@ -111,7 +104,7 @@ export async function fetchEmailLookup(
       resolver.resolveTxt(domain).catch(() => [] as string[][]),
       resolver.resolveTxt(`_dmarc.${domain}`).catch(() => [] as string[][]),
     ]);
-    if (signal.aborted) throw abortedToolsError("Email lookup aborted");
+    assertNotAborted(signal, "Email lookup aborted");
 
     const root = flatTxt(txtRoot);
     const dmarc = flatTxt(txtDmarc);
@@ -132,6 +125,6 @@ export async function fetchEmailLookup(
       dmarcPresent: dmarc.some((r) => /v=DMARC1/i.test(r)),
     });
   } finally {
-    signal.removeEventListener("abort", onAbort);
+    cleanup();
   }
 }

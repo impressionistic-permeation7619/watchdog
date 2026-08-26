@@ -2,7 +2,7 @@ import { db, type DbTx } from "@watchdog/db";
 import { assertPatchGates } from "@watchdog/policy";
 import type { ConfidenceTier, PatchOp } from "@watchdog/schemas";
 
-import { DomainError } from "../infra/domain-error";
+import { DomainError, errorMessage } from "../infra/domain-error";
 import { applyClaimOp } from "./apply-claim-op";
 import { applyEdgeOp } from "./apply-edge-op";
 import { applyEntityOp } from "./apply-entity-op";
@@ -77,7 +77,7 @@ export async function applyPatch(opts: ApplyPatchOpts): Promise<void> {
     if (error instanceof DomainError) throw error;
     throw new DomainError(
       "invalid",
-      error instanceof Error ? error.message : "Patch gate rejected"
+      errorMessage(error, "Patch gate rejected")
     );
   }
 

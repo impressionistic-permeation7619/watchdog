@@ -7,6 +7,7 @@ import {
   parseToolsError,
 } from "../errors/tools-error";
 import { isRecord } from "../parse/coerce";
+import { watchdogUserAgent } from "../errors/user-agent";
 
 export const shodanLookupSnapshotSchema = z.object({
   ip: z.string().min(1),
@@ -42,7 +43,7 @@ export async function fetchShodanHost(
   if (!key) throw missingApiKey("SHODAN_API_KEY");
 
   const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+network.shodan.lookup; OSINT)";
+    options?.userAgent ?? watchdogUserAgent("network.shodan.lookup");
   const url = new URL(
     `https://api.shodan.io/shodan/host/${encodeURIComponent(ip)}`
   );

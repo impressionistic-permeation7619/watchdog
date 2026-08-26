@@ -3,6 +3,7 @@ import { z } from "zod";
 import { normalizeIp } from "../dns/reverse";
 import { httpToolsError, ToolsError } from "../errors/tools-error";
 import { asString, isRecord } from "../parse/coerce";
+import { watchdogUserAgent } from "../errors/user-agent";
 
 export const bgprankingLookupSnapshotSchema = z.object({
   ip: z.string().min(1),
@@ -124,7 +125,7 @@ export async function fetchBgprankingLookup(
 ): Promise<BgprankingLookupSnapshot> {
   const ip = normalizeIp(ipRaw);
   const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+threat.bgpranking.lookup; OSINT)";
+    options?.userAgent ?? watchdogUserAgent("threat.bgpranking.lookup");
 
   const asn = await fetchLatestAsn(ip, signal, ua);
   if (asn === null) {

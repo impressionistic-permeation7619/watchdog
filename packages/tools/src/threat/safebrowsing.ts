@@ -8,6 +8,7 @@ import {
   validationToolsError,
 } from "../errors/tools-error";
 import { isRecord } from "../parse/coerce";
+import { watchdogUserAgent } from "../errors/user-agent";
 
 export const safebrowsingMatchSchema = z.object({
   threatType: z.string(),
@@ -51,7 +52,7 @@ export async function fetchSafebrowsingLookup(
   if (!key) throw missingApiKey("GOOGLE_SAFEBROWSING_API_KEY");
 
   const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+threat.safebrowsing.lookup; OSINT)";
+    options?.userAgent ?? watchdogUserAgent("threat.safebrowsing.lookup");
 
   const res = await fetch(
     `https://safebrowsing.googleapis.com/v4/threatMatches:find?key=${encodeURIComponent(key)}`,

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createTtlCache } from "../cache/ttl-memory";
 import { normalizeIp } from "../dns/reverse";
 import { httpToolsError } from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
 
 export const torExitLookupSnapshotSchema = z.object({
   ip: z.string().min(1),
@@ -70,7 +71,7 @@ export async function fetchTorExitLookup(
 ): Promise<TorExitLookupSnapshot> {
   const ip = normalizeIp(ipRaw);
   const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+network.tor_exit.lookup; OSINT)";
+    options?.userAgent ?? watchdogUserAgent("network.tor_exit.lookup");
 
   const exits = await fetchExitAddresses(signal, ua);
 

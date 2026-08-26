@@ -14,7 +14,7 @@ import {
 } from "@watchdog/schemas";
 
 import { assertCaseExists, assertEntityInCase } from "../graph/guards";
-import { DomainError } from "../infra/domain-error";
+import { DomainError, errorMessage } from "../infra/domain-error";
 import { enqueueCapJob } from "./boss";
 import { assertCapAvailability } from "./cap-availability";
 import { setJobStatus } from "./set-job-status";
@@ -112,7 +112,7 @@ export async function startJob(input: StartJobInput): Promise<JobRecord> {
   try {
     cap = getCapability(input.capabilityId);
   } catch (error) {
-    const msg = error instanceof Error ? error.message : String(error);
+    const msg = errorMessage(error);
     throw new DomainError("not_found", msg);
   }
   const parsed = cap.input.safeParse(input.input);

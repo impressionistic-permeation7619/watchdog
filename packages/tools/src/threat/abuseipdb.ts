@@ -7,6 +7,7 @@ import {
   parseToolsError,
 } from "../errors/tools-error";
 import { isRecord } from "../parse/coerce";
+import { watchdogUserAgent } from "../errors/user-agent";
 
 export const abuseIpdbLookupSnapshotSchema = z.object({
   ip: z.string().min(1),
@@ -46,7 +47,7 @@ export async function fetchAbuseIpdbCheck(
   if (!key) throw missingApiKey("ABUSEIPDB_API_KEY");
 
   const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+threat.abuseipdb.lookup; OSINT)";
+    options?.userAgent ?? watchdogUserAgent("threat.abuseipdb.lookup");
   const url = new URL("https://api.abuseipdb.com/api/v2/check");
   url.searchParams.set("ipAddress", ip);
   url.searchParams.set("maxAgeInDays", String(options?.maxAgeInDays ?? 90));

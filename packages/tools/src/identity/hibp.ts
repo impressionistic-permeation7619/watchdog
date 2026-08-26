@@ -6,6 +6,7 @@ import {
   missingApiKey,
   validationToolsError,
 } from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
 
 export const hibpBreachSchema = z.object({
   name: z.string(),
@@ -43,7 +44,7 @@ export async function fetchHibpBreachedAccount(
   const key = apiKey.trim();
   if (!key) throw missingApiKey("HIBP_API_KEY");
 
-  const ua = options?.userAgent ?? "Watchdog/1.0 (+breach.hibp.lookup; OSINT)";
+  const ua = options?.userAgent ?? watchdogUserAgent("breach.hibp.lookup");
   const truncate = options?.truncate ?? 40;
   const url = `https://haveibeenpwned.com/api/v3/breachedaccount/${encodeURIComponent(normalized)}?truncateResponse=false`;
 

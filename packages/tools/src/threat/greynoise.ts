@@ -1,12 +1,9 @@
 import { z } from "zod";
 
 import { normalizeIp } from "../dns/reverse";
-import {
-  httpToolsError,
-  parseToolsError,
-  rateLimitedToolsError,
-} from "../errors/tools-error";
-import { asBool, asString, isRecord } from "../parse/coerce";
+import { fetchJsonObject } from "../http/fetch-json";
+import { asBool, asString } from "../parse/coerce";
+import { watchdogUserAgent } from "../errors/user-agent";
 
 export const greynoiseLookupSnapshotSchema = z.object({
   ip: z.string().min(1),
@@ -41,7 +38,7 @@ export async function fetchGreynoiseCommunity(
   const ip = normalizeIp(ipRaw);
   const key = options?.apiKey?.trim() ?? "";
   const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+threat.greynoise.lookup; OSINT)";
+    options?.userAgent ?? watchdogUserAgent("threat.greynoise.lookup");
 
   const headers: Record<string, string> = {
     Accept: "application/json",
@@ -49,28 +46,17 @@ export async function fetchGreynoiseCommunity(
   };
   if (key) headers.key = key;
 
-  const res = await fetch(`https://api.greynoise.io/v3/community/${ip}`, {
-    method: "GET",
+  const body = await fetchJsonObject({
+    url: `https://api.greynoise.io/v3/community/${ip}`,
+    init: {
+      method: "GET",
+      headers,
+    },
     signal,
-    headers,
+    service: "GreyNoise",
+    subject: ip,
+    acceptStatus: (status) => status === 200 || status === 404,
   });
-
-  // 404 JSON = IP not observed; still a valid snapshot.
-  if (res.status !== 200 && res.status !== 404) {
-    if (res.status === 429) {
-      throw rateLimitedToolsError("GreyNoise", ip);
-    }
-    throw httpToolsError(
-      "GreyNoise API",
-      res.status,
-      `GreyNoise API ${res.status} for ${ip}`
-    );
-  }
-
-  const body: unknown = await res.json();
-  if (!isRecord(body)) {
-    throw parseToolsError("GreyNoise", ip);
-  }
   const noise = asBool(body.noise);
   const riot = asBool(body.riot);
 

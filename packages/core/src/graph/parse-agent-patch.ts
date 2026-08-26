@@ -1,6 +1,7 @@
 import { assertPatchShape } from "@watchdog/policy";
 import { trimmedOrNull, type PatchOp } from "@watchdog/schemas";
 
+import { errorMessage } from "../infra/domain-error";
 import { tryParsePatch } from "./patch";
 
 export interface ParsedAgentPatch {
@@ -34,7 +35,7 @@ export function parseAgentPatch(input: {
   } catch (error) {
     return {
       ok: false,
-      error: error instanceof Error ? error.message : "Invalid patch shape",
+      error: errorMessage(error, "Invalid patch shape"),
     };
   }
 

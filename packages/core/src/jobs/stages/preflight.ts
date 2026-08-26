@@ -10,6 +10,7 @@ import { db, jobsRepo, type JobArtifact, type JobRow } from "@watchdog/db";
 import { isJsonObject } from "@watchdog/schemas";
 
 import { logProcess } from "../../infra/process-log";
+import { errorMessage } from "../../infra/domain-error";
 import {
   evaluateCapAvailability,
   formatCapAvailabilityError,
@@ -75,7 +76,7 @@ export async function preflight(jobId: string): Promise<PreflightResult> {
   try {
     cap = getCapability(job.capabilityId);
   } catch (error) {
-    const msg = error instanceof Error ? error.message : String(error);
+    const msg = errorMessage(error);
     await failJob(jobId, msg);
     return { kind: "stop", reason: "unknown_capability" };
   }

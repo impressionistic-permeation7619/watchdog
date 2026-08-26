@@ -3,6 +3,7 @@ import { z } from "zod";
 import { normalizeIp } from "../dns/reverse";
 import { httpToolsError } from "../errors/tools-error";
 import { asString, isRecord } from "../parse/coerce";
+import { watchdogUserAgent } from "../errors/user-agent";
 
 export const feodoLookupSnapshotSchema = z.object({
   ip: z.string().min(1),
@@ -98,7 +99,7 @@ export async function fetchFeodoLookup(
   options?: { userAgent?: string; apiKey?: string }
 ): Promise<FeodoLookupSnapshot> {
   const ip = normalizeIp(ipRaw);
-  const ua = options?.userAgent ?? "Watchdog/1.0 (+threat.feodo.lookup; OSINT)";
+  const ua = options?.userAgent ?? watchdogUserAgent("threat.feodo.lookup");
 
   const entries = await fetchBlocklist(signal, {
     userAgent: ua,

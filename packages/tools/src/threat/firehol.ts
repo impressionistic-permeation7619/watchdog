@@ -5,6 +5,7 @@ import { z } from "zod";
 import { createTtlCache } from "../cache/ttl-memory";
 import { httpToolsError } from "../errors/tools-error";
 import { normalizeIp } from "../dns/reverse";
+import { watchdogUserAgent } from "../errors/user-agent";
 
 export const fireholLookupSnapshotSchema = z.object({
   ip: z.string().min(1),
@@ -133,7 +134,7 @@ export async function fetchFireholLookup(
 ): Promise<FireholLookupSnapshot> {
   const ip = normalizeIp(ipRaw);
   const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+threat.firehol.lookup; OSINT)";
+    options?.userAgent ?? watchdogUserAgent("threat.firehol.lookup");
 
   let found = false;
   const list = await fetchCidrList(signal, ua);

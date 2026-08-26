@@ -3,6 +3,7 @@ import { z } from "zod";
 import { httpToolsError, missingApiKey } from "../errors/tools-error";
 import { asBool, isRecord } from "../parse/coerce";
 import { normalizeHost } from "../whois/normalize";
+import { watchdogUserAgent } from "../errors/user-agent";
 
 export const c99SubdomainHitSchema = z.object({
   subdomain: z.string(),
@@ -76,7 +77,7 @@ export async function fetchC99Subdomains(
 
   const realtime = options?.realtime === true;
   const limit = options?.limit ?? 200;
-  const ua = options?.userAgent ?? "Watchdog/1.0 (+network.c99.lookup; OSINT)";
+  const ua = options?.userAgent ?? watchdogUserAgent("network.c99.lookup");
 
   const url = new URL("https://api.c99.nl/subdomainfinder");
   url.searchParams.set("key", key);
