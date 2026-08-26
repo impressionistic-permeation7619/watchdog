@@ -3,7 +3,6 @@
   "compilerOptions": {
     "paths": {
       "@/*": ["./apps/web/src/*"],
-      "#/*": ["./apps/web/src/*"],
 
       "@watchdog/ai": ["./packages/ai/src/index.ts"],
       "@watchdog/ai/*": ["./packages/ai/src/*"],

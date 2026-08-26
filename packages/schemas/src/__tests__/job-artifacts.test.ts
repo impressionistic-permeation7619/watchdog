@@ -18,11 +18,9 @@ describe("isJobInternalArtifact", () => {
 });
 
 describe("isProcessCapability", () => {
-  it("includes current and legacy process ids", () => {
+  it("includes current process capability ids", () => {
     expect(isProcessCapability("evidence.harvest")).toBe(true);
     expect(isProcessCapability("evidence.extract.ai")).toBe(true);
-    expect(isProcessCapability("evidence.item.process")).toBe(true);
-    expect(isProcessCapability("evidence.item.aiprocess")).toBe(true);
     expect(isProcessCapability("network.dns.lookup")).toBe(false);
   });
 });
