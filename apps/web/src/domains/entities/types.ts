@@ -6,20 +6,11 @@ import {
   nonEmptyTrimmed,
   trimmedOrUndefined,
   uuidSchema,
-  type EntityKind,
 } from "@watchdog/schemas";
 
-export interface EntityRecord {
-  id: string;
-  caseId: string;
-  kind: EntityKind;
-  name: string;
-  slug: string;
-  summary: string | null;
-  notes: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
+import type { EntityRecord as CoreEntityRecord } from "@watchdog/core";
+
+export type EntityRecord = CoreEntityRecord;
 
 export const caseIdInputSchema = z.object({
   caseId: uuidSchema,

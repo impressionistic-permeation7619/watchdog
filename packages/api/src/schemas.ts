@@ -18,8 +18,6 @@ import {
   questionStatusSchema,
   retractKindSchema,
   slugifyName,
-  taskPrioritySchema,
-  taskStatusSchema,
   trimmedOrUndefined,
 } from "@watchdog/schemas";
 
@@ -33,6 +31,15 @@ export {
   jsonObjectSchema,
   listRecentActivityInputSchema,
   proposalStatusSchema,
+  searchCaseCaseHitSchema,
+  searchCaseEntityHitSchema,
+  searchCaseEvidenceHitSchema,
+  searchCaseIdentifierHitSchema,
+  searchCaseJobHitSchema,
+  searchCaseProposalHitSchema,
+  searchCaseResultSchema,
+  searchCaseTaskHitSchema,
+  taskSchema,
 } from "@watchdog/schemas";
 
 export const caseSchema = z.object({
@@ -166,20 +173,6 @@ export const questionSchema = z.object({
   resolvedNote: z.string().nullable(),
 });
 
-export const taskSchema = z.object({
-  id: z.uuid(),
-  caseId: z.uuid(),
-  entityId: z.uuid().nullable(),
-  title: z.string(),
-  description: z.string().nullable(),
-  status: taskStatusSchema,
-  priority: taskPrioritySchema.nullable(),
-  dueDate: z.string().nullable(),
-  position: z.number().int(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-});
-
 export const presignedUploadSchema = z.object({
   url: z.string(),
   uri: z.string(),
@@ -289,64 +282,4 @@ export const credentialSlotSchema = z.object({
   description: z.string(),
   configured: z.boolean(),
   updatedAt: z.string().nullable(),
-});
-
-export const searchCaseEntityHitSchema = z.object({
-  id: z.uuid(),
-  name: z.string(),
-  slug: z.string(),
-  kind: entityKindSchema,
-});
-
-export const searchCaseIdentifierHitSchema = z.object({
-  id: z.uuid(),
-  type: identifierTypeSchema,
-  platform: z.string(),
-  value: z.string(),
-  entityId: z.uuid(),
-  entityName: z.string(),
-  entitySlug: z.string(),
-});
-
-export const searchCaseEvidenceHitSchema = z.object({
-  id: z.uuid(),
-  label: z.string().nullable(),
-  kind: evidenceKindSchema,
-});
-
-export const searchCaseTaskHitSchema = z.object({
-  id: z.uuid(),
-  title: z.string(),
-  status: taskStatusSchema,
-  entityId: z.uuid().nullable(),
-});
-
-export const searchCaseJobHitSchema = z.object({
-  id: z.uuid(),
-  capabilityId: z.string(),
-  status: jobStatusSchema,
-  resultSummary: z.string().nullable(),
-});
-
-export const searchCaseProposalHitSchema = z.object({
-  id: z.uuid(),
-  summary: z.string().nullable(),
-  capabilityId: z.string().nullable(),
-});
-
-export const searchCaseCaseHitSchema = z.object({
-  id: z.uuid(),
-  name: z.string(),
-  slug: z.string(),
-});
-
-export const searchCaseResultSchema = z.object({
-  q: z.string(),
-  entities: z.array(searchCaseEntityHitSchema),
-  identifiers: z.array(searchCaseIdentifierHitSchema),
-  evidence: z.array(searchCaseEvidenceHitSchema),
-  tasks: z.array(searchCaseTaskHitSchema),
-  jobs: z.array(searchCaseJobHitSchema),
-  proposals: z.array(searchCaseProposalHitSchema),
-  cases: z.array(searchCaseCaseHitSchema),
 });

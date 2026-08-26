@@ -9,7 +9,14 @@ import {
   reorderTasks,
   updateTask,
 } from "@watchdog/core";
-import { taskPrioritySchema, taskStatusSchema } from "@watchdog/schemas";
+import {
+  taskCreateInputSchema,
+  taskDeleteInputSchema,
+  taskFiltersSchema,
+  taskIdInputSchema,
+  taskReorderInputSchema,
+  taskUpdateInputSchema,
+} from "@watchdog/schemas";
 
 import { withDomainError } from "../map-domain-error";
 import { authed } from "../os";
@@ -22,15 +29,8 @@ export const list = authed
     summary: "List tasks for a case",
     tags: ["tasks"],
   })
-  .input(
-    z.object({
-      caseId: z.uuid(),
-      entityId: z.uuid().optional(),
-      status: taskStatusSchema.optional(),
-      unattachedOnly: z.boolean().optional(),
-    })
-  )
-  .output(z.array(taskSchema))
+  .input(taskFiltersSchema)
+  .output(taskSchema.array())
   .handler(
     withDomainError(async ({ input }) =>
       listTasksForCase(input.caseId, {
@@ -48,7 +48,7 @@ export const get = authed
     summary: "Get a task by id",
     tags: ["tasks"],
   })
-  .input(z.object({ caseId: z.uuid(), taskId: z.uuid() }))
+  .input(taskIdInputSchema)
   .output(taskSchema)
   .handler(
     withDomainError(async ({ input }) => {
@@ -66,17 +66,7 @@ export const create = authed
     tags: ["tasks"],
     successStatus: 201,
   })
-  .input(
-    z.object({
-      caseId: z.uuid(),
-      title: z.string().trim().min(1),
-      description: z.string().optional(),
-      status: taskStatusSchema.optional(),
-      priority: taskPrioritySchema.nullable().optional(),
-      dueDate: z.string().nullable().optional(),
-      entityId: z.uuid().nullable().optional(),
-    })
-  )
+  .input(taskCreateInputSchema)
   .output(taskSchema)
   .handler(withDomainError(async ({ input }) => createTask(input)));
 
@@ -87,29 +77,7 @@ export const update = authed
     summary: "Update a task",
     tags: ["tasks"],
   })
-  .input(
-    z
-      .object({
-        caseId: z.uuid(),
-        taskId: z.uuid(),
-        title: z.string().trim().min(1).optional(),
-        description: z.string().nullable().optional(),
-        status: taskStatusSchema.optional(),
-        priority: taskPrioritySchema.nullable().optional(),
-        dueDate: z.string().nullable().optional(),
-        entityId: z.uuid().nullable().optional(),
-      })
-      .refine(
-        (data) =>
-          data.title !== undefined ||
-          data.description !== undefined ||
-          data.status !== undefined ||
-          data.priority !== undefined ||
-          data.dueDate !== undefined ||
-          data.entityId !== undefined,
-        { message: "At least one field is required" }
-      )
-  )
+  .input(taskUpdateInputSchema)
   .output(taskSchema)
   .handler(withDomainError(async ({ input }) => updateTask(input)));
 
@@ -120,7 +88,7 @@ export const remove = authed
     summary: "Delete a task",
     tags: ["tasks"],
   })
-  .input(z.object({ caseId: z.uuid(), taskId: z.uuid() }))
+  .input(taskDeleteInputSchema)
   .output(z.object({ ok: z.literal(true) }))
   .handler(
     withDomainError(async ({ input }) => {
@@ -136,12 +104,6 @@ export const reorder = authed
     summary: "Rewrite task order within a status column",
     tags: ["tasks"],
   })
-  .input(
-    z.object({
-      caseId: z.uuid(),
-      status: taskStatusSchema,
-      orderedIds: z.array(z.uuid()),
-    })
-  )
-  .output(z.array(taskSchema))
+  .input(taskReorderInputSchema)
+  .output(taskSchema.array())
   .handler(withDomainError(async ({ input }) => reorderTasks(input)));

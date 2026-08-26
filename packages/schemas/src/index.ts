@@ -10,4 +10,6 @@ export * from "./validate-identifier";
 export * from "./fingerprint";
 export * from "./evidence-snapshot";
 export * from "./activity";
+export * from "./tasks";
+export * from "./search";
 export * from "./watchdog-events";

@@ -6,13 +6,9 @@ import {
   uuidSchema,
 } from "@watchdog/schemas";
 
-export interface EventRecord {
-  id: string;
-  entityId: string;
-  when: string;
-  what: string;
-  where: string | null;
-}
+import type { EventRecord as CoreEventRecord } from "@watchdog/core";
+
+export type EventRecord = CoreEventRecord;
 
 export const entityScopeInputSchema = z.object({
   caseId: uuidSchema,

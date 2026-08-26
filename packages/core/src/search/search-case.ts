@@ -15,12 +15,12 @@ import type {
   JobStatus,
   TaskStatus,
 } from "@watchdog/schemas";
+import { SEARCH_MIN_QUERY_LENGTH } from "@watchdog/schemas";
 
 import { assertCaseExists } from "../graph/guards";
 
 const DEFAULT_LIMIT = 24;
 const DEFAULT_PER_GROUP = 8;
-const MIN_QUERY_LENGTH = 2;
 
 export interface SearchCaseOpts {
   caseId: string;
@@ -107,7 +107,7 @@ export async function searchCase(
   opts: SearchCaseOpts
 ): Promise<SearchCaseResult> {
   const q = opts.q.trim();
-  if (q.length < MIN_QUERY_LENGTH) {
+  if (q.length < SEARCH_MIN_QUERY_LENGTH) {
     return emptyResult(q);
   }
 
@@ -183,4 +183,4 @@ export async function searchCase(
   };
 }
 
-export { MIN_QUERY_LENGTH as SEARCH_CASE_MIN_QUERY_LENGTH };
+export { SEARCH_CASE_MIN_QUERY_LENGTH } from "@watchdog/schemas";
