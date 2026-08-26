@@ -32,7 +32,7 @@
 
 Enqueue: `enqueueCapJob` → pg-boss queue `watchdog.cap-jobs` → `apps/worker` runs Cap → Evidence + Proposal → Inbox Accept/Reject (one TX). `/jobs` list is `JobListRecord` (no `logs`); Detail loads full `JobRecord` via `getJobForCase`.
 
-One boss per process: web/API via `enqueueCapJob` / `getBossProducer()` (`supervise: false`); worker via `getBossWorker()` (`supervise: true`) — playbook chain reuses the live worker boss. Cap `timeoutMs` drives abort, per-job expire, graceful stop, and stale-Job reclaim (see package AGENTS Gotchas). Export shadow sync: worker listens for graph events → `scheduleCaseExport` (coalesced in `@watchdog/core`).
+One boss per process: web/API via `enqueueCapJob` / `ensureBossProducer()` (`supervise: false`); worker via `ensureBossWorker()` (`supervise: true`) — playbook chain reuses the live worker boss. Cap `timeoutMs` drives abort, per-job expire, graceful stop, and stale-Job reclaim (see package AGENTS Gotchas). Export shadow sync: worker listens for graph events → `scheduleCaseExport` (coalesced in `@watchdog/core`).
 
 **Capability ids** — three segments `<category>.<salient_axis>.<method>` (ADR-045). File path mirrors the id under `packages/caps/src/`. Lexicon, method vocabulary, D1–D5 decisions, and ship gates: [`CAPS.md`](CAPS.md).
 

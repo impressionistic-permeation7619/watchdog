@@ -39,7 +39,7 @@ Domain services for Case Graph, Jobs, evidence, Tasks (case work items — not G
 - **TX asserts use `tx`** — pass `tx` into `assertEntityInCase` / `assertEvidenceInCase` / `assertCaseExists`; never assert on the global pool while writing on `tx`.
 - Dossier create+link / replace Evidence: one `db.transaction`; helpers in `evidence-links.ts`.
 - Jobs list: `listJobsForCase` → `JobListRecord` (input + artifact output; no `logs`). Detail via `getJobForCase`.
-- One boss per process: web/API `getBossProducer()` / `enqueueCapJob` (`supervise: false`); worker `getBossWorker()` (`supervise: true`); playbook chain reuses the live worker boss — never a second pool from Vite.
+- One boss per process: web/API `ensureBossProducer()` / `enqueueCapJob` (`supervise: false`); worker `ensureBossWorker()` (`supervise: true`); playbook chain reuses the live worker boss — never a second pool from Vite.
 - Dual SoT cancel: product `jobs.status` is authoritative; worker polls ~2s and aborts Cap `AbortController`; do not bridge pg-boss `job.signal`.
 - Export sync: `scheduleCaseExport(caseId)` coalesces (returns a Promise; callers fire-and-forget with `void`). Do not start parallel `writeCaseExport` from the worker. Case name rename regenerates slug (`slugForCaseName`); conflict if taken; best-effort `renameCaseExportDir` then `scheduleCaseExport`. Empty slugify → `invalid`.
 - Process logs: `@watchdog/log` (`logSwallowed` / `logProcess` — `logSwallowed` uses `log.error`); `executeJob` returns `JobRunOutcome` (`outcome` / `stopReason` / `abortReason`). evlog ≠ `Job.logs` / `graph_writes` custody.

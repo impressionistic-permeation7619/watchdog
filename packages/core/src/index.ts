@@ -13,8 +13,8 @@ export {
 export type { UploadedArtifact, PresignedPut } from "./infra/blob";
 export {
   CAP_JOB_QUEUE,
-  getBossProducer,
-  getBossWorker,
+  ensureBossProducer,
+  ensureBossWorker,
   enqueueCapJob,
   isCapJobPayload,
   type CapJobPayload,

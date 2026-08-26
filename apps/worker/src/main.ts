@@ -6,7 +6,7 @@ import {
   activeControllers,
   executeJob,
   findCancelledJobIds,
-  getBossWorker,
+  ensureBossWorker,
   gracefulStopTimeoutMs,
   isCapJobPayload,
   isWatchdogEvent,
@@ -36,7 +36,7 @@ async function main() {
     drainDir: path.join(workerRoot, ".evlog", "logs"),
   });
 
-  const boss = await getBossWorker();
+  const boss = await ensureBossWorker();
   emitOnce("worker.boot", { message: `listening on ${CAP_JOB_QUEUE}` });
 
   const stale = await reconcileStaleJobs();
