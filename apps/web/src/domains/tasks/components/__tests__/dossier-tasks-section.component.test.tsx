@@ -58,7 +58,13 @@ describe("DossierTasksSection", () => {
       handleQuickCreate: vi.fn(),
     });
 
-    render(<DossierTasksSection caseId={CASE_ID} entityId={ENTITY_ID} />);
+    render(
+      <DossierTasksSection
+        caseId={CASE_ID}
+        entityId={ENTITY_ID}
+        entitySlug="target-alpha"
+      />
+    );
 
     expect(screen.getByText("Task board (1)")).toBeInTheDocument();
     expect(useTaskWorkspaceMock).toHaveBeenCalledWith(CASE_ID, {

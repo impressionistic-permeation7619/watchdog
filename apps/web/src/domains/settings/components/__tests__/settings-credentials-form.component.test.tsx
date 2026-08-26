@@ -142,7 +142,7 @@ describe("SettingsCredentialsForm", () => {
   });
 
   it("removes a configured credential after type-to-confirm", async () => {
-    vi.mocked(deleteCredentialFn).mockResolvedValue(undefined);
+    vi.mocked(deleteCredentialFn).mockResolvedValue({ ok: true });
 
     renderForm([CONNECTED]);
     fireEvent.click(screen.getByRole("button", { name: "Remove" }));
