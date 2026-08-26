@@ -79,6 +79,7 @@ export const questionsCmd = defineNounCommand({
           caseId: args.case,
           entityId,
           text: args.text,
+          userOverride: true,
         });
         emit(row);
       },
@@ -120,6 +121,7 @@ export const questionsCmd = defineNounCommand({
         const row = await api().questions.update({
           caseId: args.case,
           questionId: args.question,
+          userOverride: true,
           ...pickDefined({ text: args.text }),
           ...(resolvedNote === undefined ? {} : { resolvedNote }),
         });
@@ -154,6 +156,7 @@ export const questionsCmd = defineNounCommand({
         const row = await api().questions.resolve({
           caseId: args.case,
           questionId: args.question,
+          userOverride: true,
           ...pickDefined({ resolvedNote: args.note }),
         });
         emit(row);
@@ -183,6 +186,7 @@ export const questionsCmd = defineNounCommand({
         const row = await api().questions.reopen({
           caseId: args.case,
           questionId: args.question,
+          userOverride: true,
         });
         emit(row);
       },

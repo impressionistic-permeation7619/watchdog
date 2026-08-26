@@ -1975,6 +1975,9 @@
                       "type": "string",
                       "format": "uuid"
                     }
+                  },
+                  "userOverride": {
+                    "const": true
                   }
                 },
                 "required": [
@@ -2158,6 +2161,9 @@
                       "type": "string",
                       "format": "uuid"
                     }
+                  },
+                  "userOverride": {
+                    "const": true
                   }
                 }
               }
@@ -2321,6 +2327,9 @@
                   "reason": {
                     "type": "string",
                     "minLength": 1
+                  },
+                  "userOverride": {
+                    "const": true
                   }
                 },
                 "required": [
@@ -2642,6 +2651,9 @@
                       "type": "string",
                       "format": "uuid"
                     }
+                  },
+                  "userOverride": {
+                    "const": true
                   }
                 },
                 "required": [
@@ -2949,6 +2961,9 @@
                       "type": "string",
                       "format": "uuid"
                     }
+                  },
+                  "userOverride": {
+                    "const": true
                   }
                 }
               }
@@ -3401,6 +3416,9 @@
                   "viewEntityId": {
                     "type": "string",
                     "format": "uuid"
+                  },
+                  "userOverride": {
+                    "const": true
                   }
                 },
                 "required": [
@@ -3612,6 +3630,9 @@
                       "type": "string",
                       "format": "uuid"
                     }
+                  },
+                  "userOverride": {
+                    "const": true
                   }
                 },
                 "required": [
@@ -3760,6 +3781,21 @@
             }
           }
         ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userOverride": {
+                    "const": true
+                  }
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "OK",
@@ -3900,6 +3936,9 @@
                   },
                   "where": {
                     "type": "string"
+                  },
+                  "userOverride": {
+                    "const": true
                   }
                 },
                 "required": [
@@ -4001,6 +4040,9 @@
                   },
                   "where": {
                     "type": "string"
+                  },
+                  "userOverride": {
+                    "const": true
                   }
                 },
                 "required": [
@@ -4083,6 +4125,21 @@
             }
           }
         ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userOverride": {
+                    "const": true
+                  }
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "OK",
@@ -4221,6 +4278,9 @@
                   "text": {
                     "type": "string",
                     "minLength": 1
+                  },
+                  "userOverride": {
+                    "const": true
                   }
                 },
                 "required": [
@@ -4328,6 +4388,9 @@
                         "type": "null"
                       }
                     ]
+                  },
+                  "userOverride": {
+                    "const": true
                   }
                 }
               }
@@ -4421,6 +4484,9 @@
                 "properties": {
                   "resolvedNote": {
                     "type": "string"
+                  },
+                  "userOverride": {
+                    "const": true
                   }
                 }
               }
@@ -4505,6 +4571,21 @@
             }
           }
         ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userOverride": {
+                    "const": true
+                  }
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "OK",

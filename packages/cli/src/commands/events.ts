@@ -86,6 +86,7 @@ export const eventsCmd = defineNounCommand({
           entityId,
           when: args.when,
           what: args.what,
+          userOverride: true,
           ...pickDefined({ where: args.where }),
         });
         emit(row);
@@ -129,6 +130,7 @@ export const eventsCmd = defineNounCommand({
           eventId: args.event,
           when: args.when,
           what: args.what,
+          userOverride: true,
           ...pickDefined({ where: args.where }),
         });
         emit(row);
@@ -163,6 +165,7 @@ export const eventsCmd = defineNounCommand({
         await api().events.delete({
           caseId: args.case,
           eventId: args.event,
+          userOverride: true,
         });
         emitOk({ deleted: true, id: args.event });
       },

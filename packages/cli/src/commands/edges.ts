@@ -105,6 +105,7 @@ export const edgesCmd = defineNounCommand({
           toId,
           predicate: edgePredicateSchema.parse(args.predicate),
           confidence: confidenceTierSchema.parse(args.confidence),
+          userOverride: true,
           ...pickDefined({ notes: args.notes, evidenceIds }),
         });
         emit(row);
@@ -139,6 +140,7 @@ export const edgesCmd = defineNounCommand({
         await api().edges.delete({
           caseId: args.case,
           edgeId: args.edge,
+          userOverride: true,
         });
         emitOk({ deleted: true, id: args.edge });
       },

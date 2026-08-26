@@ -23,6 +23,9 @@ import {
   trimmedOrUndefined,
 } from "@watchdog/schemas";
 
+/** Agent ingress escape hatch — required for API-key child Graph writes. */
+export const userOverrideSchema = z.literal(true).optional();
+
 export {
   activityItemSchema,
   activityKindSchema,

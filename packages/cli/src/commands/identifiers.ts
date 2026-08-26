@@ -114,6 +114,7 @@ export const identifiersCmd = defineNounCommand({
           value: args.value,
           confidence: confidenceTierSchema.parse(args.confidence),
           status: identifierStatusSchema.parse(args.status),
+          userOverride: true,
           ...pickDefined({
             platform: args.platform,
             notes: args.notes,
@@ -174,6 +175,7 @@ export const identifiersCmd = defineNounCommand({
         const row = await api().identifiers.update({
           caseId: args.case,
           identifierId: args.identifier,
+          userOverride: true,
           ...pickDefined({
             value: args.value,
             type: typeValue,

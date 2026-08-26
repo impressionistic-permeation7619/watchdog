@@ -32,6 +32,7 @@ export async function createApiContext(request: Request): Promise<ApiContext> {
     return {
       headers: request.headers,
       actor: actorFromSession(session),
+      authMethod: "session",
       log,
     };
   }
@@ -57,6 +58,7 @@ export async function createApiContext(request: Request): Promise<ApiContext> {
           email: null,
           name: `api-key:${result.key.name ?? result.key.id}`,
         },
+        authMethod: "apiKey",
         log,
       };
     }

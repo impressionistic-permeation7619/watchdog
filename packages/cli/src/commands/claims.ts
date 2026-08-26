@@ -119,6 +119,7 @@ export const claimsCmd = defineNounCommand({
           text: args.text,
           confidence: confidenceTierSchema.parse(args.confidence),
           class: claimClassSchema.parse(args.class),
+          userOverride: true,
           ...pickDefined({ evidenceIds }),
         });
         emit(row);
@@ -168,6 +169,7 @@ export const claimsCmd = defineNounCommand({
         const row = await api().claims.update({
           caseId: args.case,
           claimId: args.claim,
+          userOverride: true,
           ...pickDefined({
             text: args.text,
             class: classValue,
@@ -220,6 +222,7 @@ export const claimsCmd = defineNounCommand({
           claimId: args.claim,
           kind,
           reason: args.reason,
+          userOverride: true,
         });
         emit(row);
       },
