@@ -13,6 +13,8 @@ patterns=(
   graph
   data
   node_modules
+  .venv
+  .direnv
   dist
   .turbo
   packages/client/src/generated

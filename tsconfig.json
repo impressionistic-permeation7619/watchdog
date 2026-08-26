@@ -1,0 +1,57 @@
+{
+  "files": [],
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./apps/web/src/*"],
+      "#/*": ["./apps/web/src/*"],
+
+      "@watchdog/ai": ["./packages/ai/src/index.ts"],
+      "@watchdog/ai/*": ["./packages/ai/src/*"],
+
+      "@watchdog/api": ["./packages/api/src/index.ts"],
+      "@watchdog/api/*": ["./packages/api/src/*"],
+
+      "@watchdog/cap-sdk": ["./packages/cap-sdk/src/index.ts"],
+      "@watchdog/cap-sdk/*": ["./packages/cap-sdk/src/*"],
+
+      "@watchdog/caps": ["./packages/caps/src/index.ts"],
+      "@watchdog/caps/capabilities.gen.json": [
+        "./packages/caps/capabilities.gen.json"
+      ],
+      "@watchdog/caps/*": ["./packages/caps/src/*"],
+
+      "@watchdog/cli/*": ["./packages/cli/src/*"],
+
+      "@watchdog/client": ["./packages/client/src/index.ts"],
+      "@watchdog/client/*": ["./packages/client/src/*"],
+
+      "@watchdog/core": ["./packages/core/src/index.ts"],
+      "@watchdog/core/blob": ["./packages/core/src/infra/blob.ts"],
+      "@watchdog/core/*": ["./packages/core/src/*"],
+
+      "@watchdog/db": ["./packages/db/src/index.ts"],
+      "@watchdog/db/*": ["./packages/db/src/*"],
+
+      "@watchdog/env/*": ["./packages/env/src/*"],
+
+      "@watchdog/log": ["./packages/log/src/index.ts"],
+      "@watchdog/log/*": ["./packages/log/src/*"],
+
+      "@watchdog/policy": ["./packages/policy/src/index.ts"],
+      "@watchdog/policy/*": ["./packages/policy/src/*"],
+
+      "@watchdog/schemas": ["./packages/schemas/src/index.ts"],
+      "@watchdog/schemas/*": ["./packages/schemas/src/*"],
+
+      "@watchdog/test-kit": ["./packages/test-kit/src/index.ts"],
+      "@watchdog/test-kit/expect": ["./packages/test-kit/src/expect/patch.ts"],
+      "@watchdog/test-kit/http": [
+        "./packages/test-kit/src/http/mock-server.ts"
+      ],
+      "@watchdog/test-kit/*": ["./packages/test-kit/src/*"],
+
+      "@watchdog/tools": ["./packages/tools/src/index.ts"],
+      "@watchdog/tools/*": ["./packages/tools/src/*"]
+    }
+  }
+}

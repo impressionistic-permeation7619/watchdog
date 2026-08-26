@@ -30,8 +30,8 @@
     "check:agents": "node ./scripts/check-agents.mjs",
     "check:agents:strict": "node ./scripts/check-agents.mjs --strict",
     "desloppify:bootstrap": "bash scripts/desloppify-bootstrap.sh",
-    "desloppify:scan": "bash scripts/desloppify-bootstrap.sh && desloppify --lang typescript scan --path apps && desloppify --lang typescript scan --path packages && desloppify --lang typescript scan --path scripts && desloppify --lang typescript scan --path e2e",
-    "desloppify:scan:ci": "bash scripts/desloppify-bootstrap.sh && desloppify --lang typescript scan --path apps --profile ci --no-badge && desloppify --lang typescript scan --path packages --profile ci --no-badge && desloppify --lang typescript scan --path scripts --profile ci --no-badge && desloppify --lang typescript scan --path e2e --profile ci --no-badge",
+    "desloppify:scan": "bash scripts/desloppify-bootstrap.sh && PYTHONPATH= desloppify --lang typescript scan --path .",
+    "desloppify:scan:ci": "bash scripts/desloppify-bootstrap.sh && PYTHONPATH= desloppify --lang typescript scan --path . --profile ci --no-badge",
     "desloppify:status": "desloppify status",
     "desloppify:next": "desloppify next"
   },

@@ -157,6 +157,10 @@
             export PYTHONPATH="$PWD/pipeline''${PYTHONPATH:+:$PYTHONPATH}"
             export LD_LIBRARY_PATH="${pkgs.stdenv.cc.cc.lib}/lib''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
             export UV_PROJECT_ENVIRONMENT="''${UV_PROJECT_ENVIRONMENT:-$PWD/.venv}"
+            export PATH="$PWD/.venv/bin:$PATH"
+            # Python in .venv has no bundled CA store; without this desloppify's
+            # network calls fail SSL verification on NixOS.
+            export SSL_CERT_FILE="''${SSL_CERT_FILE:-${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt}"
             export PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH="${pkgs.chromium}/bin/chromium"
             export PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=1
             echo "Watchdog / OSINT shell: node=$(${pkgs.nodejs_24}/bin/node -v) pnpm=$(${pkgs.pnpm}/bin/pnpm -v) uv=$(${pkgs.uv}/bin/uv --version | awk '{print $2}')"
