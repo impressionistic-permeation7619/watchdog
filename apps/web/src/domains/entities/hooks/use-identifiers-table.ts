@@ -12,12 +12,12 @@ import {
   HANDLE_REQUIRES_PLATFORM,
   isHandleWithoutPlatform,
   type IdentifierFieldUpdate,
-} from "@/domains/dossier/components/identifiers-section.cells";
+} from "@/shared/ui/identifiers/identifier-cells";
 import {
   identifierCreateCanSubmit,
   useIdentifierCreateForm,
-} from "@/domains/dossier/components/identifiers-section.composer";
-import type { EvidenceOption } from "@/domains/dossier/types";
+} from "@/shared/ui/identifiers/identifier-composer";
+import type { EvidenceOption } from "@/shared/ui/intake/evidence-option";
 import {
   createIdentifiersTableColumns,
   identifiersGlobalFilterFn,

@@ -8,7 +8,7 @@ import type { CaseRecord } from "@/domains/cases/types";
 import {
   IdentifierComposerAppend,
   IdentifierComposerEvidence,
-} from "@/domains/dossier/components/identifiers-section.composer";
+} from "@/shared/ui/identifiers/identifier-composer";
 import { BulkAddIdentifiersDialog } from "@/domains/entities/components/bulk-add-identifiers-dialog";
 import { useIdentifiersTable } from "@/domains/entities/hooks/use-identifiers-table";
 import { Page, PageHeader } from "@/shared/layout/page";

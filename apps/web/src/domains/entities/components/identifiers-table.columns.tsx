@@ -3,18 +3,18 @@ import type { CellContext, ColumnDef, FilterFn } from "@tanstack/react-table";
 import { CopyIcon } from "lucide-react";
 import { toast } from "sonner";
 
-import { IdentifierEvidenceCell } from "@/domains/dossier/components/identifier-evidence-cell";
+import { IdentifierEvidenceCell } from "@/shared/ui/identifiers/identifier-evidence-cell";
 import {
   PLATFORM_OPTIONS,
   STATUS_OPTIONS,
   TYPE_OPTIONS,
   type IdentifierFieldUpdate,
-} from "@/domains/dossier/components/identifiers-section.cells";
+} from "@/shared/ui/identifiers/identifier-cells";
 import {
   CONFIRMED_REQUIRES_EVIDENCE_HINT,
   isConfirmedBlocked,
-} from "@/domains/dossier/lib/confirmed-evidence";
-import type { EvidenceOption } from "@/domains/dossier/types";
+} from "@/shared/lib/confirmed-evidence";
+import type { EvidenceOption } from "@/shared/ui/intake/evidence-option";
 import type { CaseIdentifierRecord } from "@/domains/entities/identifiers/types";
 import {
   tryCommitIdentifierPlatform,
