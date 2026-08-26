@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { httpToolsError } from "../errors/tools-error";
 import type { WhoisSnapshot } from "./schema";
 import { parseWhoisDate, whoisStatusList } from "./shared";
 
@@ -41,7 +42,11 @@ export async function fetchWhoisXml(
   url.searchParams.set("outputFormat", "JSON");
   const res = await fetch(url, { signal });
   if (!res.ok) {
-    throw new Error(`WhoisXML ${res.status} for ${host}`);
+    throw httpToolsError(
+      "WhoisXML",
+      res.status,
+      `WhoisXML ${res.status} for ${host}`
+    );
   }
   const raw = whoisXmlResponseSchema.parse(await res.json());
   const rec = raw.WhoisRecord ?? {};

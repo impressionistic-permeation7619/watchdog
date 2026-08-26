@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { httpToolsError, missingApiKey } from "../errors/tools-error";
 import { asBool, isRecord } from "../parse/coerce";
 import { normalizeHost } from "../whois/normalize";
 
@@ -71,7 +72,7 @@ export async function fetchC99Subdomains(
 ): Promise<C99LookupSnapshot> {
   const host = normalizeHost(hostRaw);
   const key = apiKey.trim();
-  if (!key) throw new Error("C99_API_KEY required");
+  if (!key) throw missingApiKey("C99_API_KEY");
 
   const realtime = options?.realtime === true;
   const limit = options?.limit ?? 200;
@@ -91,7 +92,11 @@ export async function fetchC99Subdomains(
   });
 
   if (!res.ok) {
-    throw new Error(`C99 API ${res.status} for ${host}`);
+    throw httpToolsError(
+      "C99 API",
+      res.status,
+      `C99 API ${res.status} for ${host}`
+    );
   }
 
   const body: unknown = await res.json();

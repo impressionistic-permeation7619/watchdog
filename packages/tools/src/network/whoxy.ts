@@ -1,5 +1,10 @@
 import { z } from "zod";
 
+import {
+  httpToolsError,
+  missingApiKey,
+  parseToolsError,
+} from "../errors/tools-error";
 import { isRecord } from "../parse/coerce";
 import { normalizeHost } from "../whois/normalize";
 
@@ -42,7 +47,7 @@ export async function fetchWhoxyWhois(
 ): Promise<WhoxyLookupSnapshot> {
   const host = normalizeHost(hostRaw);
   const key = apiKey.trim();
-  if (!key) throw new Error("WHOXY_API_KEY required");
+  if (!key) throw missingApiKey("WHOXY_API_KEY");
 
   const ua =
     options?.userAgent ?? "Watchdog/1.0 (+network.whoxy.lookup; OSINT)";
@@ -57,12 +62,16 @@ export async function fetchWhoxyWhois(
   });
 
   if (!res.ok) {
-    throw new Error(`Whoxy API ${res.status} for ${host}`);
+    throw httpToolsError(
+      "Whoxy API",
+      res.status,
+      `Whoxy API ${res.status} for ${host}`
+    );
   }
 
   const body: unknown = await res.json();
   if (!isRecord(body)) {
-    throw new Error(`Whoxy response for ${host} was not a JSON object`);
+    throw parseToolsError("Whoxy", host);
   }
   let statusNum: number | null;
   if (typeof body.status === "number") {

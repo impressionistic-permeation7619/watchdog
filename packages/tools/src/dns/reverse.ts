@@ -3,6 +3,11 @@ import { isIP } from "node:net";
 
 import { z } from "zod";
 
+import {
+  abortedToolsError,
+  validationToolsError,
+} from "../errors/tools-error";
+
 export const dnsReverseSnapshotSchema = z.object({
   ip: z.string().min(1),
   queriedAt: z.string().min(1),
@@ -15,7 +20,7 @@ export type DnsReverseSnapshot = z.infer<typeof dnsReverseSnapshotSchema>;
 export function normalizeIp(raw: string): string {
   const trimmed = raw.trim();
   if (!isIP(trimmed)) {
-    throw new Error(`Invalid IP address: ${raw}`);
+    throw validationToolsError(`Invalid IP address: ${raw}`);
   }
   return trimmed;
 }
@@ -36,14 +41,14 @@ export async function fetchDnsReverse(
   };
   if (signal.aborted) {
     onAbort();
-    throw new Error("DNS reverse aborted");
+    throw abortedToolsError("DNS reverse aborted");
   }
   signal.addEventListener("abort", onAbort, { once: true });
   try {
     const hostnames = await resolver
       .reverse(normalized)
       .catch(() => [] as string[]);
-    if (signal.aborted) throw new Error("DNS reverse aborted");
+    if (signal.aborted) throw abortedToolsError("DNS reverse aborted");
     const cleaned = [
       ...new Set(
         hostnames

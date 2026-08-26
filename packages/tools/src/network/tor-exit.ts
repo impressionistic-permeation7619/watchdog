@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { createTtlCache } from "../cache/ttl-memory";
 import { normalizeIp } from "../dns/reverse";
+import { httpToolsError } from "../errors/tools-error";
 
 export const torExitLookupSnapshotSchema = z.object({
   ip: z.string().min(1),
@@ -45,7 +46,11 @@ async function fetchExitAddresses(
     headers: { Accept: "text/plain", "User-Agent": ua },
   });
   if (!res.ok) {
-    throw new Error(`Tor exit-address list ${res.status}`);
+    throw httpToolsError(
+      "Tor exit-address list",
+      res.status,
+      `Tor exit-address list ${res.status}`
+    );
   }
 
   const ips = parseExitAddresses(await res.text());

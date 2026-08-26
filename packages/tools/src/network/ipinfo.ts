@@ -1,6 +1,12 @@
 import { z } from "zod";
 
 import { normalizeIp } from "../dns/reverse";
+import {
+  httpToolsError,
+  missingApiKey,
+  parseToolsError,
+  rateLimitedToolsError,
+} from "../errors/tools-error";
 import { asString, isRecord } from "../parse/coerce";
 
 export const ipinfoLookupSnapshotSchema = z.object({
@@ -32,7 +38,7 @@ export async function fetchIpinfoLookup(
   options?: { userAgent?: string }
 ): Promise<IpinfoLookupSnapshot> {
   const token = apiToken.trim();
-  if (!token) throw new Error("IPINFO_API_TOKEN required");
+  if (!token) throw missingApiKey("IPINFO_API_TOKEN");
   const ip = normalizeIp(ipRaw);
   const ua =
     options?.userAgent ?? "Watchdog/1.0 (+network.ipinfo.lookup; OSINT)";
@@ -47,15 +53,19 @@ export async function fetchIpinfoLookup(
   });
 
   if (res.status === 429) {
-    throw new Error(`IPinfo rate-limited for ${ip}`);
+    throw rateLimitedToolsError("IPinfo", ip);
   }
   if (!res.ok) {
-    throw new Error(`IPinfo API ${res.status} for ${ip}`);
+    throw httpToolsError(
+      "IPinfo API",
+      res.status,
+      `IPinfo API ${res.status} for ${ip}`
+    );
   }
 
   const body: unknown = await res.json();
   if (!isRecord(body)) {
-    throw new Error(`IPinfo response for ${ip} was not a JSON object`);
+    throw parseToolsError("IPinfo", ip);
   }
 
   return ipinfoLookupSnapshotSchema.parse({

@@ -2,6 +2,10 @@ import { z } from "zod";
 
 import { normalizeIp } from "../dns/reverse";
 import {
+  httpToolsError,
+  parseToolsError,
+} from "../errors/tools-error";
+import {
   asBool,
   asNumber,
   asString,
@@ -100,12 +104,16 @@ export async function fetchIpctlLookup(
   });
 
   if (!res.ok) {
-    throw new Error(`ipctl API ${res.status} for ${ip}`);
+    throw httpToolsError(
+      "ipctl API",
+      res.status,
+      `ipctl API ${res.status} for ${ip}`
+    );
   }
 
   const body: unknown = await res.json();
   if (!isRecord(body)) {
-    throw new Error(`ipctl response for ${ip} was not a JSON object`);
+    throw parseToolsError("ipctl", ip);
   }
   const data = isRecord(body.data) ? body.data : {};
   return parseIpctlBody(ip, new Date().toISOString(), data);

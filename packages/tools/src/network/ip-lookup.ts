@@ -4,6 +4,10 @@ import { isIP } from "node:net";
 import { z } from "zod";
 
 import { normalizeIp } from "../dns/reverse";
+import {
+  abortedToolsError,
+  validationToolsError,
+} from "../errors/tools-error";
 
 export const ipLookupSnapshotSchema = z.object({
   ip: z.string().min(1),
@@ -30,7 +34,7 @@ function stripTxtQuotes(s: string): string {
 
 function expandIpv6(ip: string): string {
   const parts = ip.split("::");
-  if (parts.length > 2) throw new Error(`Invalid IPv6: ${ip}`);
+  if (parts.length > 2) throw validationToolsError(`Invalid IPv6: ${ip}`);
   const head =
     parts[0] !== undefined && parts[0] !== "" ? parts[0].split(":") : [];
   const tail =
@@ -41,7 +45,7 @@ function expandIpv6(ip: string): string {
     ...Array.from({ length: Math.max(missing, 0) }, () => "0"),
     ...tail,
   ];
-  if (full.length !== 8) throw new Error(`Invalid IPv6: ${ip}`);
+  if (full.length !== 8) throw validationToolsError(`Invalid IPv6: ${ip}`);
   return full.map((h) => h.padStart(4, "0")).join(":");
 }
 
@@ -60,7 +64,7 @@ function originLookupName(ip: string): string {
     const nibbles = nibbleChars.reverse().join(".");
     return `${nibbles}.origin6.asn.cymru.com`;
   }
-  throw new Error(`Invalid IP address: ${ip}`);
+  throw validationToolsError(`Invalid IP address: ${ip}`);
 }
 
 /**
@@ -82,7 +86,7 @@ export async function fetchIpLookup(
   };
   if (signal.aborted) {
     onAbort();
-    throw new Error("IP lookup aborted");
+    throw abortedToolsError("IP lookup aborted");
   }
   signal.addEventListener("abort", onAbort, { once: true });
   try {
@@ -90,7 +94,7 @@ export async function fetchIpLookup(
     const originChunks = await resolver
       .resolveTxt(originName)
       .catch(() => [] as string[][]);
-    if (signal.aborted) throw new Error("IP lookup aborted");
+    if (signal.aborted) throw abortedToolsError("IP lookup aborted");
 
     const rawOrigin =
       originChunks.length > 0

@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { validationToolsError } from "../errors/tools-error";
+
 export const pgpKeySchema = z.object({
   /** Key id / fingerprint string from HKP index (may be short id). */
   fingerprint: z.string(),
@@ -69,7 +71,7 @@ export async function fetchPgpLookup(
   options?: { userAgent?: string }
 ): Promise<PgpLookupSnapshot> {
   const query = queryRaw.trim();
-  if (!query) throw new Error("PGP query required");
+  if (!query) throw validationToolsError("PGP query required");
   const ua = options?.userAgent ?? "Watchdog/1.0 (+identity.pgp.lookup; OSINT)";
 
   let source: string | null = null;

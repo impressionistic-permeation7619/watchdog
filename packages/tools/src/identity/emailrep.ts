@@ -1,6 +1,13 @@
 import { z } from "zod";
 
 import { asBool, asNumber, asString, isRecord } from "../parse/coerce";
+import {
+  httpToolsError,
+  missingApiKey,
+  parseToolsError,
+  rateLimitedToolsError,
+  validationToolsError,
+} from "../errors/tools-error";
 
 export const emailrepLookupSnapshotSchema = z.object({
   email: z.string().min(1),
@@ -32,7 +39,7 @@ export function parseEmailrepBody(
   body: unknown
 ): EmailrepLookupSnapshot {
   if (!isRecord(body)) {
-    throw new Error(`EmailRep response for ${email} was not a JSON object`);
+    throw parseToolsError("EmailRep", email);
   }
   const details = isRecord(body.details) ? body.details : {};
   const references = asNumber(body.references);
@@ -89,7 +96,7 @@ export async function fetchEmailrepLookup(
   options?: { apiKey?: string; userAgent?: string }
 ): Promise<EmailrepLookupSnapshot> {
   const email = emailRaw.trim().toLowerCase();
-  if (!email.includes("@")) throw new Error(`Invalid email: ${emailRaw}`);
+  if (!email.includes("@")) throw validationToolsError(`Invalid email: ${emailRaw}`);
 
   const ua =
     options?.userAgent ?? "Watchdog/1.0 (+identity.emailrep.lookup; OSINT)";
@@ -112,26 +119,26 @@ export async function fetchEmailrepLookup(
     if (
       reason.toLowerCase().includes("unauthenticated api is currently disabled")
     ) {
-      throw new Error(
+      throw validationToolsError(
         `EmailRep requires an API key (unauthenticated API disabled) for ${email}`
       );
     }
-    throw new Error(
-      reason === ""
-        ? `EmailRep HTTP 429 for ${email}`
-        : `EmailRep HTTP 429 for ${email}: ${reason}`
-    );
+    throw rateLimitedToolsError("EmailRep", email);
   }
   if (res.status === 401) {
-    throw new Error(`EmailRep API key invalid for ${email}`);
+    throw validationToolsError(`EmailRep API key invalid for ${email}`);
   }
   if (res.status === 403) {
-    throw new Error(
+    throw validationToolsError(
       `EmailRep rejected request (missing User-Agent) for ${email}`
     );
   }
   if (!res.ok) {
-    throw new Error(`EmailRep API ${res.status} for ${email}`);
+    throw httpToolsError(
+      "EmailRep API",
+      res.status,
+      `EmailRep API ${res.status} for ${email}`
+    );
   }
 
   const body: unknown = await res.json();

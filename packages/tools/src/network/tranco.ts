@@ -1,5 +1,10 @@
 import { z } from "zod";
 
+import {
+  httpToolsError,
+  parseToolsError,
+  rateLimitedToolsError,
+} from "../errors/tools-error";
 import { isRecord } from "../parse/coerce";
 import { normalizeHost } from "../whois/normalize";
 
@@ -62,18 +67,26 @@ export async function fetchTrancoLookup(
   );
 
   if (res.status === 429) {
-    throw new Error(`Tranco rate-limited for ${domain}`);
+    throw rateLimitedToolsError("Tranco", domain);
   }
   if (res.status === 403) {
-    throw new Error(`Tranco temporarily unavailable for ${domain}`);
+    throw httpToolsError(
+      "Tranco",
+      res.status,
+      `Tranco temporarily unavailable for ${domain}`
+    );
   }
   if (!res.ok) {
-    throw new Error(`Tranco API ${res.status} for ${domain}`);
+    throw httpToolsError(
+      "Tranco API",
+      res.status,
+      `Tranco API ${res.status} for ${domain}`
+    );
   }
 
   const body: unknown = await res.json();
   if (!isRecord(body)) {
-    throw new Error(`Tranco response for ${domain} was not a JSON object`);
+    throw parseToolsError("Tranco", domain);
   }
   const rows = parseRanks(body.ranks).sort((a, b) =>
     b.date.localeCompare(a.date)

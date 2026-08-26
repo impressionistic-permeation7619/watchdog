@@ -1,3 +1,7 @@
+import {
+  httpToolsError,
+  parseToolsError,
+} from "../errors/tools-error";
 import { asStringEmpty as asString, isRecord } from "../parse/coerce";
 import { normalizeHost } from "../whois/normalize";
 import {
@@ -22,7 +26,7 @@ export function parseCrtShJson(text: string): unknown[] {
       const parsed: unknown = JSON.parse(wrapped);
       return Array.isArray(parsed) ? parsed : [];
     } catch {
-      throw new Error("crt.sh returned non-JSON");
+      throw parseToolsError("crt.sh", "response", "crt.sh returned non-JSON");
     }
   }
 }
@@ -88,16 +92,17 @@ export async function fetchCrtShLookup(
     headers: { Accept: "application/json", "User-Agent": userAgent },
   });
   if (!res.ok) {
-    throw new Error(`crt.sh HTTP ${res.status}`);
+    throw httpToolsError("crt.sh", res.status, `crt.sh HTTP ${res.status}`);
   }
 
   let payloadText: string;
   try {
     payloadText = await res.text();
   } catch (error) {
-    throw new Error(
-      `crt.sh read failed: ${error instanceof Error ? error.message : String(error)}`,
-      { cause: error }
+    throw parseToolsError(
+      "crt.sh",
+      normalized,
+      `crt.sh read failed: ${error instanceof Error ? error.message : String(error)}`
     );
   }
   const rows = parseCrtShJson(payloadText);

@@ -1,5 +1,11 @@
 import { z } from "zod";
 
+import {
+  httpToolsError,
+  missingApiKey,
+  parseToolsError,
+  rateLimitedToolsError,
+} from "../errors/tools-error";
 import { classifyIpOrHost } from "../parse/classify-ip-or-host";
 import { asString, isRecord } from "../parse/coerce";
 
@@ -39,7 +45,7 @@ export async function fetchLeakixLookup(
   options?: { userAgent?: string }
 ): Promise<LeakixLookupSnapshot> {
   const key = apiKey.trim();
-  if (!key) throw new Error("LEAKIX_API_KEY required");
+  if (!key) throw missingApiKey("LEAKIX_API_KEY");
 
   const { kind, value } = classifyIpOrHost(queryRaw);
   const ua =
@@ -71,18 +77,19 @@ export async function fetchLeakixLookup(
     });
   }
   if (res.status === 429) {
-    const waitFor = res.headers.get("x-limited-for");
-    throw new Error(
-      `LeakIX rate-limited for ${value}${waitFor ? ` (retry after ${waitFor})` : ""}`
-    );
+    throw rateLimitedToolsError("LeakIX", value);
   }
   if (!res.ok) {
-    throw new Error(`LeakIX API ${res.status} for ${value}`);
+    throw httpToolsError(
+      "LeakIX API",
+      res.status,
+      `LeakIX API ${res.status} for ${value}`
+    );
   }
 
   const body: unknown = await res.json();
   if (!isRecord(body)) {
-    throw new Error(`LeakIX response for ${value} was not a JSON object`);
+    throw parseToolsError("LeakIX", value);
   }
   const services = firstArray(body, ["Services", "services"]);
   const leaks = firstArray(body, ["Leaks", "leaks"]);

@@ -1,6 +1,10 @@
 import { z } from "zod";
 
 import { normalizeIp } from "../dns/reverse";
+import {
+  httpToolsError,
+  rateLimitedToolsError,
+} from "../errors/tools-error";
 import { normalizeHost } from "../whois/normalize";
 
 export const hackertargetLookupSnapshotSchema = z.object({
@@ -40,10 +44,14 @@ export async function fetchHackertargetReverseIp(
   });
 
   if (res.status === 429) {
-    throw new Error(`HackerTarget rate-limited for ${ip}`);
+    throw rateLimitedToolsError("HackerTarget", ip);
   }
   if (!res.ok) {
-    throw new Error(`HackerTarget API ${res.status} for ${ip}`);
+    throw httpToolsError(
+      "HackerTarget API",
+      res.status,
+      `HackerTarget API ${res.status} for ${ip}`
+    );
   }
 
   const rawText = await res.text();

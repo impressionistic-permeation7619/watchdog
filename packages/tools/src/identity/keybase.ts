@@ -2,6 +2,11 @@ import { isIP } from "node:net";
 
 import { z } from "zod";
 
+import {
+  httpToolsError,
+  parseToolsError,
+  validationToolsError,
+} from "../errors/tools-error";
 import { asString, isRecord } from "../parse/coerce";
 import { normalizeHost } from "../whois/normalize";
 
@@ -46,7 +51,7 @@ function classifyQuery(raw: string): {
   }
   const username = trimmed.toLowerCase();
   if (!/^[a-z0-9][a-z0-9_]{1,15}$/i.test(username)) {
-    throw new Error(`Invalid Keybase query: ${raw}`);
+    throw validationToolsError(`Invalid Keybase query: ${raw}`);
   }
   return { kind: "username", value: username, param: "usernames" };
 }
@@ -158,12 +163,12 @@ export function parseKeybaseBody(
   body: unknown
 ): KeybaseLookupSnapshot {
   if (!isRecord(body)) {
-    throw new Error(`Keybase response for ${query} was not a JSON object`);
+    throw parseToolsError("Keybase", query);
   }
   const status = isRecord(body.status) ? body.status : null;
   const code = status?.code;
   if (code !== 0 && code !== "0") {
-    throw new Error(
+    throw validationToolsError(
       `Keybase status ${String(code)} (${asString(status?.name) ?? "?"}) for ${query}`
     );
   }
@@ -222,7 +227,11 @@ export async function fetchKeybaseLookup(
     headers: { Accept: "application/json", "User-Agent": ua },
   });
   if (!res.ok) {
-    throw new Error(`Keybase API ${res.status} for ${value}`);
+    throw httpToolsError(
+      "Keybase API",
+      res.status,
+      `Keybase API ${res.status} for ${value}`
+    );
   }
 
   const body: unknown = await res.json();

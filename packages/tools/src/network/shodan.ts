@@ -1,6 +1,11 @@
 import { z } from "zod";
 
 import { normalizeIp } from "../dns/reverse";
+import {
+  httpToolsError,
+  missingApiKey,
+  parseToolsError,
+} from "../errors/tools-error";
 import { isRecord } from "../parse/coerce";
 
 export const shodanLookupSnapshotSchema = z.object({
@@ -34,7 +39,7 @@ export async function fetchShodanHost(
 ): Promise<ShodanLookupSnapshot> {
   const ip = normalizeIp(ipRaw);
   const key = apiKey.trim();
-  if (!key) throw new Error("SHODAN_API_KEY required");
+  if (!key) throw missingApiKey("SHODAN_API_KEY");
 
   const ua =
     options?.userAgent ?? "Watchdog/1.0 (+network.shodan.lookup; OSINT)";
@@ -70,12 +75,16 @@ export async function fetchShodanHost(
   }
 
   if (!res.ok) {
-    throw new Error(`Shodan API ${res.status} for ${ip}`);
+    throw httpToolsError(
+      "Shodan API",
+      res.status,
+      `Shodan API ${res.status} for ${ip}`
+    );
   }
 
   const body: unknown = await res.json();
   if (!isRecord(body)) {
-    throw new Error(`Shodan response for ${ip} was not a JSON object`);
+    throw parseToolsError("Shodan", ip);
   }
   const hostnames = Array.isArray(body.hostnames)
     ? body.hostnames.filter((h): h is string => typeof h === "string")

@@ -3,6 +3,10 @@ import { isIP } from "node:net";
 import { z } from "zod";
 
 import { normalizeIp } from "../dns/reverse";
+import {
+  httpToolsError,
+  parseToolsError,
+} from "../errors/tools-error";
 import { classifyIpOrHost } from "../parse/classify-ip-or-host";
 import { asNumber, asStringEmpty as asString, isRecord } from "../parse/coerce";
 import { normalizeHost } from "../whois/normalize";
@@ -54,21 +58,27 @@ export function parseMnemonicPdnsBody(
   body: unknown
 ): MnemonicLookupSnapshot {
   if (!isRecord(body)) {
-    throw new Error(
-      `Mnemonic PDNS response for ${query} was not a JSON object`
-    );
+    throw parseToolsError("Mnemonic PDNS", query);
   }
 
   const responseCode = body.responseCode;
   if (responseCode === 402) {
-    throw new Error(`Mnemonic PDNS resource limit exceeded for ${query}`);
+    throw httpToolsError(
+      "Mnemonic PDNS",
+      402,
+      `Mnemonic PDNS resource limit exceeded for ${query}`
+    );
   }
   if (responseCode !== 200 && responseCode !== undefined) {
     const label =
       typeof responseCode === "number" || typeof responseCode === "string"
         ? String(responseCode)
         : JSON.stringify(responseCode);
-    throw new Error(`Mnemonic PDNS responseCode=${label} for ${query}`);
+    throw httpToolsError(
+      "Mnemonic PDNS",
+      typeof responseCode === "number" ? responseCode : 400,
+      `Mnemonic PDNS responseCode=${label} for ${query}`
+    );
   }
 
   const rows = Array.isArray(body.data) ? body.data : [];
@@ -177,7 +187,11 @@ export async function fetchMnemonicPdns(
   });
 
   if (!res.ok) {
-    throw new Error(`Mnemonic PDNS ${res.status} for ${value}`);
+    throw httpToolsError(
+      "Mnemonic PDNS",
+      res.status,
+      `Mnemonic PDNS ${res.status} for ${value}`
+    );
   }
 
   const body: unknown = await res.json();

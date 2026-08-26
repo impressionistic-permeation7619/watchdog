@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 
 import { z } from "zod";
 
+import { httpToolsError } from "../errors/tools-error";
 import { asString, isRecord, recordRows } from "../parse/coerce";
 import { normalizeEmail } from "./email-lookup";
 
@@ -136,7 +137,11 @@ export async function fetchGravatarLookup(
   }
 
   if (!res.ok) {
-    throw new Error(`Gravatar API ${res.status} for ${hash}`);
+    throw httpToolsError(
+      "Gravatar API",
+      res.status,
+      `Gravatar API ${res.status} for ${hash}`
+    );
   }
 
   const body: unknown = await res.json();

@@ -1,6 +1,10 @@
 import { z } from "zod";
 
 import { asStringEmpty as asString, isRecord } from "../parse/coerce";
+import {
+  httpToolsError,
+  rateLimitedToolsError,
+} from "../errors/tools-error";
 import { normalizeHost } from "../whois/normalize";
 
 export const certspotterIssuanceSchema = z.object({
@@ -52,10 +56,14 @@ export async function fetchCertspotterLookup(
   });
 
   if (res.status === 429) {
-    throw new Error(`Cert Spotter rate-limited for ${host}`);
+    throw rateLimitedToolsError("Cert Spotter", host);
   }
   if (!res.ok) {
-    throw new Error(`Cert Spotter API ${res.status} for ${host}`);
+    throw httpToolsError(
+      "Cert Spotter API",
+      res.status,
+      `Cert Spotter API ${res.status} for ${host}`
+    );
   }
 
   const body: unknown = await res.json();

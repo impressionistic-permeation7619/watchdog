@@ -2,6 +2,13 @@ import { z } from "zod";
 
 import { classifyBreachQuery } from "../parse/classify-breach-query";
 import { asString, isRecord } from "../parse/coerce";
+import {
+  httpToolsError,
+  missingApiKey,
+  parseToolsError,
+  rateLimitedToolsError,
+  validationToolsError,
+} from "../errors/tools-error";
 
 const DATABASE_NAMES_CAP = 20;
 const ENTRIES_CAP = 100;
@@ -67,7 +74,9 @@ function buildDehashedQuery(
     }
     default: {
       const _exhaustive: never = kind;
-      throw new Error(`Unhandled DeHashed query kind: ${String(_exhaustive)}`);
+      throw validationToolsError(
+        `Unhandled DeHashed query kind: ${String(_exhaustive)}`
+      );
     }
   }
 }
@@ -109,7 +118,7 @@ export async function fetchDehashedLookup(
   options?: { userAgent?: string }
 ): Promise<DehashedLookupSnapshot> {
   const key = apiKey.trim();
-  if (!key) throw new Error("DEHASHED_API_KEY required");
+  if (!key) throw missingApiKey("DEHASHED_API_KEY");
 
   const { kind, value } = classifyDehashedQuery(queryRaw);
   const query = buildDehashedQuery(kind, value);
@@ -135,15 +144,19 @@ export async function fetchDehashedLookup(
   });
 
   if (res.status === 429) {
-    throw new Error(`DeHashed rate-limited for ${value}`);
+    throw rateLimitedToolsError("DeHashed", value);
   }
   if (res.status >= 400) {
-    throw new Error(`DeHashed API ${res.status} for ${value}`);
+    throw httpToolsError(
+      "DeHashed API",
+      res.status,
+      `DeHashed API ${res.status} for ${value}`
+    );
   }
 
   const body: unknown = await res.json();
   if (!isRecord(body)) {
-    throw new Error(`DeHashed response for ${value} was not a JSON object`);
+    throw parseToolsError("DeHashed", value);
   }
   const rawEntries = Array.isArray(body.entries) ? body.entries : [];
   const entries: DehashedEntry[] = [];

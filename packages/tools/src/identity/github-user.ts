@@ -1,6 +1,11 @@
 import { z } from "zod";
 
 import { isRecord } from "../parse/coerce";
+import {
+  httpToolsError,
+  parseToolsError,
+  validationToolsError,
+} from "../errors/tools-error";
 
 export const githubUserSnapshotSchema = z.object({
   handle: z.string().min(1),
@@ -25,7 +30,7 @@ export type GithubUserSnapshot = z.infer<typeof githubUserSnapshotSchema>;
 export function normalizeGithubHandle(raw: string): string {
   const h = raw.trim().replace(/^@/, "").toLowerCase();
   if (!/^[a-z0-9](?:[a-z0-9]|-(?=[a-z0-9])){0,38}$/i.test(h)) {
-    throw new Error(`Invalid GitHub handle: ${raw}`);
+    throw validationToolsError(`Invalid GitHub handle: ${raw}`);
   }
   return h;
 }
@@ -76,12 +81,16 @@ export async function fetchGithubUser(
   }
 
   if (!res.ok) {
-    throw new Error(`GitHub API ${res.status} for ${handle}`);
+    throw httpToolsError(
+      "GitHub API",
+      res.status,
+      `GitHub API ${res.status} for ${handle}`
+    );
   }
 
   const body: unknown = await res.json();
   if (!isRecord(body)) {
-    throw new Error(`GitHub response for ${handle} was not a JSON object`);
+    throw parseToolsError("GitHub", handle);
   }
   return githubUserSnapshotSchema.parse({
     handle,

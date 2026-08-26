@@ -1,5 +1,11 @@
 import { z } from "zod";
 
+import {
+  httpToolsError,
+  missingApiKey,
+  parseToolsError,
+  rateLimitedToolsError,
+} from "../errors/tools-error";
 import { isRecord } from "../parse/coerce";
 
 export const urlscanSubmitVisibilitySchema = z.enum([
@@ -38,7 +44,7 @@ export async function submitUrlscan(
   options?: { userAgent?: string }
 ): Promise<UrlscanSubmitSnapshot> {
   const key = apiKey.trim();
-  if (!key) throw new Error("URLSCAN_API_KEY required");
+  if (!key) throw missingApiKey("URLSCAN_API_KEY");
   const target = url.trim();
   const ua =
     options?.userAgent ?? "Watchdog/1.0 (+network.urlscan.submit; OSINT)";
@@ -55,17 +61,19 @@ export async function submitUrlscan(
   });
 
   if (res.status === 429) {
-    throw new Error(`URLScan rate-limited for ${target}`);
+    throw rateLimitedToolsError("URLScan", target);
   }
   if (res.status >= 400) {
-    throw new Error(`URLScan API ${res.status} for ${target}`);
+    throw httpToolsError(
+      "URLScan API",
+      res.status,
+      `URLScan API ${res.status} for ${target}`
+    );
   }
 
   const body: unknown = await res.json();
   if (!isRecord(body)) {
-    throw new Error(
-      `URLScan submit response for ${target} was not a JSON object`
-    );
+    throw parseToolsError("URLScan submit", target);
   }
   const uuid =
     typeof body.uuid === "string" && body.uuid !== "" ? body.uuid : null;

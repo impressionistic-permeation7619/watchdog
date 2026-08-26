@@ -1,5 +1,10 @@
 import { z } from "zod";
 
+import {
+  httpToolsError,
+  parseToolsError,
+  rateLimitedToolsError,
+} from "../errors/tools-error";
 import { asString, isRecord } from "../parse/coerce";
 import { normalizeHost } from "../whois/normalize";
 
@@ -56,15 +61,19 @@ export async function fetchUrlscanSearch(
   });
 
   if (res.status === 429) {
-    throw new Error(`URLScan rate-limited for ${host}`);
+    throw rateLimitedToolsError("URLScan", host);
   }
   if (!res.ok) {
-    throw new Error(`URLScan API ${res.status} for ${host}`);
+    throw httpToolsError(
+      "URLScan API",
+      res.status,
+      `URLScan API ${res.status} for ${host}`
+    );
   }
 
   const body: unknown = await res.json();
   if (!isRecord(body)) {
-    throw new Error(`URLScan response for ${host} was not a JSON object`);
+    throw parseToolsError("URLScan", host);
   }
   const rows = Array.isArray(body.results) ? body.results : [];
   const hits: UrlscanHit[] = [];

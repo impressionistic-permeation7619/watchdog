@@ -1,5 +1,6 @@
 import { Resolver } from "node:dns/promises";
 
+import { abortedToolsError } from "../errors/tools-error";
 import {
   mailConfigSnapshotSchema,
   type MailConfigSnapshot,
@@ -38,7 +39,7 @@ function withResolverAbort(signal: AbortSignal): {
   };
   if (signal.aborted) {
     onAbort();
-    throw new Error("Mail config lookup aborted");
+    throw abortedToolsError("Mail config lookup aborted");
   }
   signal.addEventListener("abort", onAbort, { once: true });
   return {
@@ -86,7 +87,7 @@ export async function fetchMailConfig(
       }),
     ]);
 
-    if (signal.aborted) throw new Error("Mail config lookup aborted");
+    if (signal.aborted) throw abortedToolsError("Mail config lookup aborted");
 
     const spfRecords = txtRoot.filter((r) => /v=spf1/i.test(r));
     const dmarcRecords = txtDmarc.filter((r) => /v=DMARC1/i.test(r));

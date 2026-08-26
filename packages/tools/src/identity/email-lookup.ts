@@ -2,6 +2,8 @@ import { Resolver } from "node:dns/promises";
 
 import { z } from "zod";
 
+import { abortedToolsError, validationToolsError } from "../errors/tools-error";
+
 export const emailLookupSnapshotSchema = z.object({
   email: z.string().min(1),
   domain: z.string().min(1),
@@ -56,11 +58,11 @@ export function normalizeEmail(raw: string): { email: string; domain: string } {
   const trimmed = raw.trim().toLowerCase();
   const at = trimmed.lastIndexOf("@");
   if (at <= 0 || at === trimmed.length - 1) {
-    throw new Error(`Invalid email: ${raw}`);
+    throw validationToolsError(`Invalid email: ${raw}`);
   }
   const domain = trimmed.slice(at + 1);
   if (!domain.includes(".") || domain.includes(" ")) {
-    throw new Error(`Invalid email domain: ${raw}`);
+    throw validationToolsError(`Invalid email domain: ${raw}`);
   }
   return { email: trimmed, domain };
 }
@@ -98,7 +100,7 @@ export async function fetchEmailLookup(
   };
   if (signal.aborted) {
     onAbort();
-    throw new Error("Email lookup aborted");
+    throw abortedToolsError("Email lookup aborted");
   }
   signal.addEventListener("abort", onAbort, { once: true });
   try {
@@ -109,7 +111,7 @@ export async function fetchEmailLookup(
       resolver.resolveTxt(domain).catch(() => [] as string[][]),
       resolver.resolveTxt(`_dmarc.${domain}`).catch(() => [] as string[][]),
     ]);
-    if (signal.aborted) throw new Error("Email lookup aborted");
+    if (signal.aborted) throw abortedToolsError("Email lookup aborted");
 
     const root = flatTxt(txtRoot);
     const dmarc = flatTxt(txtDmarc);

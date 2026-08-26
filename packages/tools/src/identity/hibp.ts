@@ -1,6 +1,11 @@
 import { z } from "zod";
 
 import { recordRows } from "../parse/coerce";
+import {
+  httpToolsError,
+  missingApiKey,
+  validationToolsError,
+} from "../errors/tools-error";
 
 export const hibpBreachSchema = z.object({
   name: z.string(),
@@ -34,9 +39,9 @@ export async function fetchHibpBreachedAccount(
   options?: { userAgent?: string; truncate?: number }
 ): Promise<HibpLookupSnapshot> {
   const normalized = email.trim().toLowerCase();
-  if (!normalized.includes("@")) throw new Error(`Invalid email: ${email}`);
+  if (!normalized.includes("@")) throw validationToolsError(`Invalid email: ${email}`);
   const key = apiKey.trim();
-  if (!key) throw new Error("HIBP_API_KEY required");
+  if (!key) throw missingApiKey("HIBP_API_KEY");
 
   const ua = options?.userAgent ?? "Watchdog/1.0 (+breach.hibp.lookup; OSINT)";
   const truncate = options?.truncate ?? 40;
@@ -64,7 +69,11 @@ export async function fetchHibpBreachedAccount(
   }
 
   if (!res.ok) {
-    throw new Error(`HIBP API ${res.status} for ${normalized}`);
+    throw httpToolsError(
+      "HIBP API",
+      res.status,
+      `HIBP API ${res.status} for ${normalized}`
+    );
   }
 
   const raw: unknown = await res.json();

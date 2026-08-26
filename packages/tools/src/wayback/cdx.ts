@@ -1,3 +1,4 @@
+import { httpToolsError } from "../errors/tools-error";
 import { fetchBytes } from "../http/fetch-bytes";
 import {
   waybackFetchSnapshotSchema,
@@ -64,7 +65,11 @@ export async function fetchWaybackLookup(
     headers: { "User-Agent": options.userAgent },
   });
   if (!res.ok) {
-    throw new Error(`Wayback CDX HTTP ${res.status} for ${url}`);
+    throw httpToolsError(
+      "Wayback CDX",
+      res.status,
+      `Wayback CDX HTTP ${res.status} for ${url}`
+    );
   }
   const payload: unknown = await res.json();
   if (!isUnknownArray(payload) || payload.length === 0) {

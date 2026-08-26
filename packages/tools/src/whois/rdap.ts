@@ -1,3 +1,4 @@
+import { httpToolsError, parseToolsError } from "../errors/tools-error";
 import type { WhoisSnapshot } from "./schema";
 import {
   extractVcard,
@@ -22,11 +23,11 @@ export async function fetchRdapWhois(
     }
   );
   if (!res.ok) {
-    throw new Error(`RDAP ${res.status} for ${host}`);
+    throw httpToolsError("RDAP", res.status, `RDAP ${res.status} for ${host}`);
   }
   const parsed: unknown = await res.json();
   if (!isRecord(parsed)) {
-    throw new Error(`RDAP response for ${host} was not a JSON object`);
+    throw parseToolsError("RDAP", host);
   }
   const raw = parsed;
   const entities = Array.isArray(raw.entities) ? raw.entities : [];

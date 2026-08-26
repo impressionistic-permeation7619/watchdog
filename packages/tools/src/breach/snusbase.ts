@@ -2,6 +2,12 @@ import { z } from "zod";
 
 import { classifyBreachQuery } from "../parse/classify-breach-query";
 import { asString, isRecord } from "../parse/coerce";
+import {
+  httpToolsError,
+  missingApiKey,
+  parseToolsError,
+  rateLimitedToolsError,
+} from "../errors/tools-error";
 
 const TABLES_CAP = 15;
 const ENTRIES_CAP = 100;
@@ -107,7 +113,7 @@ export async function fetchSnusbaseLookup(
   options?: { userAgent?: string }
 ): Promise<SnusbaseLookupSnapshot> {
   const key = apiKey.trim();
-  if (!key) throw new Error("SNUSBASE_API_KEY required");
+  if (!key) throw missingApiKey("SNUSBASE_API_KEY");
 
   const { kind, value, type } = classifySnusbaseQuery(queryRaw);
   const ua =
@@ -126,15 +132,19 @@ export async function fetchSnusbaseLookup(
   });
 
   if (res.status === 429) {
-    throw new Error(`Snusbase rate-limited for ${value}`);
+    throw rateLimitedToolsError("Snusbase", value);
   }
   if (res.status >= 400) {
-    throw new Error(`Snusbase API ${res.status} for ${value}`);
+    throw httpToolsError(
+      "Snusbase API",
+      res.status,
+      `Snusbase API ${res.status} for ${value}`
+    );
   }
 
   const body: unknown = await res.json();
   if (!isRecord(body)) {
-    throw new Error(`Snusbase response for ${value} was not a JSON object`);
+    throw parseToolsError("Snusbase", value);
   }
   const { tables, entries } = flattenSearchResults(body.results);
   const total =

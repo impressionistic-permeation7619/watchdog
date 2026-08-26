@@ -2,6 +2,12 @@ import { z } from "zod";
 
 import { classifyIpOrHost } from "../parse/classify-ip-or-host";
 import { asString, isRecord, recordRows } from "../parse/coerce";
+import {
+  httpToolsError,
+  missingApiKey,
+  rateLimitedToolsError,
+  validationToolsError,
+} from "../errors/tools-error";
 
 export const hudsonrockLookupSnapshotSchema = z.object({
   query: z.string().min(1),
@@ -77,7 +83,7 @@ export async function fetchHudsonrockLookup(
   options?: { userAgent?: string }
 ): Promise<HudsonrockLookupSnapshot> {
   const key = apiKey.trim();
-  if (!key) throw new Error("HUDSONROCK_API_KEY required");
+  if (!key) throw missingApiKey("HUDSONROCK_API_KEY");
 
   const { kind, value } = classifyHudsonrockQuery(queryRaw);
   const ua =
@@ -103,7 +109,7 @@ export async function fetchHudsonrockLookup(
     }
     default: {
       const _exhaustive: never = kind;
-      throw new Error(
+      throw validationToolsError(
         `Unhandled Hudson Rock query kind: ${String(_exhaustive)}`
       );
     }
@@ -133,10 +139,14 @@ export async function fetchHudsonrockLookup(
     });
   }
   if (res.status === 429) {
-    throw new Error(`Hudson Rock rate-limited for ${value}`);
+    throw rateLimitedToolsError("Hudson Rock", value);
   }
   if (!res.ok) {
-    throw new Error(`Hudson Rock API ${res.status} for ${value}`);
+    throw httpToolsError(
+      "Hudson Rock API",
+      res.status,
+      `Hudson Rock API ${res.status} for ${value}`
+    );
   }
 
   const raw: unknown = await res.json();

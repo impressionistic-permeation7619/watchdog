@@ -1,6 +1,10 @@
 import { z } from "zod";
 
 import { isRecord } from "../parse/coerce";
+import {
+  httpToolsError,
+  validationToolsError,
+} from "../errors/tools-error";
 import { normalizeHost } from "../whois/normalize";
 
 export const commoncrawlHitSchema = z.object({
@@ -95,12 +99,16 @@ export async function fetchCommoncrawlLookup(
     headers: { Accept: "application/json", "User-Agent": ua },
   });
   if (!collRes.ok) {
-    throw new Error(`Common Crawl collinfo ${collRes.status}`);
+    throw httpToolsError(
+      "Common Crawl collinfo",
+      collRes.status,
+      `Common Crawl collinfo ${collRes.status}`
+    );
   }
 
   const coll: unknown = await collRes.json();
   if (!Array.isArray(coll) || coll.length === 0) {
-    throw new Error("Common Crawl collinfo empty");
+    throw validationToolsError("Common Crawl collinfo empty");
   }
 
   const indexes: { id: string; cdxApi: string }[] = [];
@@ -114,7 +122,7 @@ export async function fetchCommoncrawlLookup(
   }
 
   if (indexes.length === 0) {
-    throw new Error("Common Crawl: no usable indexes");
+    throw validationToolsError("Common Crawl: no usable indexes");
   }
 
   const hits: CommoncrawlHit[] = [];
@@ -137,7 +145,11 @@ export async function fetchCommoncrawlLookup(
 
     if (res.status === 404) continue;
     if (!res.ok) {
-      throw new Error(`Common Crawl CDX ${res.status} (${index.id})`);
+      throw httpToolsError(
+        "Common Crawl CDX",
+        res.status,
+        `Common Crawl CDX ${res.status} (${index.id})`
+      );
     }
 
     // oxlint-disable-next-line no-await-in-loop -- same ordered fan-out as above
