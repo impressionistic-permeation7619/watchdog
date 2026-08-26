@@ -37,7 +37,7 @@ function job(overrides: Partial<JobListRecord> = {}): JobListRecord {
     playbookRunStatus: null,
     playbookStep: null,
     evidenceIds: [],
-    output: [{ name: "report.json", sha256: "abc", mime: "application/json" }],
+    output: [{ name: "report.json", sha256: "abc", mime: "application/json", uri: "s3://bucket/report.json" }],
     actorId: "test-actor",
     playbookFanIndex: 0,
     ...overrides,

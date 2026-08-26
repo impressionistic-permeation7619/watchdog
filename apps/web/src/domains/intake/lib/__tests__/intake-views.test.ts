@@ -111,7 +111,14 @@ describe("intake evidence helpers", () => {
       id: testId(13),
       capabilityId: "network.url.enrich",
       input: { sourceEvidenceId: row.id },
-      output: [{ name: ENRICHED_MD_ARTIFACT, sha256: "abc", mime: "text/markdown" }],
+      output: [
+        {
+          name: ENRICHED_MD_ARTIFACT,
+          sha256: "abc",
+          mime: "text/markdown",
+          uri: "s3://bucket/enriched.md",
+        },
+      ],
       status: "succeeded",
     });
 
