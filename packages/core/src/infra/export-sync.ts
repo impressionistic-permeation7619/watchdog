@@ -30,7 +30,7 @@ async function write(
   await writeFile(path, content);
 }
 
-function safeFilename(label: string): string {
+export function safeFilename(label: string): string {
   return (
     label
       // oxlint-disable-next-line eslint/no-control-regex -- intentionally strips filesystem-illegal control chars

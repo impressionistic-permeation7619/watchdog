@@ -69,6 +69,56 @@ describe("shared noun args", () => {
 });
 
 describe("CLI output contract", () => {
+  it("emitList prints count, items, and at most three help lines", async () => {
+    const prev = process.env.WD_CLI_HELP;
+    process.env.WD_CLI_HELP = "1";
+    const { emitList } = await import("../io");
+    const lines: string[] = [];
+    const original = console.log;
+    console.log = (msg?: unknown) => {
+      lines.push(String(msg));
+    };
+    try {
+      emitList({
+        items: [{ id: "a" }],
+        help: ["h1", "h2", "h3", "h4"],
+      });
+    } finally {
+      console.log = original;
+      if (prev === undefined) {
+        Reflect.deleteProperty(process.env, "WD_CLI_HELP");
+      } else {
+        process.env.WD_CLI_HELP = prev;
+      }
+    }
+    const body = JSON.parse(lines[0] ?? "{}");
+    expect(body).toMatchObject({ count: 1, items: [{ id: "a" }] });
+    expect(body.help).toEqual(["h1", "h2", "h3"]);
+  });
+
+  it("emitList omits help when WD_CLI_HELP=0", async () => {
+    const prev = process.env.WD_CLI_HELP;
+    process.env.WD_CLI_HELP = "0";
+    const { emitList } = await import("../io");
+    const lines: string[] = [];
+    const original = console.log;
+    console.log = (msg?: unknown) => {
+      lines.push(String(msg));
+    };
+    try {
+      emitList({ items: [{ id: "a" }], help: ["tip"] });
+    } finally {
+      console.log = original;
+      if (prev === undefined) {
+        Reflect.deleteProperty(process.env, "WD_CLI_HELP");
+      } else {
+        process.env.WD_CLI_HELP = prev;
+      }
+    }
+    const body = JSON.parse(lines[0] ?? "{}");
+    expect(body.help).toBeUndefined();
+  });
+
   it("emitOk prints { ok: true, ... }", async () => {
     const { emitOk } = await import("../io");
     const lines: string[] = [];

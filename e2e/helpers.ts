@@ -6,15 +6,8 @@ async function waitForHydratedNode(
   page: Page,
   selector: string
 ): Promise<void> {
-  await page.waitForFunction(
-    (sel) => {
-      const el = document.querySelector(sel);
-      if (el === null) return false;
-      return Object.keys(el).some((key) => key.includes("react"));
-    },
-    selector,
-    { timeout: 30_000 }
-  );
+  await page.waitForSelector("html[data-hydrated=true]", { timeout: 30_000 });
+  await page.locator(selector).waitFor({ timeout: 30_000 });
 }
 
 export async function signUp(page: Page, stamp: string): Promise<void> {

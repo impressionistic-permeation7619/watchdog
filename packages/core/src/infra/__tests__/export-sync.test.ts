@@ -1,31 +1,53 @@
-import { setTimeout as delay } from "node:timers/promises";
-
 import { describe, expect, it } from "vitest";
 
 import { testId } from "@watchdog/test-kit";
 
-import { scheduleCaseExport } from "../export-sync.ts";
+import {
+  removeCaseExportDir,
+  renameCaseExportDir,
+  safeFilename,
+  scheduleCaseExport,
+} from "../export-sync.ts";
+
+describe("safeFilename", () => {
+  it("strips path separators and control characters", () => {
+    expect(safeFilename('evil/../etc\u0001pass')).toBe("evil_.._etc_pass");
+    expect(safeFilename("a/b:c*d?")).not.toMatch(/[/\\:]/);
+  });
+});
+
+describe("export path guards", () => {
+  it("ignores path-traversal slugs for remove and rename", async () => {
+    await expect(removeCaseExportDir("../outside")).resolves.toBeUndefined();
+    await expect(
+      renameCaseExportDir("../outside", "safe-slug")
+    ).resolves.toBeUndefined();
+  });
+});
 
 describe("scheduleCaseExport", () => {
   it("coalesces concurrent schedules into one in-flight write then a follow-up", async () => {
-    let inflight = 0;
-    let maxInflight = 0;
     let calls = 0;
+    let releaseFirst!: () => void;
+    const firstGate = new Promise<void>((resolve) => {
+      releaseFirst = resolve;
+    });
+
     const writeExport = async () => {
-      inflight += 1;
-      maxInflight = Math.max(maxInflight, inflight);
       calls += 1;
-      await delay(30);
-      inflight -= 1;
+      if (calls === 1) {
+        await firstGate;
+      }
     };
 
-    const caseId = testId(1);
-    const first = scheduleCaseExport(caseId, writeExport);
-    const second = scheduleCaseExport(caseId, writeExport);
-    await Promise.all([first, second]);
+    const caseId = testId(99);
+    const run = scheduleCaseExport(caseId, writeExport);
+    void scheduleCaseExport(caseId, writeExport);
+    await Promise.resolve();
+    expect(calls).toBe(1);
 
-    expect(maxInflight).toBe(1);
-    expect(calls).toBeGreaterThanOrEqual(1);
-    expect(calls).toBeLessThanOrEqual(2);
+    releaseFirst();
+    await run;
+    expect(calls).toBe(2);
   });
 });

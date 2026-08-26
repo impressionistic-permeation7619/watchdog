@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect } from "react";
 
 import { authClient } from "@/auth/client";
 import { apiKeyPlugin } from "@/auth/plugins/api-key";
@@ -39,6 +39,10 @@ export function Providers({ children }: { children: ReactNode }) {
   const navigate = useAuthNavigate();
   const router = useRouter();
   const queryClient = router.options.context.queryClient;
+
+  useEffect(() => {
+    document.documentElement.dataset.hydrated = "true";
+  }, []);
 
   return (
     <AuthProvider
