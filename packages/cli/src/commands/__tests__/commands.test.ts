@@ -62,6 +62,40 @@ const mocks = vi.hoisted(() => {
         { id: "ent-1", kind: "person", name: "Jane", slug: "jane" },
       ]),
     },
+    events: {
+      list: vi.fn().mockResolvedValue([
+        {
+          id: "event-1",
+          when: "2026-01-01",
+          what: "Observed activity",
+          where: "NYC",
+        },
+      ]),
+    },
+    evidence: {
+      list: vi.fn().mockResolvedValue([
+        {
+          id: "evidence-1",
+          kind: "note",
+          label: "Screenshot",
+          capturedAt: "2026-01-01T12:00:00.000Z",
+        },
+      ]),
+    },
+    identifiers: {
+      list: vi.fn().mockResolvedValue([
+        {
+          id: "id-1",
+          type: "email",
+          value: "jane@example.com",
+          confidence: "unverified",
+          status: "active",
+        },
+      ]),
+    },
+    graph: {
+      write: vi.fn().mockResolvedValue({ ok: true }),
+    },
   };
 
   const api = vi.fn(() => client);
@@ -83,6 +117,15 @@ vi.mock("../../client", async (importOriginal) => {
 
 vi.mock("../../ids", () => ({
   resolveEntityId: vi.fn(async () => "entity-id-1"),
+  parseIdList: vi.fn(() => undefined),
+}));
+
+vi.mock("../../download", () => ({
+  downloadToFile: vi.fn(async () => "/tmp/export.zip"),
+}));
+
+vi.mock("../../load-patch", () => ({
+  loadPatch: vi.fn(() => []),
 }));
 
 import { capsCmd } from "../caps";
@@ -91,6 +134,11 @@ import { claimsCmd } from "../claims";
 import { credentialsCmd } from "../credentials";
 import { edgesCmd } from "../edges";
 import { entitiesCmd } from "../entities";
+import { eventsCmd } from "../events";
+import { evidenceCmd } from "../evidence";
+import { exportCmd } from "../export";
+import { graphCmd } from "../graph";
+import { identifiersCmd } from "../identifiers";
 
 describe("CLI noun commands", () => {
   it("capsCmd lists capabilities", async () => {
@@ -127,5 +175,38 @@ describe("CLI noun commands", () => {
     await entitiesCmd.run?.({ args: { case: "case-1" } } as never);
     expect(mocks.client.entities.list).toHaveBeenCalled();
     expect(mocks.emitList).toHaveBeenCalled();
+  });
+
+  it("eventsCmd lists timeline events for a case entity", async () => {
+    await eventsCmd.run?.({ args: { case: "case-1", entity: "jane" } } as never);
+    expect(mocks.client.events.list).toHaveBeenCalled();
+    expect(mocks.emitList).toHaveBeenCalled();
+  });
+
+  it("evidenceCmd lists evidence for a case", async () => {
+    await evidenceCmd.run?.({ args: { case: "case-1" } } as never);
+    expect(mocks.client.evidence.list).toHaveBeenCalled();
+    expect(mocks.emitList).toHaveBeenCalled();
+  });
+
+  it("identifiersCmd lists identifiers for a case entity", async () => {
+    await identifiersCmd.run?.({
+      args: { case: "case-1", entity: "jane" },
+    } as never);
+    expect(mocks.client.identifiers.list).toHaveBeenCalled();
+    expect(mocks.emitList).toHaveBeenCalled();
+  });
+
+  it("exportCmd zip downloads the case export archive", async () => {
+    const zip = exportCmd.subCommands?.zip;
+    await zip?.run?.({ args: { case: "case-1" } } as never);
+    expect(mocks.emitOk).toHaveBeenCalledWith({ path: "/tmp/export.zip" });
+  });
+
+  it("graphCmd write sends a patch with userOverride", async () => {
+    const write = graphCmd.subCommands?.write;
+    await write?.run?.({ args: { case: "case-1", patch: "[]" } } as never);
+    expect(mocks.client.graph.write).toHaveBeenCalled();
+    expect(mocks.emit).toHaveBeenCalled();
   });
 });
