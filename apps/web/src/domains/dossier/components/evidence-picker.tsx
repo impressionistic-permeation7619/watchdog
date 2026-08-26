@@ -1,4 +1,4 @@
-import { ChevronDownIcon, XIcon } from "lucide-react";
+import { ChevronDownIcon, PaperclipIcon, XIcon } from "lucide-react";
 import { useId, useMemo, useState } from "react";
 
 import type { EvidenceOption } from "@/domains/dossier/types";
@@ -13,6 +13,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/shared/ui/shadcn/popover";
+import { WithTooltip } from "@/shared/ui/timestamp";
 import { KindBadge } from "@/shared/ui/vocab";
 
 export type { EvidenceOption } from "@/domains/dossier/types";
@@ -36,10 +37,13 @@ export function EvidenceCiteChips({
   options,
   ids,
   className,
+  withIcon = false,
 }: {
   options: EvidenceOption[];
   ids: string[];
   className?: string;
+  /** Swap the "Evidence" text label for an icon + tooltip in dense bands. */
+  withIcon?: boolean;
 }) {
   const byId = useMemo(() => {
     const map = new Map<string, EvidenceOption>();
@@ -55,7 +59,16 @@ export function EvidenceCiteChips({
     <div
       className={cn("flex min-w-0 flex-wrap items-center gap-1.5", className)}
     >
-      <span className="text-muted-foreground text-xs">Evidence</span>
+      {withIcon ? (
+        <WithTooltip content="Evidence" wrapSpan className="inline-flex">
+          <PaperclipIcon
+            aria-hidden
+            className="text-muted-foreground size-3.5 shrink-0"
+          />
+        </WithTooltip>
+      ) : (
+        <span className="text-muted-foreground text-xs">Evidence</span>
+      )}
       {rows.map((row) => (
         <DetailStatusChip
           key={row.id}
@@ -67,9 +80,6 @@ export function EvidenceCiteChips({
           <span className="text-muted-foreground">· Job</span>
         </DetailStatusChip>
       ))}
-      {rows.length === 0 && ids.length > 0 ? (
-        <DetailStatusChip size="sm">{ids.length} Job-linked</DetailStatusChip>
-      ) : null}
     </div>
   );
 }
@@ -83,11 +93,17 @@ export function EvidencePicker({
   selectedIds,
   onChange,
   className,
+  dashedWhenEmpty = false,
 }: {
   options: EvidenceOption[];
   selectedIds: string[];
   onChange: (ids: string[]) => void;
   className?: string;
+  /**
+   * Dashed trigger instead of trailing helper text when nothing is selected.
+   * For bands that already message the confirmed-needs-evidence gate elsewhere.
+   */
+  dashedWhenEmpty?: boolean;
 }) {
   const idPrefix = useId();
   const [filter, setFilter] = useState("");
@@ -128,7 +144,10 @@ export function EvidencePicker({
           <PopoverTrigger
             data-slot="select-trigger"
             data-size="default"
-            className={CONTROL_FIELD_TRIGGER}
+            className={cn(
+              CONTROL_FIELD_TRIGGER,
+              dashedWhenEmpty && totalCount === 0 && "border-dashed"
+            )}
             aria-label={
               totalCount > 0
                 ? `Evidence, ${totalCount} selected`
@@ -219,7 +238,7 @@ export function EvidencePicker({
           </DetailStatusChip>
         ))}
 
-        {totalCount === 0 ? (
+        {totalCount === 0 && !dashedWhenEmpty ? (
           <span className="text-muted-foreground text-xs">
             None · required for confirmed
           </span>

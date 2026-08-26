@@ -67,7 +67,12 @@ export function InboxDetail({
         .filter((row): row is EvidenceRecord => Boolean(row)),
     [linkedIds, evidenceById]
   );
-  const missingJobEvidenceCount = linkedIds.length - jobEvidence.length;
+  // Only an unresolved id after the list actually loads is missing. While the
+  // query is pending or errored, `caseEvidence` is empty and every linked id
+  // would look absent.
+  const missingJobEvidenceCount = evidenceQuery.isSuccess
+    ? linkedIds.length - jobEvidence.length
+    : 0;
 
   if (!proposal) {
     return (

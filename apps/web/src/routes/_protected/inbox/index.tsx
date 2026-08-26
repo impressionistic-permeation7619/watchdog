@@ -5,6 +5,7 @@ import { z } from "zod";
 import { casesContextQuery } from "@/domains/cases/queries";
 import { Inbox } from "@/domains/inbox/components/inbox";
 import { allProposalsQuery } from "@/domains/inbox/queries";
+import { evidenceListQuery } from "@/domains/intake/queries";
 import { Page } from "@/shared/layout/page";
 import { RouteError } from "@/shared/layout/route-error";
 import { RoutePending } from "@/shared/layout/route-pending";
@@ -46,7 +47,12 @@ export const Route = createFileRoute("/_protected/inbox/")({
   loader: async ({ context: { queryClient } }) => {
     const { active } = await queryClient.ensureQueryData(casesContextQuery());
     if (active) {
-      await queryClient.ensureQueryData(allProposalsQuery(active.id));
+      await Promise.all([
+        queryClient.ensureQueryData(allProposalsQuery(active.id)),
+        // Same query the decide band reads — must be ready before paint, not
+        // fire-and-forget prefetch (useQuery falls back to [] while pending).
+        queryClient.ensureQueryData(evidenceListQuery(active.id)),
+      ]);
     }
   },
   pendingComponent: RoutePending,

@@ -1,3 +1,5 @@
+import { GaugeIcon } from "lucide-react";
+
 import {
   EvidenceCiteChips,
   EvidencePicker,
@@ -31,6 +33,7 @@ import { MetaRow } from "@/shared/ui/meta-row";
 import { RelativeTime } from "@/shared/ui/relative-time";
 import { Button } from "@/shared/ui/shadcn/button";
 import { Textarea } from "@/shared/ui/shadcn/textarea";
+import { WithTooltip } from "@/shared/ui/timestamp";
 import { StatusBadge } from "@/shared/ui/vocab";
 
 interface InboxDecideHeaderProps {
@@ -178,8 +181,14 @@ function PendingAcceptBand({
   return (
     <>
       <div className="flex flex-col gap-2">
-        <div className="flex flex-wrap items-center gap-3">
-          <MetaRow label="Confidence" className="w-auto flex-none">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1.5">
+            <WithTooltip content="Confidence" wrapSpan className="inline-flex">
+              <GaugeIcon
+                aria-hidden
+                className="text-muted-foreground size-3.5 shrink-0"
+              />
+            </WithTooltip>
             <acceptForm.Field name="confidence">
               {(field) => (
                 <ConfidenceSelect
@@ -190,9 +199,13 @@ function PendingAcceptBand({
                 />
               )}
             </acceptForm.Field>
-          </MetaRow>
+          </div>
           {evidenceMode === "cite" ? (
-            <EvidenceCiteChips options={caseEvidence} ids={linkedIds} />
+            <EvidenceCiteChips
+              withIcon
+              options={caseEvidence}
+              ids={linkedIds}
+            />
           ) : (
             <acceptForm.Field
               name="evidenceIds"
@@ -210,6 +223,7 @@ function PendingAcceptBand({
             >
               {(field) => (
                 <EvidencePicker
+                  dashedWhenEmpty
                   options={caseEvidence}
                   selectedIds={field.state.value}
                   onChange={(ids) => {
