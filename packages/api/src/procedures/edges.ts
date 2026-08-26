@@ -83,7 +83,7 @@ export const update = graphChildWrite
       .object({
         caseId: z.uuid(),
         edgeId: z.uuid(),
-        entityId: z.uuid(),
+        viewEntityId: z.uuid().optional(),
         fromId: z.uuid().optional(),
         toId: z.uuid().optional(),
         predicate: edgePredicateSchema.optional(),

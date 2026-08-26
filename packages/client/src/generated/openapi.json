@@ -3573,13 +3573,13 @@
           }
         ],
         "requestBody": {
-          "required": true,
+          "required": false,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
                 "properties": {
-                  "entityId": {
+                  "viewEntityId": {
                     "type": "string",
                     "format": "uuid"
                   },
@@ -3634,10 +3634,7 @@
                   "userOverride": {
                     "const": true
                   }
-                },
-                "required": [
-                  "entityId"
-                ]
+                }
               }
             }
           }
@@ -4025,7 +4022,7 @@
           }
         ],
         "requestBody": {
-          "required": true,
+          "required": false,
           "content": {
             "application/json": {
               "schema": {
@@ -4045,11 +4042,7 @@
                   "userOverride": {
                     "const": true
                   }
-                },
-                "required": [
-                  "when",
-                  "what"
-                ]
+                }
               }
             }
           }

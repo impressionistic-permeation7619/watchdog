@@ -62,7 +62,7 @@ export function buildUpdateEdgeData(opts: {
   const patch: UpdateEdgeInput = {
     caseId: opts.caseId,
     edgeId: opts.edgeId,
-    entityId: opts.centerId,
+    viewEntityId: opts.centerId,
     fromId,
     toId,
     predicate: opts.core.predicate,

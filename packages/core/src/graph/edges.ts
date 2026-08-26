@@ -57,8 +57,11 @@ export interface CreateEdgeInput {
 export interface UpdateEdgeInput {
   caseId: string;
   edgeId: string;
-  /** Dossier view entity — drives peer/direction on the returned record. */
-  entityId: string;
+  /**
+   * Entity whose dossier orientation to use on the returned record.
+   * Defaults to the edge's `fromId`.
+   */
+  viewEntityId?: string;
   /** Absolute endpoints (send both to change orientation or peer). */
   fromId?: string;
   toId?: string;
@@ -250,8 +253,9 @@ export async function updateEdge(
       }
     );
 
+    const viewEntityId = input.viewEntityId ?? existing.fromId;
     notifyEntityChanged(input.caseId);
-    return toRecord(listed, input.entityId, nextEvidenceIds);
+    return toRecord(listed, viewEntityId, nextEvidenceIds);
   } catch (error) {
     if (isUniqueViolation(error, NATURAL_KEY_INDEX)) {
       throw new DomainError("conflict", "That Edge already exists");

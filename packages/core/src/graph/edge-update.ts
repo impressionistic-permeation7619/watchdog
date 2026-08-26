@@ -33,11 +33,15 @@ export function validateEdgeUpdate(
   existing: NonNullable<Awaited<ReturnType<typeof edgesRepo.getInCase>>>,
   evidenceIds: string[]
 ): ValidatedEdgeUpdate {
+  const viewEntityId = input.viewEntityId ?? existing.fromId;
   if (
-    input.entityId !== existing.fromId &&
-    input.entityId !== existing.toId
+    viewEntityId !== existing.fromId &&
+    viewEntityId !== existing.toId
   ) {
-    throw new DomainError("invalid", "Entity is not an endpoint of this Edge");
+    throw new DomainError(
+      "invalid",
+      "viewEntityId must be an endpoint of the Edge"
+    );
   }
 
   const hasEndpoints =
@@ -72,10 +76,10 @@ export function validateEdgeUpdate(
   if (next.fromId === next.toId) {
     throw new DomainError("invalid", "Edge cannot link an Entity to itself");
   }
-  if (input.entityId !== next.fromId && input.entityId !== next.toId) {
+  if (viewEntityId !== next.fromId && viewEntityId !== next.toId) {
     throw new DomainError(
       "invalid",
-      "Entity must remain an endpoint of this Edge"
+      "viewEntityId must remain an endpoint of this Edge"
     );
   }
   if (

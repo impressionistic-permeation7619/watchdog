@@ -48,7 +48,7 @@ export const updateEdgeInputSchema = z
   .object({
     caseId: uuidSchema,
     edgeId: uuidSchema,
-    entityId: uuidSchema,
+    viewEntityId: uuidSchema.optional(),
     fromId: uuidSchema.optional(),
     toId: uuidSchema.optional(),
     predicate: edgePredicateSchema.optional(),
