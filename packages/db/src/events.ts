@@ -24,7 +24,8 @@ export async function notifyEvent(event: WatchdogEvent): Promise<void> {
  */
 export function listenForEvents(
   onNotification: (payload: string) => void,
-  onReady?: () => void
+  onReady?: () => void,
+  onError?: (error: unknown) => void
 ): { end: () => Promise<void> } {
   const sql = postgres(env.DATABASE_URL, {
     max: 1,
@@ -36,7 +37,7 @@ export function listenForEvents(
     try {
       await sql.listen(WATCHDOG_CHANNEL, onNotification, onReady);
     } catch (error) {
-      console.error("[watchdog] LISTEN failed:", error);
+      onError?.(error);
     }
   })();
 

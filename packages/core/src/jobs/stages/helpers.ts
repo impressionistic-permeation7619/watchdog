@@ -1,8 +1,5 @@
 import { setJobStatus } from "../set-job-status";
 
-/** Active AbortControllers keyed by jobId — used by the worker to abort on cancel. */
-export const activeControllers = new Map<string, AbortController>();
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }

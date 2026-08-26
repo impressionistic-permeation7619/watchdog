@@ -47,10 +47,14 @@ export {
 } from "./graph/agent-ingress";
 export {
   executeJob,
-  activeControllers,
+  abortActiveJob,
+  listActiveJobIds,
+  registerActiveJobController,
+  unregisterActiveJobController,
   type JobRunOutcome,
   type JobAbortReason,
   type JobRunOutcomeName,
+  type ActiveJobAbortReason,
 } from "./jobs/run-job";
 export { loadCapReport, artifactsHaveCapReport } from "./jobs/load-cap-report";
 export {

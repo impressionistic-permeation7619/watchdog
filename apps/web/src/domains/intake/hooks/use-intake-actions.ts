@@ -10,11 +10,9 @@ import {
   restoreEvidenceFn,
   softDeleteEvidenceFn,
 } from "@/domains/intake/intake.functions";
+import { refreshJobsAfterMutation } from "@/domains/jobs/queries";
 import { errMessage } from "@/lib/utils";
-import {
-  invalidateAfterJobMutation,
-  invalidateAfterEvidenceMutation,
-} from "@/shared/lib/query-invalidation";
+import { invalidateAfterEvidenceMutation } from "@/shared/lib/query-invalidation";
 
 type IntakePending = null | {
   kind: "harvest" | "extract" | "enrich";
@@ -79,9 +77,7 @@ export function useIntakeActions({
       toast.success(
         input.ai === true ? "Extract (AI) job started" : "Harvest job started"
       );
-      await invalidateAfterJobMutation(queryClient, caseId, {
-        withRetry: true,
-      });
+      await refreshJobsAfterMutation(queryClient, caseId);
       await invalidateAfterEvidenceMutation(queryClient, caseId);
     },
     onError: (e) => {
@@ -98,9 +94,7 @@ export function useIntakeActions({
     onSuccess: async (_result, id) => {
       onEvidenceIdChange(id);
       toast.success("Enrich job started");
-      await invalidateAfterJobMutation(queryClient, caseId, {
-        withRetry: true,
-      });
+      await refreshJobsAfterMutation(queryClient, caseId);
       await invalidateAfterEvidenceMutation(queryClient, caseId);
     },
     onError: (e) => {

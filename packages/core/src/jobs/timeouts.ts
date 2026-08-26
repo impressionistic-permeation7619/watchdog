@@ -7,7 +7,7 @@ import {
 /**
  * Headroom after a Cap's abort timer for post-run work (upload, landEvidence,
  * interpret) before pg-boss may reclaim the attempt. Must keep expire above the
- * abort window so a redelivery cannot collide on `activeControllers` by jobId.
+ * abort window so a redelivery cannot collide on the cancel registry by jobId.
  */
 export const POST_RUN_SLACK_MS = 60_000;
 

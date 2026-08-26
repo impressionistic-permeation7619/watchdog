@@ -37,6 +37,8 @@ export const Route = createFileRoute("/api/events")({
         const stream = new ReadableStream({
           start(controller) {
             const enc = new TextEncoder();
+            let listener: { end: () => Promise<void> } | undefined;
+            let closed = false;
 
             function send(eventType: string, data: string) {
               try {
@@ -45,6 +47,21 @@ export const Route = createFileRoute("/api/events")({
                 );
               } catch {
                 // client disconnected
+              }
+            }
+
+            function closeStream(errorMessage?: string) {
+              if (closed) return;
+              closed = true;
+              clearInterval(heartbeat);
+              void listener?.end();
+              if (errorMessage !== undefined) {
+                send("error", JSON.stringify({ message: errorMessage }));
+              }
+              try {
+                controller.close();
+              } catch {
+                // already closed
               }
             }
 
@@ -57,7 +74,7 @@ export const Route = createFileRoute("/api/events")({
               }
             }, 25_000);
 
-            const listener = listenForEvents(
+            listener = listenForEvents(
               (rawPayload) => {
                 try {
                   const parsed: unknown = JSON.parse(rawPayload);
@@ -72,17 +89,16 @@ export const Route = createFileRoute("/api/events")({
               },
               () => {
                 send("connected", JSON.stringify({ ok: true }));
+              },
+              (error: unknown) => {
+                closeStream(
+                  error instanceof Error ? error.message : String(error)
+                );
               }
             );
 
             request.signal.addEventListener("abort", () => {
-              clearInterval(heartbeat);
-              void listener.end();
-              try {
-                controller.close();
-              } catch {
-                // already closed
-              }
+              closeStream();
             });
           },
         });

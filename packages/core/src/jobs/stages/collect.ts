@@ -12,12 +12,8 @@ import { logSwallowed } from "../../infra/process-log";
 import { getCredential, hasCredential } from "../../infra/vault";
 import { hashCapInput, lookupCapCache } from "../cap-cache";
 import { artifactsHaveCapReport } from "../load-cap-report";
-import {
-  activeControllers,
-  inputString,
-  linkedEvidenceId,
-  type JobLog,
-} from "./helpers";
+import { registerActiveJobController } from "../job-cancel-registry";
+import { inputString, linkedEvidenceId, type JobLog } from "./helpers";
 import type { PreflightState } from "./preflight";
 
 export interface CollectRuntime {
@@ -131,7 +127,7 @@ export async function collect(
 
   const scratchDir = await mkdtemp(path.join(tmpdir(), "wd-cap-"));
   const controller = new AbortController();
-  activeControllers.set(state.jobId, controller);
+  registerActiveJobController(state.jobId, controller);
   const timeoutMs = capTimeoutMs(state.cap);
   const timer = setTimeout(() => {
     controller.abort("timeout");
@@ -208,7 +204,7 @@ export async function collect(
       runtime,
     };
   } catch (error) {
-    // Leave activeControllers set so executeJob can read abortReason before finally.
+    // Leave registry entry until executeJob finally unregisters (abortReason read).
     clearTimeout(timer);
     await rm(scratchDir, { recursive: true, force: true }).catch(
       (cleanupError: unknown) => {

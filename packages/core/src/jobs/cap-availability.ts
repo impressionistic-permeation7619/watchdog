@@ -1,7 +1,7 @@
 import type { z } from "zod";
 
 import {
-  checkPlaybookAvailability,
+  checkCapabilityAvailability,
   toCapDescriptor,
   type AvailabilityError,
   type AvailabilityResult,
@@ -69,7 +69,7 @@ export async function evaluateCapAvailability(input: {
 
   return {
     allowThirdPartyEgress,
-    result: checkPlaybookAvailability(
+    result: checkCapabilityAvailability(
       {
         credentials: specs,
         egress: desc.egress ?? "none",

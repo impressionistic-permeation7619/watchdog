@@ -71,6 +71,7 @@ export function getPlaybook(id: string): PlaybookDef {
 
 export {
   checkPlaybookAvailability,
+  checkCapabilityAvailability,
   formatPlanError,
   hostFromUrl,
   isPlanError,
@@ -94,6 +95,7 @@ export {
   type PlaybookDescriptor,
   type PlaybookPlan,
   type PlaybookRequires,
+  type CapabilityRequires,
   type PlaybookSeedKind,
   type PlaybookStepDef,
   type PlanError,

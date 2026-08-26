@@ -83,6 +83,9 @@ export interface PlaybookRequires {
   flags: CapFlag[];
 }
 
+/** Credential/egress requirements for a single Cap (same wire shape as playbooks). */
+export type CapabilityRequires = PlaybookRequires;
+
 export interface PlaybookDescriptor {
   id: string;
   title: string;
@@ -470,6 +473,18 @@ export function checkPlaybookAvailability(
     }
   }
   return { ok: true };
+}
+
+/** Single-Cap availability — same predicate as playbooks, distinct entry point. */
+export function checkCapabilityAvailability(
+  requires: CapabilityRequires,
+  opts: {
+    hasCredential: (name: string) => boolean;
+    allowThirdPartyEgress: boolean;
+    thirdPartyCapabilityId?: string;
+  }
+): AvailabilityResult {
+  return checkPlaybookAvailability(requires, opts);
 }
 
 export function formatPlanError(err: PlanError): string {

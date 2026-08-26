@@ -342,27 +342,6 @@ export const jobsRepo = {
     return updated ?? null;
   },
 
-  async releaseBlockedStep(
-    exec: DbExec,
-    playbookRunId: string,
-    nextStep: number
-  ): Promise<{ id: string; capabilityId: string }[]> {
-    return exec
-      .update(jobs)
-      .set({
-        status: "queued",
-        updatedAt: new Date(),
-      })
-      .where(
-        and(
-          eq(jobs.playbookRunId, playbookRunId),
-          eq(jobs.status, "blocked"),
-          eq(jobs.playbookStep, nextStep)
-        )
-      )
-      .returning({ id: jobs.id, capabilityId: jobs.capabilityId });
-  },
-
   async abandonBlockedForPlaybook(
     exec: DbExec,
     playbookRunId: string,

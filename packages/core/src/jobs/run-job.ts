@@ -7,14 +7,25 @@ import { runFailedPath, runSucceededPath } from "./run-paths";
 import { advancePlaybookRun } from "./stages/chain";
 import { collect, type CollectResult } from "./stages/collect";
 import { finish } from "./stages/finish";
-import { activeControllers, createJobLog } from "./stages/helpers";
+import {
+  getActiveJobAbortSignal,
+  unregisterActiveJobController,
+} from "./job-cancel-registry";
+import { createJobLog } from "./stages/helpers";
 import { interpretStage, logInterpretFailure } from "./stages/interpret";
 import { landEvidence } from "./stages/land-evidence";
 import { preflight, type PreflightStopReason } from "./stages/preflight";
 import { proposeStage } from "./stages/propose";
 import { suppressStage } from "./stages/suppress";
 
-export { activeControllers } from "./stages/helpers";
+export {
+  abortActiveJob,
+  getActiveJobAbortSignal,
+  listActiveJobIds,
+  registerActiveJobController,
+  unregisterActiveJobController,
+  type ActiveJobAbortReason,
+} from "./job-cancel-registry";
 
 export type JobAbortReason = "timeout" | "cancel";
 
@@ -219,7 +230,7 @@ export async function executeJob(jobId: string): Promise<JobRunOutcome> {
   } catch (error: unknown) {
     const signal =
       collected?.runtime.controller.signal ??
-      activeControllers.get(jobId)?.signal;
+      getActiveJobAbortSignal(jobId);
     const classified = classifyRun({ signal, threw: true });
     abortReason = classified.abortReason;
     runOutcome = classified.outcome;
@@ -241,7 +252,7 @@ export async function executeJob(jobId: string): Promise<JobRunOutcome> {
         logSwallowed("job.scratch_cleanup", cleanupError, { jobId });
       });
     }
-    activeControllers.delete(jobId);
+    unregisterActiveJobController(jobId);
   }
 
   return {

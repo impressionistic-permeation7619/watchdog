@@ -1,4 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
+import type { QueryClient } from "@tanstack/react-query";
 
 import {
   getArtifactContentFn,
@@ -8,6 +9,7 @@ import {
   listPlaybooksFn,
 } from "@/domains/jobs/jobs.functions";
 import type { GetArtifactContentInput } from "@/domains/jobs/types";
+import { invalidateAfterJobMutation } from "@/shared/lib/query-invalidation";
 import {
   GC_DEFAULT,
   GC_REALTIME,
@@ -99,4 +101,12 @@ export function artifactContentQuery(input: GetArtifactContentInput) {
     enabled,
     meta: { silentError: true },
   });
+}
+
+/** Jobs workspace freshness — SSE `job_update` is the follow-up path; no timed retries. */
+export async function refreshJobsAfterMutation(
+  queryClient: QueryClient,
+  caseId: string
+): Promise<void> {
+  await invalidateAfterJobMutation(queryClient, caseId);
 }

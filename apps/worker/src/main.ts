@@ -3,7 +3,7 @@ import { scheduler } from "node:timers/promises";
 
 import {
   CAP_JOB_QUEUE,
-  activeControllers,
+  abortActiveJob,
   executeJob,
   findCancelledJobIds,
   ensureBossWorker,
@@ -11,6 +11,7 @@ import {
   isCapJobPayload,
   isWatchdogEvent,
   listenForEvents,
+  listActiveJobIds,
   reconcileStaleJobs,
   reconcileStuckPlaybookRuns,
 } from "@watchdog/core";
@@ -123,17 +124,23 @@ async function main() {
     },
     () => {
       emitOnce("export-sync", { message: "listening for graph events" });
+    },
+    (error: unknown) => {
+      const log = createLogger({ scope: "export-sync.listen" });
+      log.set({ message: "LISTEN connection failed" });
+      log.error(error instanceof Error ? error : new Error(String(error)));
+      void log.emit();
     }
   );
 
   const cancelPollInterval = setInterval(() => {
     void (async () => {
-      const running = [...activeControllers.keys()];
+      const running = listActiveJobIds();
       if (running.length === 0) return;
       try {
-        const cancelled = await findCancelledJobIds(running);
+        const cancelled = await findCancelledJobIds([...running]);
         for (const id of cancelled) {
-          activeControllers.get(id)?.abort("cancel");
+          abortActiveJob(id, "cancel");
         }
       } catch (error: unknown) {
         const log = createLogger({ scope: "worker.cancel_poll" });

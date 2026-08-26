@@ -15,8 +15,6 @@ import { jobsKeys } from "@/domains/jobs/queries";
 import { credentialsKeys } from "@/domains/settings/queries";
 import { tasksKeys } from "@/domains/tasks/queries";
 
-const JOB_FOLLOWUP_DELAYS_MS = [3000, 8000] as const;
-
 /** Soft settle: mark stale without flashing loading, then refetch active observers. */
 async function softInvalidate(
   client: QueryClient,
@@ -34,21 +32,10 @@ export async function invalidateAfterCaseSwitch(
 
 export async function invalidateAfterJobMutation(
   client: QueryClient,
-  caseId: string,
-  opts?: { withRetry?: boolean }
+  caseId: string
 ): Promise<void> {
-  const key = jobsKeys.all(caseId);
-  await softInvalidate(client, key);
+  await softInvalidate(client, jobsKeys.all(caseId));
   await softInvalidate(client, activityKeys.all);
-  if (opts?.withRetry) {
-    for (const delay of JOB_FOLLOWUP_DELAYS_MS) {
-      setTimeout(() => {
-        void softInvalidate(client, key);
-        void softInvalidate(client, proposalsKeys.all(caseId));
-        void softInvalidate(client, activityKeys.all);
-      }, delay);
-    }
-  }
 }
 
 export async function invalidateAfterProposalAccept(
