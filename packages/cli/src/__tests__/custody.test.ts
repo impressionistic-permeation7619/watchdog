@@ -1,7 +1,15 @@
 import { spawnSync } from "node:child_process";
 import path from "node:path";
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+import { refuseConfirmed, requireUserOverride } from "../custody";
+
+vi.mock("../io", () => ({
+  fail: vi.fn((code: string, message: string) => {
+    throw new Error(`${code}: ${message}`);
+  }),
+}));
 
 const here = import.meta.dirname;
 const mainTs = path.join(here, "../main.ts");
@@ -52,6 +60,16 @@ function assertCustody(stdout: string): void {
   if (!isObject(body.error)) return;
   expect(body.error.code).toBe("CUSTODY");
 }
+
+describe("custody helpers", () => {
+  it("requireUserOverride throws when override is disabled", () => {
+    expect(() => requireUserOverride(false)).toThrow(/CUSTODY/);
+  });
+
+  it("refuseConfirmed throws for confirmed confidence", () => {
+    expect(() => refuseConfirmed("confirmed")).toThrow(/CUSTODY/);
+  });
+});
 
 describe("cli custody", () => {
   it("requires --user-override on identifier, edge, event, and question creates", () => {
