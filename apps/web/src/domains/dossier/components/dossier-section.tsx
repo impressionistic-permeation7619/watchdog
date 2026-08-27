@@ -104,11 +104,7 @@ export function DossierSection({
         </SectionLabel>
         {actions}
       </div>
-      {fill ? (
-        <div className="flex min-h-0 flex-1 flex-col">{body}</div>
-      ) : (
-        body
-      )}
+      {fill ? <div className="flex min-h-0 flex-1 flex-col">{body}</div> : body}
     </section>
   );
 }

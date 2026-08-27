@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { testId } from "@watchdog/test-kit";
 
 import { createIdentifierInputSchema } from "@/domains/entities/identifiers/types";
+import { testId } from "@watchdog/test-kit";
 
 describe("identifiers types schemas", () => {
   it("defaults status to unknown and trims optional fields", () => {

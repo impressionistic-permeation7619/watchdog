@@ -1,13 +1,12 @@
 import { z } from "zod";
 
+import type { QuestionRecord as CoreQuestionRecord } from "@watchdog/core";
 import {
   nonEmptyTrimmed,
   optionalTrimmedSchema,
   trimmedOrNull,
   uuidSchema,
 } from "@watchdog/schemas";
-
-import type { QuestionRecord as CoreQuestionRecord } from "@watchdog/core";
 
 export type QuestionRecord = CoreQuestionRecord;
 

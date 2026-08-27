@@ -349,7 +349,10 @@ function tryParseJsonPaste(text: string): IdentifierPasteTable | null {
 
 const LABEL_LINE = /^([^:\n]{1,40})\s*:\s+(.+)$/;
 
-type LabeledField = { label: string; value: string };
+interface LabeledField {
+  label: string;
+  value: string;
+}
 
 function parseLabeledPasteLine(trimmed: string): LabeledField | "invalid" {
   const match = LABEL_LINE.exec(trimmed);

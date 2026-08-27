@@ -1,14 +1,13 @@
 import { z } from "zod";
 
 import { slugifyName } from "@/lib/utils";
+import type { EntityRecord as CoreEntityRecord } from "@watchdog/core";
 import {
   entityKindSchema,
   nonEmptyTrimmed,
   trimmedOrUndefined,
   uuidSchema,
 } from "@watchdog/schemas";
-
-import type { EntityRecord as CoreEntityRecord } from "@watchdog/core";
 
 export type EntityRecord = CoreEntityRecord;
 

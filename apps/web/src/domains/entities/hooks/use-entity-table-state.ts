@@ -41,7 +41,9 @@ function kindFilterClearHandler(
   setKindFilter: Dispatch<SetStateAction<string[]>>,
   kind: string
 ): () => void {
-  return () => setKindFilter((prev) => withoutKind(prev, kind));
+  return () => {
+    setKindFilter((prev) => withoutKind(prev, kind));
+  };
 }
 
 function kindFilterChip(
@@ -99,10 +101,7 @@ export function useEntityTableState(
     [caseEdges]
   );
 
-  const entityOptions = useMemo(
-    () => entityOptionsFromRows(rows),
-    [rows]
-  );
+  const entityOptions = useMemo(() => entityOptionsFromRows(rows), [rows]);
 
   const columnFilters = useMemo(
     () => kindColumnFilters(kindFilter),

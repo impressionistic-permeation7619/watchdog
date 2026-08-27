@@ -2,9 +2,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook } from "@testing-library/react";
 import { createElement, type ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { testId } from "@watchdog/test-kit";
 
 import type { EntityRecord } from "@/domains/entities/types";
+import { testId } from "@watchdog/test-kit";
 
 vi.mock("@/auth/server", () => ({
   auth: {},
@@ -57,32 +57,42 @@ const ENTITY: EntityRecord = {
 };
 
 function renderShell() {
-  useQueryMock.mockImplementation((options: { queryKey: readonly unknown[] }) => {
-    switch (options.queryKey[0]) {
-      case "claims":
-        return { data: [{ retracted: false }, { retracted: true }] };
-      case "identifiers":
-        return { data: [{ id: "id-1" }, { id: "id-2" }] };
-      case "edges":
-        return { data: [{ id: "edge-1" }] };
-      case "events":
-        return { data: [{ id: "ev-1" }, { id: "ev-2" }, { id: "ev-3" }] };
-      case "questions":
-        return { data: [{ status: "open" }, { status: "resolved" }] };
-      case "tasks":
-        return { data: [{ status: "todo" }, { status: "done" }] };
-      case "evidence":
-        return {
-          data: [
-            { id: "evidence-1", entityId: ENTITY.id },
-            { id: "evidence-2", entityId: testId(99) },
-          ],
-          isPending: false,
-        };
-      default:
-        return { data: [] };
+  useQueryMock.mockImplementation(
+    (options: { queryKey: readonly unknown[] }) => {
+      switch (options.queryKey[0]) {
+        case "claims": {
+          return { data: [{ retracted: false }, { retracted: true }] };
+        }
+        case "identifiers": {
+          return { data: [{ id: "id-1" }, { id: "id-2" }] };
+        }
+        case "edges": {
+          return { data: [{ id: "edge-1" }] };
+        }
+        case "events": {
+          return { data: [{ id: "ev-1" }, { id: "ev-2" }, { id: "ev-3" }] };
+        }
+        case "questions": {
+          return { data: [{ status: "open" }, { status: "resolved" }] };
+        }
+        case "tasks": {
+          return { data: [{ status: "todo" }, { status: "done" }] };
+        }
+        case "evidence": {
+          return {
+            data: [
+              { id: "evidence-1", entityId: ENTITY.id },
+              { id: "evidence-2", entityId: testId(99) },
+            ],
+            isPending: false,
+          };
+        }
+        default: {
+          return { data: [] };
+        }
+      }
     }
-  });
+  );
 
   const client = new QueryClient();
   return renderHook(() => useDossierShell(testId(10), ENTITY), {

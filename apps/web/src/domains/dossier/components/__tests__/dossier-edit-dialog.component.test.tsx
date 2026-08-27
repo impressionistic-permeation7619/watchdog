@@ -1,8 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { testId } from "@watchdog/test-kit";
 
 import type { EntityRecord } from "@/domains/entities/types";
+import { testId } from "@watchdog/test-kit";
 
 vi.mock("@/shared/ui/rich-text", () => ({
   RichTextEditor: ({
@@ -48,9 +48,13 @@ describe("DossierEditDialog", () => {
         onSubmit={vi.fn()}
       />
     );
-    expect(screen.getByRole("heading", { name: "Edit entity" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Edit entity" })
+    ).toBeInTheDocument();
     expect(screen.getByLabelText("Entity name")).toHaveValue("Alpha Entity");
     expect(screen.getByLabelText("BLUF summary…")).toHaveValue("Lead subject");
-    expect(screen.getByLabelText("Working notes…")).toHaveValue("Working notes");
+    expect(screen.getByLabelText("Working notes…")).toHaveValue(
+      "Working notes"
+    );
   });
 });

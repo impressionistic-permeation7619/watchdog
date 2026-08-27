@@ -4,16 +4,16 @@ import type { Dispatch, SetStateAction } from "react";
 import { useCallback, useMemo, useState } from "react";
 
 import type { CaseRecord } from "@/domains/cases/types";
-import type { CaseIdentifierRecord } from "@/domains/entities/identifiers/types";
-import { entitiesListQuery } from "@/domains/entities/queries";
-import type { EntityRecord } from "@/domains/entities/types";
-import { evidenceListQuery } from "@/domains/intake/queries";
-import type { EvidenceRecord } from "@/domains/intake/types";
 import {
   identifiersGlobalFilterFn,
   identifiersTableColumns,
   type IdentifiersTableMeta,
 } from "@/domains/entities/components/identifiers-table.columns";
+import type { CaseIdentifierRecord } from "@/domains/entities/identifiers/types";
+import { entitiesListQuery } from "@/domains/entities/queries";
+import type { EntityRecord } from "@/domains/entities/types";
+import { evidenceListQuery } from "@/domains/intake/queries";
+import type { EvidenceRecord } from "@/domains/intake/types";
 import type { PageFilterChip } from "@/shared/layout/page-filter-menu";
 import { useDataTable } from "@/shared/ui/data-table";
 import type { EntityOption } from "@/shared/ui/entity-combobox";
@@ -31,7 +31,9 @@ import type {
 
 import type { useIdentifiersTableMutations } from "./use-identifiers-table-mutations";
 
-type IdentifiersTableMutations = ReturnType<typeof useIdentifiersTableMutations>;
+type IdentifiersTableMutations = ReturnType<
+  typeof useIdentifiersTableMutations
+>;
 
 function identifierRowId(row: CaseIdentifierRecord): string {
   return row.id;
@@ -80,7 +82,9 @@ function filterClearHandler<T>(
   setFilter: Dispatch<SetStateAction<T[]>>,
   value: T
 ): () => void {
-  return () => setFilter((prev) => withoutValue(prev, value));
+  return () => {
+    setFilter((prev) => withoutValue(prev, value));
+  };
 }
 
 function typeFilterChip(
@@ -127,7 +131,9 @@ function identifierFilterChips(
   return [
     ...typeFilter.map((t) => typeFilterChip(t, setTypeFilter)),
     ...statusFilter.map((s) => statusFilterChip(s, setStatusFilter)),
-    ...confidenceFilter.map((c) => confidenceFilterChip(c, setConfidenceFilter)),
+    ...confidenceFilter.map((c) =>
+      confidenceFilterChip(c, setConfidenceFilter)
+    ),
   ];
 }
 

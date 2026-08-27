@@ -2,9 +2,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook } from "@testing-library/react";
 import { createElement, type ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { testId } from "@watchdog/test-kit";
 
 import type { CaseRecord } from "@/domains/cases/types";
+import { testId } from "@watchdog/test-kit";
 
 vi.mock("@/auth/server", () => ({
   auth: {},
@@ -64,16 +64,20 @@ const ACTIVE: CaseRecord = {
 };
 
 function renderHookWithClient() {
-  useSuspenseQueryMock.mockImplementation((options: { queryKey: readonly unknown[] }) => {
-    switch (options.queryKey[0]) {
-      case "identifiers":
-      case "entities":
-      case "evidence":
-        return { data: [] };
-      default:
-        return { data: [] };
+  useSuspenseQueryMock.mockImplementation(
+    (options: { queryKey: readonly unknown[] }) => {
+      switch (options.queryKey[0]) {
+        case "identifiers":
+        case "entities":
+        case "evidence": {
+          return { data: [] };
+        }
+        default: {
+          return { data: [] };
+        }
+      }
     }
-  });
+  );
   useMutationMock.mockReturnValue({
     mutate: vi.fn(),
     mutateAsync: vi.fn(),
@@ -91,7 +95,9 @@ describe("useIdentifiersTable", () => {
   it("starts with empty-table copy and entity/evidence options", () => {
     const { result } = renderHookWithClient();
 
-    expect(result.current.emptyText).toBe("No identifiers yet — add one below.");
+    expect(result.current.emptyText).toBe(
+      "No identifiers yet — add one below."
+    );
     expect(result.current.entityOptions).toEqual([]);
     expect(result.current.evidenceOptions).toEqual([]);
     expect(result.current.rows).toEqual([]);

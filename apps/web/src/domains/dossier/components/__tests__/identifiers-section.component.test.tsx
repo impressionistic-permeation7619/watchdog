@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+
 import { testId } from "@watchdog/test-kit";
 
 vi.mock("@/auth/server", () => ({
@@ -72,7 +73,9 @@ describe("IdentifiersSection", () => {
       )
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Add" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Bulk add" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Bulk add" })
+    ).toBeInTheDocument();
     expect(useSuspenseQueryMock).toHaveBeenCalled();
   });
 });

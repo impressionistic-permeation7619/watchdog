@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+
 import { testId } from "@watchdog/test-kit";
 
 vi.mock("@tanstack/react-start", () => ({
@@ -30,7 +31,10 @@ import {
   updateEdgeFn,
 } from "@/domains/entities/edges/edges.functions";
 
-type ServerDataContext<T> = { data: T; context: Record<string, never> };
+interface ServerDataContext<T> {
+  data: T;
+  context: Record<string, never>;
+}
 
 describe("edges.functions", () => {
   it("lists edges for an entity scope", async () => {
@@ -43,9 +47,11 @@ describe("edges.functions", () => {
     };
     edgesApi.list.mockResolvedValue([edge]);
 
-    const rows = await (listEdgesFn as unknown as (
-      input: ServerDataContext<{ caseId: string; entityId: string }>
-    ) => Promise<typeof edge[]>)({
+    const rows = await (
+      listEdgesFn as unknown as (
+        input: ServerDataContext<{ caseId: string; entityId: string }>
+      ) => Promise<(typeof edge)[]>
+    )({
       data: { caseId: testId(10), entityId: testId(20) },
       context: {},
     });
@@ -64,27 +70,35 @@ describe("edges.functions", () => {
     edgesApi.delete.mockResolvedValue(undefined);
     edgesApi.listForCase.mockResolvedValue([]);
 
-    await (createEdgeFn as unknown as (
-      input: ServerDataContext<Record<string, unknown>>
-    ) => Promise<unknown>)({
+    await (
+      createEdgeFn as unknown as (
+        input: ServerDataContext<Record<string, unknown>>
+      ) => Promise<unknown>
+    )({
       data: { caseId: testId(10), fromId: testId(1), toId: testId(2) },
       context: {},
     });
-    await (updateEdgeFn as unknown as (
-      input: ServerDataContext<Record<string, unknown>>
-    ) => Promise<unknown>)({
+    await (
+      updateEdgeFn as unknown as (
+        input: ServerDataContext<Record<string, unknown>>
+      ) => Promise<unknown>
+    )({
       data: { caseId: testId(10), edgeId: testId(4) },
       context: {},
     });
-    await (deleteEdgeFn as unknown as (
-      input: ServerDataContext<Record<string, unknown>>
-    ) => Promise<void>)({
+    await (
+      deleteEdgeFn as unknown as (
+        input: ServerDataContext<Record<string, unknown>>
+      ) => Promise<void>
+    )({
       data: { caseId: testId(10), edgeId: testId(4) },
       context: {},
     });
-    await (listEdgesForCaseFn as unknown as (
-      input: ServerDataContext<{ caseId: string }>
-    ) => Promise<unknown[]>)({
+    await (
+      listEdgesForCaseFn as unknown as (
+        input: ServerDataContext<{ caseId: string }>
+      ) => Promise<unknown[]>
+    )({
       data: { caseId: testId(10) },
       context: {},
     });

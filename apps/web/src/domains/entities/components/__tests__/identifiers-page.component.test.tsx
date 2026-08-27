@@ -2,9 +2,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { testId } from "@watchdog/test-kit";
 
 import type { CaseRecord } from "@/domains/cases/types";
+import { testId } from "@watchdog/test-kit";
 
 vi.mock("@/auth/server", () => ({
   auth: {},
@@ -121,7 +121,9 @@ describe("IdentifiersPage", () => {
       "href",
       "/cases"
     );
-    expect(screen.queryByLabelText("Search identifiers")).not.toBeInTheDocument();
+    expect(
+      screen.queryByLabelText("Search identifiers")
+    ).not.toBeInTheDocument();
   });
 
   it("renders identifier toolbar controls and opens bulk dialog", async () => {
@@ -139,7 +141,9 @@ describe("IdentifiersPage", () => {
     );
 
     expect(screen.getByLabelText("Search identifiers")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Bulk add" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Bulk add" })
+    ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Add identifier" })
     ).toBeInTheDocument();

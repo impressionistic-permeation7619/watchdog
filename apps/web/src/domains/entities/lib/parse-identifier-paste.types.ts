@@ -155,7 +155,12 @@ export const TYPE_HEADER_ALIASES: Record<string, IdentifierType> = {
   fingerprint: "pgp",
   login: "credential",
   ...Object.fromEntries([
-    [[["pass", "word"].join(""), "credential"] satisfies [string, IdentifierType]],
+    [
+      [["pass", "word"].join(""), "credential"] satisfies [
+        string,
+        IdentifierType,
+      ],
+    ],
   ]),
 };
 

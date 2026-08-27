@@ -1,12 +1,12 @@
 import type { Row } from "@tanstack/react-table";
 import { describe, expect, it } from "vitest";
-import { testId } from "@watchdog/test-kit";
 
 import {
   entityGlobalFilterFn,
   entityTableColumns,
 } from "@/domains/entities/components/entity-table.columns";
 import type { EntityRecord } from "@/domains/entities/types";
+import { testId } from "@watchdog/test-kit";
 
 const ENTITY: EntityRecord = {
   id: testId(1),
@@ -29,19 +29,21 @@ describe("entity-table.columns", () => {
     expect(entityGlobalFilterFn(asRow(ENTITY), "name", "lead", () => {})).toBe(
       true
     );
-    expect(entityGlobalFilterFn(asRow(ENTITY), "name", "person", () => {})).toBe(
-      true
-    );
+    expect(
+      entityGlobalFilterFn(asRow(ENTITY), "name", "person", () => {})
+    ).toBe(true);
     expect(
       entityGlobalFilterFn(asRow(ENTITY), "name", "missing", () => {})
     ).toBe(false);
-    expect(entityGlobalFilterFn(asRow(ENTITY), "name", "", () => {})).toBe(true);
+    expect(entityGlobalFilterFn(asRow(ENTITY), "name", "", () => {})).toBe(
+      true
+    );
   });
 
   it("builds expected entity table columns", () => {
     expect(entityTableColumns).toHaveLength(6);
-    expect(entityTableColumns.some((column) => column.id === "connections")).toBe(
-      true
-    );
+    expect(
+      entityTableColumns.some((column) => column.id === "connections")
+    ).toBe(true);
   });
 });

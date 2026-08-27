@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+
 import { testId } from "@watchdog/test-kit";
 
 vi.mock("@tanstack/react-start", () => ({
@@ -28,7 +29,10 @@ import {
   updateEventFn,
 } from "@/domains/entities/events/events.functions";
 
-type ServerDataContext<T> = { data: T; context: Record<string, never> };
+interface ServerDataContext<T> {
+  data: T;
+  context: Record<string, never>;
+}
 
 describe("events.functions", () => {
   it("lists and mutates entity events through oRPC", async () => {
@@ -44,15 +48,19 @@ describe("events.functions", () => {
     eventsApi.update.mockResolvedValue(event);
     eventsApi.delete.mockResolvedValue(undefined);
 
-    await (listEventsFn as unknown as (
-      input: ServerDataContext<{ caseId: string; entityId: string }>
-    ) => Promise<unknown[]>)({
+    await (
+      listEventsFn as unknown as (
+        input: ServerDataContext<{ caseId: string; entityId: string }>
+      ) => Promise<unknown[]>
+    )({
       data: { caseId: testId(10), entityId: testId(20) },
       context: {},
     });
-    await (createEventFn as unknown as (
-      input: ServerDataContext<Record<string, unknown>>
-    ) => Promise<unknown>)({
+    await (
+      createEventFn as unknown as (
+        input: ServerDataContext<Record<string, unknown>>
+      ) => Promise<unknown>
+    )({
       data: {
         caseId: testId(10),
         entityId: testId(20),
@@ -61,9 +69,11 @@ describe("events.functions", () => {
       },
       context: {},
     });
-    await (updateEventFn as unknown as (
-      input: ServerDataContext<Record<string, unknown>>
-    ) => Promise<unknown>)({
+    await (
+      updateEventFn as unknown as (
+        input: ServerDataContext<Record<string, unknown>>
+      ) => Promise<unknown>
+    )({
       data: {
         caseId: testId(10),
         eventId: testId(1),
@@ -72,9 +82,11 @@ describe("events.functions", () => {
       },
       context: {},
     });
-    await (deleteEventFn as unknown as (
-      input: ServerDataContext<{ caseId: string; eventId: string }>
-    ) => Promise<void>)({
+    await (
+      deleteEventFn as unknown as (
+        input: ServerDataContext<{ caseId: string; eventId: string }>
+      ) => Promise<void>
+    )({
       data: { caseId: testId(10), eventId: testId(1) },
       context: {},
     });

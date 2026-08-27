@@ -35,11 +35,9 @@ vi.mock("@/shared/ui/entity-combobox", () => ({
 }));
 
 vi.mock("@/shared/ui/field-combobox", () => ({
-  FieldCombobox: ({
-    "aria-label": ariaLabel,
-  }: {
-    "aria-label"?: string;
-  }) => <input aria-label={ariaLabel} readOnly value="related_to|forward" />,
+  FieldCombobox: ({ "aria-label": ariaLabel }: { "aria-label"?: string }) => (
+    <input aria-label={ariaLabel} readOnly value="related_to|forward" />
+  ),
 }));
 
 import { ConnectionDialog } from "@/domains/dossier/components/ego-graph/connection-dialog";
@@ -58,7 +56,9 @@ describe("ConnectionDialog", () => {
       />
     );
 
-    expect(screen.getByRole("heading", { name: "Add connection" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Add connection" })
+    ).toBeInTheDocument();
     expect(screen.getByText("Why (required)")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("Short why…")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Add" })).toBeDisabled();

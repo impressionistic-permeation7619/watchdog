@@ -2,18 +2,18 @@ import type { QueryClient } from "@tanstack/react-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import type { CaseIdentifierRecord } from "@/domains/entities/identifiers/types";
 import { updateIdentifierFn } from "@/domains/entities/identifiers/identifiers.functions";
-import type { IdentifierFieldUpdate } from "@/shared/ui/identifiers/identifier-cells";
+import type { CaseIdentifierRecord } from "@/domains/entities/identifiers/types";
 import { errMessage } from "@/lib/utils";
 import { invalidateAfterEntityChanged } from "@/shared/lib/query-invalidation";
+import type { IdentifierFieldUpdate } from "@/shared/ui/identifiers/identifier-cells";
 import type {
   ConfidenceTier,
   IdentifierStatus,
   IdentifierType,
 } from "@watchdog/schemas";
 
-type UpdateIdentifierVars = {
+interface UpdateIdentifierVars {
   identifierId: string;
   value?: string;
   platform?: string;
@@ -22,9 +22,9 @@ type UpdateIdentifierVars = {
   confidence?: ConfidenceTier;
   notes?: string;
   evidenceIds?: string[];
-};
+}
 
-function updateIdentifierFields(
+async function updateIdentifierFields(
   caseId: string,
   input: UpdateIdentifierVars
 ) {
@@ -69,9 +69,9 @@ export function useIdentifiersTableMutations(
   const queryClient = useQueryClient();
 
   const { mutate, mutateAsync } = useMutation({
-    mutationFn: (input: UpdateIdentifierVars) =>
+    mutationFn: async (input: UpdateIdentifierVars) =>
       updateIdentifierFields(caseId, input),
-    onSuccess: (_data, vars) =>
+    onSuccess: async (_data, vars) =>
       onIdentifierUpdated(queryClient, caseId, rows, vars.identifierId),
     onError: onIdentifierUpdateError,
   });

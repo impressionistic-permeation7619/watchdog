@@ -1,8 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { edgePhraseValue } from "@/shared/ui/vocab/edge-predicate";
 
 import { ConnectionComposerFields } from "@/domains/entities/components/connection-composer-fields";
+import { edgePhraseValue } from "@/shared/ui/vocab/edge-predicate";
 
 vi.mock("@/shared/ui/field-combobox", () => ({
   FieldCombobox: ({
@@ -22,7 +22,9 @@ vi.mock("@/shared/ui/field-combobox", () => ({
       }}
     >
       <option value="">Select…</option>
-      <option value={edgePhraseValue("related_to", "forward")}>Related to</option>
+      <option value={edgePhraseValue("related_to", "forward")}>
+        Related to
+      </option>
     </select>
   ),
 }));
@@ -36,7 +38,7 @@ vi.mock("@/shared/ui/entity-combobox", () => ({
   }: {
     value: string;
     onValueChange: (next: string) => void;
-    entities: Array<{ id: string; name: string }>;
+    entities: { id: string; name: string }[];
     "aria-label"?: string;
   }) => (
     <select

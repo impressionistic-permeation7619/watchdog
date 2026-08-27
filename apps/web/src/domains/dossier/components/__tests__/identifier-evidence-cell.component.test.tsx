@@ -1,8 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { testId } from "@watchdog/test-kit";
 
 import { IdentifierEvidenceCell } from "@/domains/dossier/components/identifier-evidence-cell";
+import { testId } from "@watchdog/test-kit";
 
 describe("IdentifierEvidenceCell re-export", () => {
   it("shows Link placeholder when no evidence is attached", () => {

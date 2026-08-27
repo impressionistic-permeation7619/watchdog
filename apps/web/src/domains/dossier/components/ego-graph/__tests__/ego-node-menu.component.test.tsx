@@ -3,13 +3,9 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@tanstack/react-router", () => ({
-  Link: ({
-    children,
-    to,
-  }: {
-    children: React.ReactNode;
-    to: string;
-  }) => <a href={to}>{children}</a>,
+  Link: ({ children, to }: { children: React.ReactNode; to: string }) => (
+    <a href={to}>{children}</a>
+  ),
 }));
 
 import { EgoNodeMenu } from "@/domains/dossier/components/ego-graph/ego-node-menu";

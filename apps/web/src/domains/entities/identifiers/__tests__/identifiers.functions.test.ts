@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+
 import { testId } from "@watchdog/test-kit";
 
 vi.mock("@tanstack/react-start", () => ({
@@ -28,7 +29,10 @@ import {
   updateIdentifierFn,
 } from "@/domains/entities/identifiers/identifiers.functions";
 
-type ServerDataContext<T> = { data: T; context: Record<string, never> };
+interface ServerDataContext<T> {
+  data: T;
+  context: Record<string, never>;
+}
 
 describe("identifiers.functions", () => {
   it("routes identifier list and write ServerFns through oRPC", async () => {
@@ -45,26 +49,37 @@ describe("identifiers.functions", () => {
     };
     identifiersApi.list.mockResolvedValue([identifier]);
     identifiersApi.listForCase.mockResolvedValue([
-      { ...identifier, entityName: "Alpha", entitySlug: "alpha", entityKind: "person" as const },
+      {
+        ...identifier,
+        entityName: "Alpha",
+        entitySlug: "alpha",
+        entityKind: "person" as const,
+      },
     ]);
     identifiersApi.create.mockResolvedValue(identifier);
     identifiersApi.update.mockResolvedValue(identifier);
 
-    await (listIdentifiersFn as unknown as (
-      input: ServerDataContext<{ caseId: string; entityId: string }>
-    ) => Promise<unknown[]>)({
+    await (
+      listIdentifiersFn as unknown as (
+        input: ServerDataContext<{ caseId: string; entityId: string }>
+      ) => Promise<unknown[]>
+    )({
       data: { caseId: testId(10), entityId: testId(20) },
       context: {},
     });
-    await (listIdentifiersForCaseFn as unknown as (
-      input: ServerDataContext<{ caseId: string }>
-    ) => Promise<unknown[]>)({
+    await (
+      listIdentifiersForCaseFn as unknown as (
+        input: ServerDataContext<{ caseId: string }>
+      ) => Promise<unknown[]>
+    )({
       data: { caseId: testId(10) },
       context: {},
     });
-    await (createIdentifierFn as unknown as (
-      input: ServerDataContext<Record<string, unknown>>
-    ) => Promise<unknown>)({
+    await (
+      createIdentifierFn as unknown as (
+        input: ServerDataContext<Record<string, unknown>>
+      ) => Promise<unknown>
+    )({
       data: {
         caseId: testId(10),
         entityId: testId(20),
@@ -74,10 +89,16 @@ describe("identifiers.functions", () => {
       },
       context: {},
     });
-    await (updateIdentifierFn as unknown as (
-      input: ServerDataContext<Record<string, unknown>>
-    ) => Promise<unknown>)({
-      data: { caseId: testId(10), identifierId: testId(1), value: "next@example.com" },
+    await (
+      updateIdentifierFn as unknown as (
+        input: ServerDataContext<Record<string, unknown>>
+      ) => Promise<unknown>
+    )({
+      data: {
+        caseId: testId(10),
+        identifierId: testId(1),
+        value: "next@example.com",
+      },
       context: {},
     });
 

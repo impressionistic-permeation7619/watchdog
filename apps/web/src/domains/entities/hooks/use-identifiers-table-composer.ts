@@ -1,10 +1,12 @@
 import type { QueryClient } from "@tanstack/react-query";
-import type { Dispatch, MutableRefObject, SetStateAction } from "react";
-import { useRef, useState } from "react";
+import type { Dispatch, SetStateAction } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { createIdentifierFn } from "@/domains/entities/identifiers/identifiers.functions";
 import { errMessage } from "@/lib/utils";
+import { invalidateAfterEntityChanged } from "@/shared/lib/query-invalidation";
+import { tableComposerKeyDown } from "@/shared/ui/data-table";
 import {
   HANDLE_REQUIRES_PLATFORM,
   isHandleWithoutPlatform,
@@ -13,21 +15,18 @@ import {
   identifierCreateCanSubmit,
   useIdentifierCreateForm,
 } from "@/shared/ui/identifiers/identifier-composer";
-import { invalidateAfterEntityChanged } from "@/shared/lib/query-invalidation";
-import { tableComposerKeyDown } from "@/shared/ui/data-table";
 import { normalizeIdentifierPlatform } from "@watchdog/schemas";
 
 type IdentifierCreateValues = Parameters<
   Parameters<typeof useIdentifierCreateForm>[0]
 >[0]["value"];
 
-type IdentifierComposerSubmitContext = {
+interface IdentifierComposerSubmitContext {
   caseId: string;
   queryClient: QueryClient;
-  resetFormRef: MutableRefObject<(() => void) | null>;
   setComposing: Dispatch<SetStateAction<boolean>>;
   setSubmitError: Dispatch<SetStateAction<string | null>>;
-};
+}
 
 async function submitIdentifierCreate(
   ctx: IdentifierComposerSubmitContext,
@@ -74,7 +73,7 @@ async function handleIdentifierCreateSubmit(
 }
 
 function identifierCreateOnSubmit(ctx: IdentifierComposerSubmitContext) {
-  return ({
+  return async ({
     value,
     reset,
   }: {
@@ -127,12 +126,10 @@ export function useIdentifiersTableComposer(
 ) {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [composing, setComposing] = useState(false);
-  const resetFormRef = useRef<(() => void) | null>(null);
 
   const submitContext: IdentifierComposerSubmitContext = {
     caseId,
     queryClient,
-    resetFormRef,
     setComposing,
     setSubmitError,
   };
@@ -140,8 +137,6 @@ export function useIdentifiersTableComposer(
   const createForm = useIdentifierCreateForm(
     identifierCreateOnSubmit(submitContext)
   );
-
-  resetFormRef.current = () => createForm.reset();
 
   const controls = buildIdentifierComposerControls(
     createForm,

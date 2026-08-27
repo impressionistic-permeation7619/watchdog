@@ -5,11 +5,9 @@ import { ClaimClassSelect } from "@/domains/dossier/components/graph-field-selec
 
 describe("ClaimClassSelect", () => {
   it("renders the selected claim class label", () => {
-    render(
-      <ClaimClassSelect value="observation" onChange={vi.fn()} />
-    );
-    expect(screen.getByRole("combobox", { name: "Claim class" })).toHaveTextContent(
-      "Observation"
-    );
+    render(<ClaimClassSelect value="observation" onChange={vi.fn()} />);
+    expect(
+      screen.getByRole("combobox", { name: "Claim class" })
+    ).toHaveTextContent("Observation");
   });
 });

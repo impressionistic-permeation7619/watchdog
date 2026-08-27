@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+
 import { testId } from "@watchdog/test-kit";
 
 vi.mock("@tanstack/react-start", () => ({
@@ -29,7 +30,10 @@ import {
   updateEntityFieldsFn,
 } from "@/domains/entities/entities.functions";
 
-type ServerDataContext<T> = { data: T; context: Record<string, never> };
+interface ServerDataContext<T> {
+  data: T;
+  context: Record<string, never>;
+}
 
 const ENTITY = {
   id: testId(1),
@@ -47,9 +51,11 @@ describe("entities.functions", () => {
   it("lists entities for a case", async () => {
     entitiesApi.list.mockResolvedValue([ENTITY]);
 
-    const rows = await (listEntitiesFn as unknown as (
-      input: ServerDataContext<{ caseId: string }>
-    ) => Promise<typeof ENTITY[]>)({
+    const rows = await (
+      listEntitiesFn as unknown as (
+        input: ServerDataContext<{ caseId: string }>
+      ) => Promise<(typeof ENTITY)[]>
+    )({
       data: { caseId: testId(10) },
       context: {},
     });
@@ -62,21 +68,32 @@ describe("entities.functions", () => {
     entitiesApi.create.mockResolvedValue(ENTITY);
     entitiesApi.update.mockResolvedValue(ENTITY);
 
-    await (getEntityBySlugFn as unknown as (
-      input: ServerDataContext<{ caseId: string; slug: string }>
-    ) => Promise<unknown>)({
+    await (
+      getEntityBySlugFn as unknown as (
+        input: ServerDataContext<{ caseId: string; slug: string }>
+      ) => Promise<unknown>
+    )({
       data: { caseId: testId(10), slug: "alpha" },
       context: {},
     });
-    await (createEntityFn as unknown as (
-      input: ServerDataContext<Record<string, unknown>>
-    ) => Promise<unknown>)({
-      data: { caseId: testId(10), kind: "person", name: "Alpha", slug: "alpha" },
+    await (
+      createEntityFn as unknown as (
+        input: ServerDataContext<Record<string, unknown>>
+      ) => Promise<unknown>
+    )({
+      data: {
+        caseId: testId(10),
+        kind: "person",
+        name: "Alpha",
+        slug: "alpha",
+      },
       context: {},
     });
-    await (updateEntityFieldsFn as unknown as (
-      input: ServerDataContext<Record<string, unknown>>
-    ) => Promise<unknown>)({
+    await (
+      updateEntityFieldsFn as unknown as (
+        input: ServerDataContext<Record<string, unknown>>
+      ) => Promise<unknown>
+    )({
       data: { caseId: testId(10), entityId: testId(1), name: "Beta" },
       context: {},
     });

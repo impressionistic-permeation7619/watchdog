@@ -42,7 +42,8 @@ function dossierTabCounts(
     identifiers: identifiers.length,
     connections: edges.length,
     events: events.length,
-    questions: questions.filter((question) => question.status === "open").length,
+    questions: questions.filter((question) => question.status === "open")
+      .length,
     evidence: evidenceAll.filter((entry) => entry.entityId === entityId).length,
     tasks: entityTasks.filter(
       (task) => task.status !== "done" && task.status !== "dropped"

@@ -1,9 +1,9 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { testId } from "@watchdog/test-kit";
 
 import type { EntityRecord } from "@/domains/entities/types";
+import { testId } from "@watchdog/test-kit";
 
 vi.mock("@/auth/server", () => ({
   auth: {},
@@ -68,13 +68,17 @@ const ENTITY: EntityRecord = {
 
 function renderWithClient(ui: React.ReactElement) {
   const client = new QueryClient();
-  return render(<QueryClientProvider client={client}>{ui}</QueryClientProvider>);
+  return render(
+    <QueryClientProvider client={client}>{ui}</QueryClientProvider>
+  );
 }
 
 describe("summary-notes sections", () => {
   it("renders SummarySection with seeded BLUF copy", () => {
     renderWithClient(<SummarySection caseId={testId(10)} entity={ENTITY} />);
-    expect(screen.getByRole("heading", { name: "Summary" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Summary" })
+    ).toBeInTheDocument();
     expect(
       screen.getByLabelText(
         "BLUF summary — who is this entity and why do they matter?"

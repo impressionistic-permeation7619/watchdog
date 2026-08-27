@@ -8,18 +8,6 @@ import type {
 import { CopyIcon } from "lucide-react";
 import { toast } from "sonner";
 
-import { IdentifierEvidenceCell } from "@/shared/ui/identifiers/identifier-evidence-cell";
-import {
-  PLATFORM_OPTIONS,
-  STATUS_OPTIONS,
-  TYPE_OPTIONS,
-  type IdentifierFieldUpdate,
-} from "@/shared/ui/identifiers/identifier-cells";
-import {
-  CONFIRMED_REQUIRES_EVIDENCE_HINT,
-  isConfirmedBlocked,
-} from "@/shared/lib/confirmed-evidence";
-import type { EvidenceOption } from "@/shared/ui/intake/evidence-option";
 import type { CaseIdentifierRecord } from "@/domains/entities/identifiers/types";
 import {
   tryCommitIdentifierPlatform,
@@ -27,11 +15,23 @@ import {
   tryCommitIdentifierValue,
 } from "@/domains/entities/lib/commit-identifier-field";
 import {
+  CONFIRMED_REQUIRES_EVIDENCE_HINT,
+  isConfirmedBlocked,
+} from "@/shared/lib/confirmed-evidence";
+import {
   DataTableColumnHeader,
   EditableSelectCell,
   EditableSuggestCell,
   EditableTextCell,
 } from "@/shared/ui/data-table";
+import {
+  PLATFORM_OPTIONS,
+  STATUS_OPTIONS,
+  TYPE_OPTIONS,
+  type IdentifierFieldUpdate,
+} from "@/shared/ui/identifiers/identifier-cells";
+import { IdentifierEvidenceCell } from "@/shared/ui/identifiers/identifier-evidence-cell";
+import type { EvidenceOption } from "@/shared/ui/intake/evidence-option";
 import { Button } from "@/shared/ui/shadcn/button";
 import { CONFIDENCE_OPTIONS, KindBadge } from "@/shared/ui/vocab";
 import {
@@ -175,7 +175,11 @@ function renderTypeCell(ctx: CellContext<CaseIdentifierRecord, unknown>) {
       onCommit={(next) => {
         const type = identifierTypeSchema.parse(next);
         if (type === row.type) return;
-        const committed = tryCommitIdentifierType(type, row.value, row.platform);
+        const committed = tryCommitIdentifierType(
+          type,
+          row.value,
+          row.platform
+        );
         if (committed === false) return;
         meta.updateField(row.id, committed);
       }}
@@ -223,7 +227,9 @@ function renderValueCell(ctx: CellContext<CaseIdentifierRecord, unknown>) {
         size="sm"
         className="size-6 shrink-0 p-0"
         aria-label="Copy value"
-        onClick={(e) => onCopyValueClick(row.value, e)}
+        onClick={(e) => {
+          onCopyValueClick(row.value, e);
+        }}
       >
         <CopyIcon className="size-3" />
       </Button>

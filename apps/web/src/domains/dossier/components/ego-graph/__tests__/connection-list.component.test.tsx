@@ -1,17 +1,13 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { testId } from "@watchdog/test-kit";
 
 import type { EdgeRecord } from "@/domains/entities/edges/types";
+import { testId } from "@watchdog/test-kit";
 
 vi.mock("@tanstack/react-router", () => ({
-  Link: ({
-    children,
-    to,
-  }: {
-    children: React.ReactNode;
-    to: string;
-  }) => <a href={to}>{children}</a>,
+  Link: ({ children, to }: { children: React.ReactNode; to: string }) => (
+    <a href={to}>{children}</a>
+  ),
 }));
 
 import { CompactConnectionList } from "@/domains/dossier/components/ego-graph/connection-list";
@@ -39,7 +35,9 @@ describe("CompactConnectionList", () => {
     render(
       <CompactConnectionList
         outbound={[edge()]}
-        inbound={[edge({ id: testId(11), direction: "in", peerName: "Inbound Peer" })]}
+        inbound={[
+          edge({ id: testId(11), direction: "in", peerName: "Inbound Peer" }),
+        ]}
         onEdit={vi.fn()}
         onRemove={vi.fn()}
       />

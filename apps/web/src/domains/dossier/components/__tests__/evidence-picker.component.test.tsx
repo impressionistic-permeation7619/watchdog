@@ -1,11 +1,11 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { testId } from "@watchdog/test-kit";
 
 import {
   EvidenceCiteChips,
   EvidencePicker,
 } from "@/domains/dossier/components/evidence-picker";
+import { testId } from "@watchdog/test-kit";
 
 const OPTION = {
   id: testId(1),

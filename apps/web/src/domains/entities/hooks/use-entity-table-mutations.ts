@@ -1,4 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import type { QueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import {
   createEdgeFn,
@@ -17,26 +19,24 @@ import {
 import { errMessage, slugifyName } from "@/lib/utils";
 import { invalidateAfterEntityChanged } from "@/shared/lib/query-invalidation";
 import type { EntityKind } from "@watchdog/schemas";
-import type { QueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
 
-type UpdateEntityVars = {
+interface UpdateEntityVars {
   entityId: string;
   kind?: EntityKind;
   summary?: string;
-};
+}
 
-type ConnectionVars = {
+interface ConnectionVars {
   centerId: string;
   input: CreateEntityConnectionInput;
-};
+}
 
-type ConnectionUpdateVars = {
+interface ConnectionUpdateVars {
   centerId: string;
   input: UpdateEntityConnectionInput;
-};
+}
 
-function updateEntityFields(caseId: string, vars: UpdateEntityVars) {
+async function updateEntityFields(caseId: string, vars: UpdateEntityVars) {
   return updateEntityFieldsFn({
     data: {
       caseId,
@@ -59,7 +59,7 @@ function onEntityFieldsError(error: unknown): void {
   toast.error(errMessage(error, "Update failed"));
 }
 
-function createEntityConnection(caseId: string, vars: ConnectionVars) {
+async function createEntityConnection(caseId: string, vars: ConnectionVars) {
   return createEdgeFn({
     data: buildCreateEdgeData({
       caseId,
@@ -75,10 +75,12 @@ async function onConnectionCreated(
   centerId: string
 ): Promise<void> {
   toast.success("Connection added");
-  await invalidateAfterEntityChanged(queryClient, caseId, { entityId: centerId });
+  await invalidateAfterEntityChanged(queryClient, caseId, {
+    entityId: centerId,
+  });
 }
 
-function updateEntityConnection(
+async function updateEntityConnection(
   caseId: string,
   vars: ConnectionUpdateVars
 ) {
@@ -103,7 +105,9 @@ async function onConnectionUpdated(
   centerId: string
 ): Promise<void> {
   toast.success("Connection updated");
-  await invalidateAfterEntityChanged(queryClient, caseId, { entityId: centerId });
+  await invalidateAfterEntityChanged(queryClient, caseId, {
+    entityId: centerId,
+  });
 }
 
 async function createEntityRecord(
@@ -161,25 +165,27 @@ export function useEntityTableMutations(caseId: string) {
   const queryClient = useQueryClient();
 
   const updateMutation = useMutation({
-    mutationFn: (vars: UpdateEntityVars) => updateEntityFields(caseId, vars),
-    onSuccess: () => onEntityFieldsUpdated(queryClient, caseId),
+    mutationFn: async (vars: UpdateEntityVars) =>
+      updateEntityFields(caseId, vars),
+    onSuccess: async () => onEntityFieldsUpdated(queryClient, caseId),
     onError: onEntityFieldsError,
   });
 
   const connectionMutation = useMutation({
-    mutationFn: (vars: ConnectionVars) => createEntityConnection(caseId, vars),
-    onSuccess: (_data, vars) =>
+    mutationFn: async (vars: ConnectionVars) =>
+      createEntityConnection(caseId, vars),
+    onSuccess: async (_data, vars) =>
       onConnectionCreated(queryClient, caseId, vars.centerId),
   });
 
   const connectionUpdateMutation = useMutation({
-    mutationFn: (vars: ConnectionUpdateVars) =>
+    mutationFn: async (vars: ConnectionUpdateVars) =>
       updateEntityConnection(caseId, vars),
-    onSuccess: (_data, vars) =>
+    onSuccess: async (_data, vars) =>
       onConnectionUpdated(queryClient, caseId, vars.centerId),
   });
 
-  const createEntity = (name: string, kind: EntityKind) =>
+  const createEntity = async (name: string, kind: EntityKind) =>
     createEntityRecord(caseId, queryClient, name, kind);
 
   return buildEntityTableMutationHandlers(

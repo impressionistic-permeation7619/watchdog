@@ -179,7 +179,7 @@ function applyOverrideField<K extends keyof IdentifierPasteRowOverride>(
 ): void {
   const value = merged[key];
   if (value === undefined) return;
-  if (changed(value as NonNullable<IdentifierPasteRowOverride[K]>, base)) {
+  if (changed(value, base)) {
     next[key] = value;
   }
 }
@@ -196,7 +196,13 @@ function mergeRowOverride(
   applyOverrideField(next, "value", merged, base, valueOverrideChanged);
   applyOverrideField(next, "platform", merged, base, platformOverrideChanged);
   applyOverrideField(next, "status", merged, base, statusOverrideChanged);
-  applyOverrideField(next, "confidence", merged, base, confidenceOverrideChanged);
+  applyOverrideField(
+    next,
+    "confidence",
+    merged,
+    base,
+    confidenceOverrideChanged
+  );
   return Object.keys(next).length === 0 ? null : next;
 }
 

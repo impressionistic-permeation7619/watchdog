@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { testId } from "@watchdog/test-kit";
 
 import {
   createEventInputSchema,
   updateEventInputSchema,
 } from "@/domains/entities/events/types";
+import { testId } from "@watchdog/test-kit";
 
 describe("events types schemas", () => {
   it("parses create and update event payloads", () => {

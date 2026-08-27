@@ -1,6 +1,6 @@
 import { useForm } from "@tanstack/react-form";
-import type { Dispatch, MutableRefObject, SetStateAction } from "react";
-import { useRef, useState } from "react";
+import type { Dispatch, SetStateAction } from "react";
+import { useState } from "react";
 
 import { errMessage } from "@/lib/utils";
 import { tableComposerKeyDown } from "@/shared/ui/data-table";
@@ -8,14 +8,17 @@ import type { EntityKind } from "@watchdog/schemas";
 
 type CreateEntityFn = (name: string, kind: EntityKind) => Promise<void>;
 
-type EntityCreateValues = { name: string; kind: EntityKind };
+interface EntityCreateValues {
+  name: string;
+  kind: EntityKind;
+}
 
-type EntityComposerSubmitContext = {
+interface EntityComposerSubmitContext {
   createEntity: CreateEntityFn;
-  resetFormRef: MutableRefObject<(() => void) | null>;
+  resetForm: () => void;
   setComposing: Dispatch<SetStateAction<boolean>>;
   setSubmitError: Dispatch<SetStateAction<string | null>>;
-};
+}
 
 async function submitEntityCreate(
   ctx: EntityComposerSubmitContext,
@@ -26,16 +29,11 @@ async function submitEntityCreate(
   ctx.setSubmitError(null);
   try {
     await ctx.createEntity(nextName, value.kind);
-    ctx.resetFormRef.current?.();
+    ctx.resetForm();
     ctx.setComposing(false);
   } catch (error) {
     ctx.setSubmitError(errMessage(error, "Create failed"));
   }
-}
-
-function entityCreateOnSubmit(ctx: EntityComposerSubmitContext) {
-  return ({ value }: { value: EntityCreateValues }) =>
-    submitEntityCreate(ctx, value);
 }
 
 function buildEntityComposerControls(
@@ -78,21 +76,23 @@ function buildEntityComposerControls(
 export function useEntityTableComposer(createEntity: CreateEntityFn) {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [composing, setComposing] = useState(false);
-  const resetFormRef = useRef<(() => void) | null>(null);
-
-  const submitContext: EntityComposerSubmitContext = {
-    createEntity,
-    resetFormRef,
-    setComposing,
-    setSubmitError,
-  };
 
   const createForm = useForm({
     defaultValues: { name: "", kind: "person" as EntityKind },
-    onSubmit: entityCreateOnSubmit(submitContext),
+    onSubmit: async ({ value }) => {
+      await submitEntityCreate(
+        {
+          createEntity,
+          resetForm: () => {
+            createForm.reset();
+          },
+          setComposing,
+          setSubmitError,
+        },
+        value
+      );
+    },
   });
-
-  resetFormRef.current = () => createForm.reset();
 
   const controls = buildEntityComposerControls(
     createForm,

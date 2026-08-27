@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { testId } from "@watchdog/test-kit";
 
 import type { EdgeRecord } from "@/domains/entities/edges/types";
+import { testId } from "@watchdog/test-kit";
 
 import { edgesToEgoFlow } from "../edges-to-flow";
 
@@ -48,7 +48,9 @@ describe("edgesToEgoFlow", () => {
     expect(center?.data.label).toBe("Center");
     expect(peer?.id).toBe(PEER_ID);
     expect(flow.edges).toHaveLength(2);
-    expect(flow.edges.map((item) => item.data?.predicate)).toContain("related_to");
+    expect(flow.edges.map((item) => item.data?.predicate)).toContain(
+      "related_to"
+    );
   });
 
   it("skips edges whose peer is the center entity", () => {

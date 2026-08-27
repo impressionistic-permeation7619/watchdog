@@ -1,9 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { testId } from "@watchdog/test-kit";
 
 import { EntityConnectionsCell } from "@/domains/entities/components/entity-connections-cell";
 import type { EntityRecord } from "@/domains/entities/types";
+import { testId } from "@watchdog/test-kit";
 
 vi.mock("@/domains/entities/components/connection-composer-fields", () => ({
   ConnectionComposerFields: () => <div>Composer fields</div>,

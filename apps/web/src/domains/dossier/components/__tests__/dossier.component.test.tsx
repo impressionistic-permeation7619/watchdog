@@ -1,9 +1,9 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { testId } from "@watchdog/test-kit";
 
 import type { EntityRecord } from "@/domains/entities/types";
+import { testId } from "@watchdog/test-kit";
 
 vi.mock("@/auth/server", () => ({
   auth: {},
@@ -18,13 +18,9 @@ vi.mock("@/shared/ui/shadcn/sidebar", () => ({
 }));
 
 vi.mock("@tanstack/react-router", () => ({
-  Link: ({
-    to,
-    children,
-  }: {
-    to: string;
-    children: React.ReactNode;
-  }) => <a href={to}>{children}</a>,
+  Link: ({ to, children }: { to: string; children: React.ReactNode }) => (
+    <a href={to}>{children}</a>
+  ),
   notFound: () => {
     throw new Error("not found");
   },
@@ -156,7 +152,9 @@ describe("Dossier", () => {
       "href",
       "/cases"
     );
-    expect(screen.queryByRole("button", { name: "Edit" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Edit" })
+    ).not.toBeInTheDocument();
     expect(screen.queryByText("Export menu")).not.toBeInTheDocument();
     expect(screen.queryByRole("tab")).not.toBeInTheDocument();
     expect(screen.queryByText("Export menu")).not.toBeInTheDocument();
@@ -169,8 +167,12 @@ describe("Dossier", () => {
     expect(screen.getByRole("tab", { name: /Overview/i })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: /Notes/i })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: /Claims/i })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: /Identifiers/i })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: /Connections/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("tab", { name: /Identifiers/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("tab", { name: /Connections/i })
+    ).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: /Evidence/i })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: /Events/i })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: /Questions/i })).toBeInTheDocument();

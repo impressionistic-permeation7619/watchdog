@@ -1,12 +1,12 @@
 import type { Row } from "@tanstack/react-table";
 import { describe, expect, it } from "vitest";
-import { testId } from "@watchdog/test-kit";
 
 import {
   identifiersTableColumns,
   identifiersGlobalFilterFn,
 } from "@/domains/entities/components/identifiers-table.columns";
 import type { CaseIdentifierRecord } from "@/domains/entities/identifiers/types";
+import { testId } from "@watchdog/test-kit";
 
 const ROW: CaseIdentifierRecord = {
   id: testId(1),
@@ -30,7 +30,12 @@ function asRow(record: CaseIdentifierRecord): Row<CaseIdentifierRecord> {
 describe("identifiers-table.columns", () => {
   it("filters rows by value entity labels and metadata", () => {
     expect(
-      identifiersGlobalFilterFn(asRow(ROW), "value", "user@example.com", () => {})
+      identifiersGlobalFilterFn(
+        asRow(ROW),
+        "value",
+        "user@example.com",
+        () => {}
+      )
     ).toBe(true);
     expect(
       identifiersGlobalFilterFn(asRow(ROW), "value", "work email", () => {})
@@ -42,8 +47,8 @@ describe("identifiers-table.columns", () => {
 
   it("builds expected identifier table columns", () => {
     expect(identifiersTableColumns).toHaveLength(8);
-    expect(identifiersTableColumns.some((column) => column.id === "evidence")).toBe(
-      true
-    );
+    expect(
+      identifiersTableColumns.some((column) => column.id === "evidence")
+    ).toBe(true);
   });
 });

@@ -1,12 +1,11 @@
 import { z } from "zod";
 
+import type { EventRecord as CoreEventRecord } from "@watchdog/core";
 import {
   nonEmptyTrimmed,
   optionalTrimmedSchema,
   uuidSchema,
 } from "@watchdog/schemas";
-
-import type { EventRecord as CoreEventRecord } from "@watchdog/core";
 
 export type EventRecord = CoreEventRecord;
 

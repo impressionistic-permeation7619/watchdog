@@ -37,6 +37,8 @@ describe("DossierSection", () => {
       </DossierSection>
     );
     expect(screen.getByText(/No questions Yet/i)).toBeInTheDocument();
-    expect(screen.getByText("Add a question to track gaps.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Add a question to track gaps.")
+    ).toBeInTheDocument();
   });
 });

@@ -2,7 +2,6 @@ import type { QueryClient } from "@tanstack/react-query";
 import { useMutation } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { toast } from "sonner";
-import type { WatchdogEvent } from "@watchdog/schemas";
 
 import type { DossierEditFormValues } from "@/domains/dossier/components/dossier-edit-dialog";
 import { updateEntityFieldsFn } from "@/domains/entities/entities.functions";
@@ -13,6 +12,7 @@ import {
   invalidateAfterEntityChanged,
   invalidateAfterTaskMutation,
 } from "@/shared/lib/query-invalidation";
+import type { WatchdogEvent } from "@watchdog/schemas";
 
 function handleDossierLiveEvent(
   queryClient: QueryClient,
@@ -40,18 +40,18 @@ export function useDossierShellLiveInvalidation(
     (event: WatchdogEvent) => {
       handleDossierLiveEvent(queryClient, caseId, entity, event);
     },
-    [queryClient, caseId, entity.id, entity.slug]
+    [queryClient, caseId, entity]
   );
   useLiveEvents(caseId, onEvent);
 }
 
-export type EntityMutationContext = {
+export interface EntityMutationContext {
   caseId: string;
   entity: EntityRecord;
   queryClient: QueryClient;
   setEditOpen: (open: boolean) => void;
   setEditError: (message: string | null) => void;
-};
+}
 
 async function invalidateDossierEntity(
   ctx: EntityMutationContext
@@ -62,7 +62,7 @@ async function invalidateDossierEntity(
   });
 }
 
-function renameEntity(ctx: EntityMutationContext, name: string) {
+async function renameEntity(ctx: EntityMutationContext, name: string) {
   return updateEntityFieldsFn({
     data: { caseId: ctx.caseId, entityId: ctx.entity.id, name },
   });
@@ -77,7 +77,10 @@ function onRenameError(err: unknown): void {
   toast.error(errMessage(err, "Rename failed"));
 }
 
-function editEntity(ctx: EntityMutationContext, values: DossierEditFormValues) {
+async function editEntity(
+  ctx: EntityMutationContext,
+  values: DossierEditFormValues
+) {
   return updateEntityFieldsFn({
     data: {
       caseId: ctx.caseId,
@@ -103,15 +106,18 @@ function onEditError(ctx: EntityMutationContext, err: unknown): void {
 
 export function useDossierShellMutations(ctx: EntityMutationContext) {
   const renameMutation = useMutation({
-    mutationFn: (name: string) => renameEntity(ctx, name),
-    onSuccess: () => onRenameSuccess(ctx),
+    mutationFn: async (name: string) => renameEntity(ctx, name),
+    onSuccess: async () => onRenameSuccess(ctx),
     onError: onRenameError,
   });
 
   const editMutation = useMutation({
-    mutationFn: (values: DossierEditFormValues) => editEntity(ctx, values),
-    onSuccess: () => onEditSuccess(ctx),
-    onError: (err) => onEditError(ctx, err),
+    mutationFn: async (values: DossierEditFormValues) =>
+      editEntity(ctx, values),
+    onSuccess: async () => onEditSuccess(ctx),
+    onError: (err) => {
+      onEditError(ctx, err);
+    },
   });
 
   return { renameMutation, editMutation };

@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+
 import { testId } from "@watchdog/test-kit";
 
 vi.mock("@/auth/server", () => ({
@@ -29,9 +30,12 @@ vi.mock("@/domains/dossier/components/ego-graph/connection-list", () => ({
   CompactConnectionList: () => <div>Connection list</div>,
 }));
 
-vi.mock("@/domains/dossier/components/ego-graph/ego-neighborhood-canvas", () => ({
-  EgoNeighborhoodCanvas: () => <div>Ego graph</div>,
-}));
+vi.mock(
+  "@/domains/dossier/components/ego-graph/ego-neighborhood-canvas",
+  () => ({
+    EgoNeighborhoodCanvas: () => <div>Ego graph</div>,
+  })
+);
 
 const useSuspenseQueryMock = vi.hoisted(() => vi.fn());
 

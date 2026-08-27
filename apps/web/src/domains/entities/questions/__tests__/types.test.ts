@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { testId } from "@watchdog/test-kit";
 
 import {
   createQuestionInputSchema,
   resolveQuestionInputSchema,
 } from "@/domains/entities/questions/types";
+import { testId } from "@watchdog/test-kit";
 
 describe("questions types schemas", () => {
   it("parses create and resolve question payloads", () => {

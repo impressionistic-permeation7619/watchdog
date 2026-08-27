@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+
 import { testId } from "@watchdog/test-kit";
 
 vi.mock("@tanstack/react-start", () => ({
@@ -30,7 +31,10 @@ import {
   updateQuestionFn,
 } from "@/domains/entities/questions/questions.functions";
 
-type ServerDataContext<T> = { data: T; context: Record<string, never> };
+interface ServerDataContext<T> {
+  data: T;
+  context: Record<string, never>;
+}
 
 describe("questions.functions", () => {
   it("routes question list and lifecycle ServerFns through oRPC", async () => {
@@ -50,15 +54,19 @@ describe("questions.functions", () => {
     questionsApi.update.mockResolvedValue(question);
     questionsApi.reopen.mockResolvedValue(question);
 
-    await (listQuestionsFn as unknown as (
-      input: ServerDataContext<{ caseId: string; entityId: string }>
-    ) => Promise<unknown[]>)({
+    await (
+      listQuestionsFn as unknown as (
+        input: ServerDataContext<{ caseId: string; entityId: string }>
+      ) => Promise<unknown[]>
+    )({
       data: { caseId: testId(10), entityId: testId(20) },
       context: {},
     });
-    await (createQuestionFn as unknown as (
-      input: ServerDataContext<Record<string, unknown>>
-    ) => Promise<unknown>)({
+    await (
+      createQuestionFn as unknown as (
+        input: ServerDataContext<Record<string, unknown>>
+      ) => Promise<unknown>
+    )({
       data: {
         caseId: testId(10),
         entityId: testId(20),
@@ -66,21 +74,35 @@ describe("questions.functions", () => {
       },
       context: {},
     });
-    await (resolveQuestionFn as unknown as (
-      input: ServerDataContext<Record<string, unknown>>
-    ) => Promise<unknown>)({
-      data: { caseId: testId(10), questionId: testId(1), resolvedNote: "Found in WHOIS" },
+    await (
+      resolveQuestionFn as unknown as (
+        input: ServerDataContext<Record<string, unknown>>
+      ) => Promise<unknown>
+    )({
+      data: {
+        caseId: testId(10),
+        questionId: testId(1),
+        resolvedNote: "Found in WHOIS",
+      },
       context: {},
     });
-    await (updateQuestionFn as unknown as (
-      input: ServerDataContext<Record<string, unknown>>
-    ) => Promise<unknown>)({
-      data: { caseId: testId(10), questionId: testId(1), text: "Updated question" },
+    await (
+      updateQuestionFn as unknown as (
+        input: ServerDataContext<Record<string, unknown>>
+      ) => Promise<unknown>
+    )({
+      data: {
+        caseId: testId(10),
+        questionId: testId(1),
+        text: "Updated question",
+      },
       context: {},
     });
-    await (reopenQuestionFn as unknown as (
-      input: ServerDataContext<{ caseId: string; questionId: string }>
-    ) => Promise<unknown>)({
+    await (
+      reopenQuestionFn as unknown as (
+        input: ServerDataContext<{ caseId: string; questionId: string }>
+      ) => Promise<unknown>
+    )({
       data: { caseId: testId(10), questionId: testId(1) },
       context: {},
     });

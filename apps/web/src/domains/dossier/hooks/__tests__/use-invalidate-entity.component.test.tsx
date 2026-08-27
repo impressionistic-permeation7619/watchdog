@@ -6,9 +6,8 @@ vi.mock("@/shared/lib/query-invalidation", () => ({
   invalidateAfterEntityChanged: vi.fn().mockResolvedValue(undefined),
 }));
 
-import { invalidateAfterEntityChanged } from "@/shared/lib/query-invalidation";
-
 import { useInvalidateEntity } from "@/domains/dossier/hooks/use-invalidate-entity";
+import { invalidateAfterEntityChanged } from "@/shared/lib/query-invalidation";
 
 describe("useInvalidateEntity", () => {
   it("delegates to the shared entity invalidation contract", async () => {
@@ -27,9 +26,13 @@ describe("useInvalidateEntity", () => {
     );
 
     await result.current();
-    expect(invalidateAfterEntityChanged).toHaveBeenCalledWith(client, "case-1", {
-      entityId: "ent-1",
-      slug: "alpha",
-    });
+    expect(invalidateAfterEntityChanged).toHaveBeenCalledWith(
+      client,
+      "case-1",
+      {
+        entityId: "ent-1",
+        slug: "alpha",
+      }
+    );
   });
 });

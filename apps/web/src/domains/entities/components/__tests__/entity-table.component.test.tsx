@@ -1,9 +1,9 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { testId } from "@watchdog/test-kit";
 
 import type { CaseRecord } from "@/domains/cases/types";
+import { testId } from "@watchdog/test-kit";
 
 vi.mock("@/auth/server", () => ({
   auth: {},
@@ -132,7 +132,9 @@ describe("EntityTable", () => {
 
     expect(screen.getByLabelText("Search entities")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Create" })).toBeInTheDocument();
-    expect(screen.getByText("No entities yet — add one below.")).toBeInTheDocument();
+    expect(
+      screen.getByText("No entities yet — add one below.")
+    ).toBeInTheDocument();
     expect(useEntityTableMock).toHaveBeenCalledWith(ACTIVE);
   });
 });

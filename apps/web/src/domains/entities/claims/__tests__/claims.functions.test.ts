@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 
-const handlers = vi.hoisted(() => [] as Array<(input: unknown) => Promise<unknown>>);
+const handlers = vi.hoisted(
+  () => [] as ((input: unknown) => Promise<unknown>)[]
+);
 
 vi.mock("@tanstack/react-start", () => ({
   createServerFn: () => ({

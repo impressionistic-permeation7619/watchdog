@@ -2,9 +2,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook } from "@testing-library/react";
 import { createElement, type ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { testId } from "@watchdog/test-kit";
 
 import type { CaseRecord } from "@/domains/cases/types";
+import { testId } from "@watchdog/test-kit";
 
 vi.mock("@/auth/server", () => ({
   auth: {},
@@ -69,15 +69,17 @@ const ACTIVE: CaseRecord = {
 };
 
 function renderHookWithClient() {
-  useSuspenseQueryMock.mockImplementation((options: { queryKey: readonly unknown[] }) => {
-    if (options.queryKey[0] === "entities") {
+  useSuspenseQueryMock.mockImplementation(
+    (options: { queryKey: readonly unknown[] }) => {
+      if (options.queryKey[0] === "entities") {
+        return { data: [] };
+      }
+      if (options.queryKey[0] === "edges") {
+        return { data: [] };
+      }
       return { data: [] };
     }
-    if (options.queryKey[0] === "edges") {
-      return { data: [] };
-    }
-    return { data: [] };
-  });
+  );
   useMutationMock.mockReturnValue({
     mutate: vi.fn(),
     mutateAsync: vi.fn(),

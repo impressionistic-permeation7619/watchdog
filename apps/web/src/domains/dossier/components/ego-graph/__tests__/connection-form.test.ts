@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  CONFIRMED_REQUIRES_EVIDENCE,
-  CONFIRMED_REQUIRES_EVIDENCE_HINT,
-} from "@/domains/dossier/lib/confirmed-evidence";
-import {
   connectionFormIssues,
   type ConnectionFormValues,
 } from "@/domains/dossier/components/ego-graph/connection-dialog";
+import {
+  CONFIRMED_REQUIRES_EVIDENCE,
+  CONFIRMED_REQUIRES_EVIDENCE_HINT,
+} from "@/domains/dossier/lib/confirmed-evidence";
 
 const BASE: ConnectionFormValues = {
   peerId: "peer-1",

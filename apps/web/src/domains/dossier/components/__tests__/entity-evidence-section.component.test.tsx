@@ -1,8 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { testId } from "@watchdog/test-kit";
 
 import type { EvidenceRecord } from "@/domains/intake/types";
+import { testId } from "@watchdog/test-kit";
 
 vi.mock("@/domains/intake/hooks/use-dump-evidence", () => ({
   useDumpEvidence: () => ({
@@ -70,13 +70,18 @@ describe("EntityEvidenceSection", () => {
       <EntityEvidenceSection
         caseId={testId(10)}
         entityId={ENTITY_ID}
-        evidenceOptions={[evidence(), evidence({ id: testId(41), label: "URL hit" })]}
+        evidenceOptions={[
+          evidence(),
+          evidence({ id: testId(41), label: "URL hit" }),
+        ]}
         onEvidenceClick={vi.fn()}
       />
     );
     expect(screen.getByText("Screenshot")).toBeInTheDocument();
     expect(screen.getByText("URL hit")).toBeInTheDocument();
     expect(screen.getAllByText("Unprocessed")).toHaveLength(2);
-    expect(screen.getByRole("group", { name: "Dump evidence" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("group", { name: "Dump evidence" })
+    ).toBeInTheDocument();
   });
 });
