@@ -1,9 +1,15 @@
 import { describe, it, expect } from "vitest";
 
-import { buildPageTrail, type TrailItem } from "../page-trail.ts";
+import { buildPageTrail, type PageTrailInput, type TrailItem } from "../page-trail.ts";
 
 const CASE = { name: "Boy Moment", slug: "boy-moment" };
 const ENTITY = { name: "Ada" };
+
+const BASE_TRAIL_INPUT = {
+  activeCase: CASE,
+  routeCase: null,
+  entity: null,
+} satisfies Omit<PageTrailInput, "pathname">;
 
 function labels(items: TrailItem[]): string[] {
   return items.map((item) => item.label);
@@ -13,32 +19,23 @@ function hrefTos(items: TrailItem[]): (string | undefined)[] {
   return items.map((item) => item.href?.to);
 }
 
-function trail(
-  pathname: string,
-  extra: Partial<Parameters<typeof buildPageTrail>[0]> = {}
-) {
-  return buildPageTrail({
-    pathname,
-    activeCase: CASE,
-    routeCase: null,
-    entity: null,
-    ...extra,
-  });
-}
-
 describe("buildPageTrail", () => {
   it("dashboard", () => {
-    const items = trail("/");
+    const items = buildPageTrail({ ...BASE_TRAIL_INPUT, pathname: "/" });
     expect(labels(items)).toEqual(["Dashboard"]);
     expect(items[0]?.href).toBe(undefined);
   });
 
   it("cases list", () => {
-    expect(labels(trail("/cases"))).toEqual(["Cases"]);
+    expect(labels(buildPageTrail({ ...BASE_TRAIL_INPUT, pathname: "/cases" }))).toEqual([
+      "Cases",
+    ]);
   });
 
   it("case overview links Cases to the manage list", () => {
-    const items = trail("/cases/boy-moment", {
+    const items = buildPageTrail({
+      ...BASE_TRAIL_INPUT,
+      pathname: "/cases/boy-moment",
       routeCase: CASE,
     });
     expect(labels(items)).toEqual(["Cases", "Boy Moment"]);
@@ -47,14 +44,19 @@ describe("buildPageTrail", () => {
   });
 
   it("case overview uses the route Case, not Active Case", () => {
-    const items = trail("/cases/other-slug", {
+    const items = buildPageTrail({
+      ...BASE_TRAIL_INPUT,
+      pathname: "/cases/other-slug",
       routeCase: { name: "Other", slug: "other-slug" },
     });
     expect(labels(items)).toEqual(["Cases", "Other"]);
   });
 
   it("case overview falls back to slug before the Case loads", () => {
-    const items = trail("/cases/boy-moment");
+    const items = buildPageTrail({
+      ...BASE_TRAIL_INPUT,
+      pathname: "/cases/boy-moment",
+    });
     expect(labels(items)).toEqual(["Cases", "boy-moment"]);
   });
 
@@ -68,7 +70,7 @@ describe("buildPageTrail", () => {
       ["/intake", "Intake"],
       ["/tasks", "Tasks"],
     ] as const) {
-      const items = trail(path);
+      const items = buildPageTrail({ ...BASE_TRAIL_INPUT, pathname: path });
       expect(labels(items), path).toEqual(["Boy Moment", label]);
       expect(items[0]?.id, path).toBe("case");
       expect(hrefTos(items), path).toEqual(["/cases/$caseSlug", undefined]);
@@ -80,7 +82,9 @@ describe("buildPageTrail", () => {
   });
 
   it("dossier is Case / Entities / name", () => {
-    const items = trail("/entities/ada", {
+    const items = buildPageTrail({
+      ...BASE_TRAIL_INPUT,
+      pathname: "/entities/ada",
       entity: ENTITY,
     });
     expect(labels(items)).toEqual(["Boy Moment", "Entities", "Ada"]);
@@ -92,17 +96,28 @@ describe("buildPageTrail", () => {
   });
 
   it("dossier falls back to slug before entity loads", () => {
-    const items = trail("/entities/ada");
+    const items = buildPageTrail({
+      ...BASE_TRAIL_INPUT,
+      pathname: "/entities/ada",
+    });
     expect(labels(items)).toEqual(["Boy Moment", "Entities", "ada"]);
   });
 
   it("settings and style guide omit Case", () => {
-    expect(labels(trail("/settings"))).toEqual(["Settings"]);
-    expect(labels(trail("/ui"))).toEqual(["Style guide"]);
+    expect(
+      labels(buildPageTrail({ ...BASE_TRAIL_INPUT, pathname: "/settings" }))
+    ).toEqual(["Settings"]);
+    expect(
+      labels(buildPageTrail({ ...BASE_TRAIL_INPUT, pathname: "/ui" }))
+    ).toEqual(["Style guide"]);
   });
 
   it("no Active Case omits the Case crumb", () => {
-    const items = trail("/entities", { activeCase: null });
+    const items = buildPageTrail({
+      ...BASE_TRAIL_INPUT,
+      activeCase: null,
+      pathname: "/entities",
+    });
     expect(labels(items)).toEqual(["Entities"]);
   });
 });
