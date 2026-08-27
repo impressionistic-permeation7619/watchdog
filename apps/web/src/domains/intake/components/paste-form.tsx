@@ -93,7 +93,7 @@ export function PasteForm({
               <Field>
                 <FieldLabel>Source URL (optional)</FieldLabel>
                 <Input
-                  placeholder="https://…"
+                  placeholder="Paste a URL or hostname"
                   value={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(e) => {

@@ -24,7 +24,7 @@ const PLACEHOLDERS: Record<string, string> = {
   handle: "Handle e.g. octocat",
   hash: "MD5 or SHA-256 file hash",
   query: "Lookup query",
-  url: "https://example.com/…",
+  url: "URL e.g. example.com/path",
   evidenceId: "Evidence UUID",
 };
 

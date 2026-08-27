@@ -76,8 +76,7 @@ function spineDotClass(status: JobListRecord["status"]): string {
       return "bg-warning";
     }
     default: {
-      const _exhaustive: never = status;
-      void _exhaustive;
+      status satisfies never;
       return "bg-muted-foreground/40";
     }
   }

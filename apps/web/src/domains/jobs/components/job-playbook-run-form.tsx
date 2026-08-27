@@ -343,7 +343,7 @@ export function JobPlaybookRunForm({
                         {(field) => (
                           <Input
                             className="h-8 min-w-[10rem] flex-1 text-xs sm:max-w-xs"
-                            placeholder="https://example.com"
+                            placeholder="example.com"
                             value={field.state.value}
                             onBlur={field.handleBlur}
                             onChange={(e) => {
