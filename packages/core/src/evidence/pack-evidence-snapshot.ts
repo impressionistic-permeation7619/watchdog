@@ -19,126 +19,132 @@ function truncate(text: string, max = MAX_SNAPSHOT_CHARS): string {
   return `${text.slice(0, max)}\n\n…[truncated ${text.length - max} chars]`;
 }
 
-async function loadTextFromEvidence(row: {
+function loadTextFromEvidence(row: {
   text: string | null;
   uri: string | null;
   mime: string | null;
   kind: string;
 }): Promise<string> {
   if (row.text !== null && row.text.trim() !== "") {
-    return await Promise.resolve(row.text);
+    return Promise.resolve(row.text);
   }
   if (row.uri === null) {
-    return await Promise.resolve("");
+    return Promise.resolve("");
   }
   const mime = row.mime ?? "";
   if (mime && !TEXTISH_MIME.test(mime) && !mime.includes("charset")) {
-    // Non-text binary — Day-0: no OCR/PDF extract
-    return await Promise.resolve("");
+    return Promise.resolve("");
   }
-  try {
-    const bytes = await readArtifactBytes(row.uri);
-    // Skip obvious binary (NUL in first 512)
-    const head = bytes.slice(0, 512);
-    if (head.includes(0)) return await Promise.resolve("");
-    return await Promise.resolve(
-      new TextDecoder("utf-8", { fatal: false }).decode(bytes)
-    );
-  } catch {
-    return await Promise.resolve("");
-  }
+  return readArtifactBytes(row.uri)
+    .then((bytes) => {
+      const head = bytes.slice(0, 512);
+      if (head.includes(0)) return "";
+      return new TextDecoder("utf-8", { fatal: false }).decode(bytes);
+    })
+    .catch(() => "");
 }
 
 /**
  * URL dumps are metadata-only until Enrich. Process should harvest the Job
  * Output (enriched.md), not the bare URL string on the Evidence row.
  */
-async function loadEnrichOutputText(input: {
+function loadEnrichOutputText(input: {
   caseId: string;
   evidenceId: string;
 }): Promise<string | null> {
-  const recent = await jobsRepo.listSucceededForCapability(
-    db,
-    input.caseId,
-    URL_ENRICH_CAPABILITY_ID,
-    40
-  );
-
-  for (const job of recent) {
-    const sourceId =
-      typeof job.input === "object" && job.input !== null
-        ? (job.input as { sourceEvidenceId?: string }).sourceEvidenceId
-        : undefined;
-    const linked =
-      sourceId === input.evidenceId ||
-      (job.evidenceIds?.includes(input.evidenceId) ?? false);
-    if (!linked) continue;
-    const arts = job.output ?? [];
-    const enriched =
-      arts.find((a) => a.name === ENRICHED_MD_ARTIFACT) ??
-      arts.find((a) => a.name === "live.md") ??
-      arts.find((a) => a.name === "wayback.md");
-    if (enriched === undefined) continue;
-    try {
-      // oxlint-disable-next-line no-await-in-loop -- sequential by design: try jobs most-recent-first, stop at first usable text
-      const bytes = await readArtifactBytes(enriched.uri);
-      const text = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
-      if (text.trim()) return text;
-    } catch {
-      // try older job
-    }
-  }
-  return await Promise.resolve(null);
+  return jobsRepo
+    .listSucceededForCapability(
+      db,
+      input.caseId,
+      URL_ENRICH_CAPABILITY_ID,
+      40
+    )
+    .then((recent) => {
+      let chain: Promise<string | null> = Promise.resolve(null);
+      for (const job of recent) {
+        chain = chain.then((found) => {
+          if (found !== null) return found;
+          const sourceId =
+            typeof job.input === "object" && job.input !== null
+              ? (job.input as { sourceEvidenceId?: string }).sourceEvidenceId
+              : undefined;
+          const linked =
+            sourceId === input.evidenceId ||
+            (job.evidenceIds?.includes(input.evidenceId) ?? false);
+          if (!linked) return null;
+          const arts = job.output ?? [];
+          const enriched =
+            arts.find((a) => a.name === ENRICHED_MD_ARTIFACT) ??
+            arts.find((a) => a.name === "live.md") ??
+            arts.find((a) => a.name === "wayback.md");
+          if (enriched === undefined) return null;
+          return readArtifactBytes(enriched.uri)
+            .then((bytes) => {
+              const text = new TextDecoder("utf-8", { fatal: false }).decode(
+                bytes
+              );
+              return text.trim() ? text : null;
+            })
+            .catch(() => null);
+        });
+      }
+      return chain;
+    });
 }
 
-export async function packEvidenceSnapshot(input: {
+export function packEvidenceSnapshot(input: {
   caseId: string;
   evidenceId: string;
   entityId?: string;
 }): Promise<EvidenceSnapshot> {
-  const row = await evidenceRepo.getActiveInCase(
-    db,
-    input.caseId,
-    input.evidenceId
-  );
-
-  if (!row) {
-    throw new DomainError(
-      "not_found",
-      `Evidence not found: ${input.evidenceId}`
-    );
-  }
-
-  let rawText = await loadTextFromEvidence(row);
-  const looksLikeUrlOnly =
-    row.uri === null &&
-    Boolean(rawText.trim()) &&
-    /^https?:\/\/\S+$/i.test(rawText.trim());
-  if (!rawText.trim() || looksLikeUrlOnly) {
-    const fromEnrich = await loadEnrichOutputText({
-      caseId: input.caseId,
-      evidenceId: row.id,
+  return evidenceRepo
+    .getActiveInCase(db, input.caseId, input.evidenceId)
+    .then((row) => {
+      if (!row) {
+        throw new DomainError(
+          "not_found",
+          `Evidence not found: ${input.evidenceId}`
+        );
+      }
+      return loadTextFromEvidence(row).then((initialText) => {
+        const looksLikeUrlOnly =
+          row.uri === null &&
+          Boolean(initialText.trim()) &&
+          /^https?:\/\/\S+$/i.test(initialText.trim());
+        const needsEnrich = !initialText.trim() || looksLikeUrlOnly;
+        const textPromise = needsEnrich
+          ? loadEnrichOutputText({
+              caseId: input.caseId,
+              evidenceId: row.id,
+            }).then(
+              (fromEnrich) =>
+                fromEnrich !== null && fromEnrich.trim() !== ""
+                  ? fromEnrich
+                  : initialText
+            )
+          : Promise.resolve(initialText);
+        return textPromise.then((rawText) => {
+          const entityId = input.entityId ?? row.entityId ?? undefined;
+          return evidenceSnapshotSchema.parse({
+            evidenceId: row.id,
+            caseId: row.caseId,
+            ...(entityId !== undefined && entityId !== ""
+              ? { entityId }
+              : {}),
+            kind: row.kind,
+            ...(row.label !== null && row.label !== ""
+              ? { label: row.label }
+              : {}),
+            text: truncate(rawText),
+            ...(row.mime !== null && row.mime !== "" ? { mime: row.mime } : {}),
+            sha256: row.sha256,
+            uri: row.uri,
+            packedAt: new Date().toISOString(),
+            packerVersion: 1,
+          });
+        });
+      });
     });
-    if (fromEnrich !== null && fromEnrich.trim() !== "") {
-      rawText = fromEnrich;
-    }
-  }
-
-  const entityId = input.entityId ?? row.entityId ?? undefined;
-
-  return evidenceSnapshotSchema.parse({
-    evidenceId: row.id,
-    caseId: row.caseId,
-    ...(entityId !== undefined && entityId !== "" ? { entityId } : {}),
-    kind: row.kind,
-    ...(row.label !== null && row.label !== "" ? { label: row.label } : {}),
-    text: truncate(rawText),
-    ...(row.mime !== null && row.mime !== "" ? { mime: row.mime } : {}),
-    sha256: row.sha256,
-    uri: row.uri,
-    packedAt: new Date().toISOString(),
-    packerVersion: 1,
-  });
 }
 
 export function snapshotToArtifactBytes(
