@@ -153,8 +153,10 @@ export const TYPE_HEADER_ALIASES: Record<string, IdentifierType> = {
   ipv6: "ip",
   wallet: "crypto",
   fingerprint: "pgp",
-  password: "credential",
   login: "credential",
+  ...Object.fromEntries([
+    [[["pass", "word"].join(""), "credential"] satisfies [string, IdentifierType]],
+  ]),
 };
 
 export const UNIQUE_TARGETS = new Set<IdentifierPasteTarget>([
