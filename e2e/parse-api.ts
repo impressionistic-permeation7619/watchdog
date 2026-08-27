@@ -46,9 +46,28 @@ export function parseEvidenceList(json: unknown): { id: string }[] {
   });
 }
 
+export function parseProposalList(
+  json: unknown
+): { id: string; status: string }[] {
+  if (!Array.isArray(json)) {
+    throw new TypeError("proposals response was not an array");
+  }
+  return json.map((row, index) => {
+    if (
+      !isRecord(row) ||
+      typeof row.id !== "string" ||
+      typeof row.status !== "string"
+    ) {
+      throw new Error(`proposals[${index}] missing id/status`);
+    }
+    return { id: row.id, status: row.status };
+  });
+}
+
 export const e2eApiParsers = {
   caseList: parseCaseList,
   entity: parseEntity,
   entityId: parseEntityId,
   evidenceList: parseEvidenceList,
+  proposalList: parseProposalList,
 };
