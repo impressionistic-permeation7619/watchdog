@@ -22,13 +22,14 @@ function findGraphWriteByIdempotency(input: {
   return graphWritesRepo.findIdByIdempotency(db, input);
 }
 
-export async function createAgentProposal(input: {
+export function createAgentProposal(input: {
   caseId: string;
   actorId: string;
   patch: unknown;
   summary?: string;
   evidenceIds?: string[];
 }): Promise<{ proposal: ProposalRecord }> {
+  return (async () => {
   const plan = parseAgentPatch({
     patch: input.patch,
     summary: input.summary,
@@ -82,9 +83,10 @@ export async function createAgentProposal(input: {
     throw new DomainError("not_found", "Proposal created but not readable");
   }
   return { proposal };
+  })();
 }
 
-export async function writeGraphFromAgent(input: {
+export function writeGraphFromAgent(input: {
   caseId: string;
   actorId: string;
   patch: unknown;
@@ -98,6 +100,7 @@ export async function writeGraphFromAgent(input: {
   opCount: number;
   replayed: boolean;
 }> {
+  return (async () => {
   if (!input.userOverride) {
     throw new DomainError(
       "invalid",
@@ -205,4 +208,5 @@ export async function writeGraphFromAgent(input: {
     }
     throw error;
   }
+  })();
 }

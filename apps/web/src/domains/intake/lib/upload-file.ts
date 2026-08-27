@@ -21,9 +21,13 @@ export function uploadFileEvidence(input: {
   label?: string;
   entityId?: string;
 }): Promise<EvidenceRecord> {
-  if (input.file.size < 1) throw new Error("File is empty");
+  if (input.file.size < 1) {
+    return Promise.reject(new Error("File is empty"));
+  }
   if (input.file.size > MAX_UPLOAD_BYTES) {
-    throw new Error(`File exceeds ${MAX_UPLOAD_BYTES} byte limit`);
+    return Promise.reject(
+      new Error(`File exceeds ${MAX_UPLOAD_BYTES} byte limit`)
+    );
   }
 
   const mime = input.file.type || "application/octet-stream";

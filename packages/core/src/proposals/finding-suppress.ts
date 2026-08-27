@@ -19,14 +19,14 @@ import {
   type PatchOp,
 } from "@watchdog/schemas";
 
-async function markExistingInGraph(
+function markExistingInGraph(
   caseId: string,
   fps: { op: PatchOp; fp: string }[],
   known: Set<string>
 ): Promise<void> {
+  return (async () => {
   const unchecked = fps.filter((x) => !known.has(x.fp));
   if (unchecked.length === 0) {
-    await Promise.resolve();
     return;
   }
 
@@ -211,13 +211,14 @@ async function markExistingInGraph(
       }
     }
   }
+  })();
 }
 
 /**
  * Drop ops whose fingerprint already exists in the Graph, a pending Proposal,
  * or finding_suppressions (rejected FP memory).
  */
-export async function suppressKnownFindings(
+export function suppressKnownFindings(
   caseId: string,
   patch: PatchOp[]
 ): Promise<{ kept: PatchOp[]; suppressed: number }> {
@@ -225,6 +226,7 @@ export async function suppressKnownFindings(
     return Promise.resolve({ kept: [], suppressed: 0 });
   }
 
+  return (async () => {
   const fps = patch.map((op) => ({
     op,
     fp: fingerprintPatchOp(op),
@@ -269,9 +271,10 @@ export async function suppressKnownFindings(
     kept.push(op);
   }
   return { kept, suppressed };
+  })();
 }
 
-export async function recordRejectedFingerprints(input: {
+export function recordRejectedFingerprints(input: {
   caseId: string;
   proposalId: string;
   patch: PatchOp[];
@@ -286,10 +289,7 @@ export async function recordRejectedFingerprints(input: {
       reason: "rejected",
       proposalId: input.proposalId,
     }));
-  if (rows.length === 0) {
-    await Promise.resolve();
-    return;
-  }
+  if (rows.length === 0) return Promise.resolve();
   const exec = input.tx ?? db;
-  await findingSuppressionsRepo.insertMany(exec, rows);
+  return findingSuppressionsRepo.insertMany(exec, rows).then(() => undefined);
 }

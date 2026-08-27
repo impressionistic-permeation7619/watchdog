@@ -80,10 +80,11 @@ function toRecord(
   };
 }
 
-export async function listProposalsForCase(
+export function listProposalsForCase(
   caseId: string,
   opts?: { status?: ProposalStatus }
 ): Promise<ProposalRecord[]> {
+  return (async () => {
   const rows = await proposalsRepo.listForCase(db, caseId, opts);
 
   const entityIds = new Set<string>();
@@ -114,6 +115,7 @@ export async function listProposalsForCase(
       identifierCollisions: collisionsByIndex[i] ?? [],
     })
   );
+  })();
 }
 
 export async function getProposalForCase(
@@ -131,7 +133,7 @@ export async function getProposalForCase(
   });
 }
 
-export async function acceptProposal(input: {
+export function acceptProposal(input: {
   caseId: string;
   proposalId: string;
   actorId: string;
@@ -140,6 +142,7 @@ export async function acceptProposal(input: {
   /** Optional paste → creates attestation Evidence and appends to shared ids. */
   attestationText?: string;
 }): Promise<ProposalRecord> {
+  return (async () => {
   const shared = [...new Set(input.sharedEvidenceIds)];
 
   const updated = await db.transaction(async (tx) => {
@@ -195,14 +198,16 @@ export async function acceptProposal(input: {
 
   notifyEntityChanged(input.caseId);
   return toRecord(updated);
+  })();
 }
 
-export async function rejectProposal(input: {
+export function rejectProposal(input: {
   caseId: string;
   proposalId: string;
   actorId: string;
   reason?: string;
 }): Promise<ProposalRecord> {
+  return (async () => {
   const updated = await db.transaction(async (tx) => {
     const existing = await proposalsRepo.lockInCase(
       tx,
@@ -242,4 +247,5 @@ export async function rejectProposal(input: {
   });
 
   return toRecord(updated);
+  })();
 }

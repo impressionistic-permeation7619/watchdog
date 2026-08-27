@@ -22,27 +22,25 @@ import { notifyEvent } from "../../infra/events";
 import { logSwallowed } from "../../infra/process-log";
 import { enqueueCapJob } from "../boss";
 
-async function maybeFinishPlaybookRun(
+function maybeFinishPlaybookRun(
   exec: DbExec,
   playbookRunId: string
 ): Promise<void> {
-  const members = await jobsRepo.listStatusesForPlaybookRun(
-    exec,
-    playbookRunId
-  );
-  if (members.some((m) => isOpenJobStatus(m.status))) {
-    await Promise.resolve();
-    return;
-  }
-  await playbookRunsRepo.setStatus(
-    exec,
-    playbookRunId,
-    "finished",
-    new Date(),
-    {
-      onlyStatuses: ["running"],
-    }
-  );
+  return jobsRepo
+    .listStatusesForPlaybookRun(exec, playbookRunId)
+    .then((members) => {
+      if (members.some((m) => isOpenJobStatus(m.status))) return;
+      return playbookRunsRepo.setStatus(
+        exec,
+        playbookRunId,
+        "finished",
+        new Date(),
+        {
+          onlyStatuses: ["running"],
+        }
+      );
+    })
+    .then(() => undefined);
 }
 
 interface ReleasedJob {
@@ -50,41 +48,35 @@ interface ReleasedJob {
   capabilityId: string;
 }
 
-async function enqueueReleased(
+function enqueueReleased(
   caseId: string,
   playbookRunId: string,
   released: ReleasedJob[]
 ): Promise<void> {
-  if (released.length === 0) {
-    await Promise.resolve();
-    return;
-  }
-  await Promise.all(
-    released.map(
-      async (row) => await enqueueCapJob(row.id, row.capabilityId)
-    )
-  );
-  await Promise.all(
-    released.map(async (row) => {
-      try {
-        await notifyEvent({
+  if (released.length === 0) return Promise.resolve();
+  return Promise.all(
+    released.map((row) => enqueueCapJob(row.id, row.capabilityId))
+  ).then(() =>
+    Promise.all(
+      released.map((row) =>
+        notifyEvent({
           type: "job_update",
           caseId,
           jobId: row.id,
           status: "queued",
-        });
-      } catch (notifyError: unknown) {
-        logSwallowed("playbook.notify", notifyError, {
-          caseId,
-          playbookRunId,
-          jobId: row.id,
-        });
-      }
-    })
-  );
+        }).catch((notifyError: unknown) => {
+          logSwallowed("playbook.notify", notifyError, {
+            caseId,
+            playbookRunId,
+            jobId: row.id,
+          });
+        })
+      )
+    )
+  ).then(() => undefined);
 }
 
-async function enqueueStepJobs(opts: {
+function enqueueStepJobs(opts: {
   tx: DbExec;
   run: {
     caseId: string;
@@ -96,6 +88,7 @@ async function enqueueStepJobs(opts: {
   capabilityId: string;
   inputs: JsonObject[];
 }): Promise<ReleasedJob[]> {
+  return (async () => {
   const { tx, run, playbookRunId, jobs, step, capabilityId, inputs } = opts;
   const created: ReleasedJob[] = [];
   for (let i = 0; i < inputs.length; i += 1) {
@@ -134,14 +127,16 @@ async function enqueueStepJobs(opts: {
     created.push({ id: row.id, capabilityId: row.capabilityId });
   }
   return created;
+  })();
 }
 
-export async function advancePlaybookRun(input: {
+export function advancePlaybookRun(input: {
   playbookRunId: string;
   caseId?: string;
 }): Promise<void> {
   const { playbookRunId } = input;
-  const outcome = await db.transaction(async (tx) => {
+  return db
+    .transaction(async (tx) => {
     const run = await playbookRunsRepo.lock(tx, playbookRunId);
     if (!run || run.status !== "running") {
       return { jobs: [] as ReleasedJob[], caseId: input.caseId };
@@ -192,12 +187,10 @@ export async function advancePlaybookRun(input: {
         return _exhaustive;
       }
     }
-  });
-
-  const caseId = outcome.caseId ?? input.caseId;
-  if (caseId === undefined) {
-    await Promise.resolve();
-    return;
-  }
-  await enqueueReleased(caseId, playbookRunId, outcome.jobs);
+  })
+    .then((outcome) => {
+      const caseId = outcome.caseId ?? input.caseId;
+      if (caseId === undefined) return;
+      return enqueueReleased(caseId, playbookRunId, outcome.jobs);
+    });
 }

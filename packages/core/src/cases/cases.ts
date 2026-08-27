@@ -89,12 +89,13 @@ export async function createCase(
   }
 }
 
-export async function updateCase(input: {
+export function updateCase(input: {
   id: string;
   name?: string;
   description?: string;
   allowThirdPartyEgress?: boolean;
 }): Promise<CaseRecord> {
+  return (async () => {
   const existing = await casesRepo.getById(db, input.id);
   if (!existing) throw new DomainError("not_found", "Case not found");
 
@@ -152,12 +153,14 @@ export async function updateCase(input: {
     }
     throw error;
   }
+  })();
 }
 
-export async function deleteCase(
+export function deleteCase(
   id: string,
   opts?: { actorId?: string }
 ): Promise<void> {
+  return (async () => {
   const existing = await casesRepo.getById(db, id);
   if (!existing) throw new DomainError("not_found", "Case not found");
 
@@ -181,4 +184,5 @@ export async function deleteCase(
   } catch (error) {
     logSwallowed("delete-case-export", error, { slug: existing.slug });
   }
+  })();
 }
