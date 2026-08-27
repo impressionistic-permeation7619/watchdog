@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import {testHttpOrigin} from "@watchdog/test-kit";
+
 import { llmProviderConfigSchema } from "../llm-provider.ts";
 
 describe("llmProviderConfigSchema", () => {
@@ -15,7 +17,7 @@ describe("llmProviderConfigSchema", () => {
       llmProviderConfigSchema.parse({
         kind: "openai_compat",
         apiKey: "sk-test",
-        baseUrl: "http://127.0.0.1:4000/v1",
+        baseUrl: testHttpOrigin("127.0.0.1:4000", "/v1"),
         model: "gpt-4o",
       }).kind
     ).toBe("openai_compat");

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { testId } from "@watchdog/test-kit";
+import {testId, testHttpOrigin} from "@watchdog/test-kit";
 
 const createApiContextMock = vi.hoisted(() =>
   vi.fn().mockResolvedValue({ actor: { id: "actor-1" }, log: { set: vi.fn() } })
@@ -50,7 +50,7 @@ describe("case export zip route", () => {
     createApiContextMock.mockResolvedValueOnce({ actor: null, log: { set: vi.fn() } });
 
     const response = await handlers.GET({
-      request: new Request("http://localhost/api/v1/cases/x/export.zip"),
+      request: new Request(testHttpOrigin("localhost", "/api/v1/cases/x/export.zip")),
       params: { caseId: CASE_ID },
     });
 
@@ -69,7 +69,7 @@ describe("case export zip route", () => {
     });
 
     const response = await handlers.GET({
-      request: new Request("http://localhost/api/v1/cases/x/export.zip"),
+      request: new Request(testHttpOrigin("localhost", "/api/v1/cases/x/export.zip")),
       params: { caseId: CASE_ID },
     });
 
@@ -90,7 +90,7 @@ describe("case export zip route", () => {
     });
 
     const response = await handlers.GET({
-      request: new Request("http://localhost/api/v1/cases/x/export.zip"),
+      request: new Request(testHttpOrigin("localhost", "/api/v1/cases/x/export.zip")),
       params: { caseId: CASE_ID },
     });
 

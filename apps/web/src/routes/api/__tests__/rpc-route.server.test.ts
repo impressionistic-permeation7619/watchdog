@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
+import {testHttpOrigin} from "@watchdog/test-kit";
+
 const handleMock = vi.hoisted(() =>
   vi.fn().mockResolvedValue({ response: new Response("rpc-ok") })
 );
@@ -37,7 +39,7 @@ import { Route } from "@/routes/api/rpc.$";
 
 describe("api rpc route", () => {
   it("delegates requests to the oRPC handler with api context", async () => {
-    const request = new Request("http://localhost/api/rpc/cases.list");
+    const request = new Request(testHttpOrigin("localhost", "/api/rpc/cases.list"));
     const handlers = (
       Route.options as { server: { handlers: Record<string, (ctx: { request: Request }) => Promise<Response>> } }
     ).server.handlers;
@@ -63,7 +65,7 @@ describe("api rpc route", () => {
     ).server.handlers;
 
     const response = await handlers.ANY({
-      request: new Request("http://localhost/api/rpc/missing"),
+      request: new Request(testHttpOrigin("localhost", "/api/rpc/missing")),
     });
 
     expect(response.status).toBe(404);

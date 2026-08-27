@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { testId } from "@watchdog/test-kit";
+import {testId, testHttpOrigin} from "@watchdog/test-kit";
 
 const createApiContextMock = vi.hoisted(() =>
   vi.fn().mockResolvedValue({ actor: { id: "actor-1" } })
@@ -43,7 +43,7 @@ describe("entity export markdown route", () => {
     createApiContextMock.mockResolvedValueOnce({ actor: null });
 
     const response = await handlers.GET({
-      request: new Request("http://localhost/api/v1/cases/x/entities/y/export.md"),
+      request: new Request(testHttpOrigin("localhost", "/api/v1/cases/x/entities/y/export.md")),
       params: { caseId: CASE_ID, slug: "target" },
     });
 
@@ -56,7 +56,7 @@ describe("entity export markdown route", () => {
     renderEntityMarkdownMock.mockResolvedValueOnce({ markdown: "# Target\n" });
 
     const response = await handlers.GET({
-      request: new Request("http://localhost/api/v1/cases/x/entities/target/export.md"),
+      request: new Request(testHttpOrigin("localhost", "/api/v1/cases/x/entities/target/export.md")),
       params: { caseId: CASE_ID, slug: "target" },
     });
 
@@ -70,7 +70,7 @@ describe("entity export markdown route", () => {
     getEntityByCaseSlugMock.mockResolvedValueOnce(null);
 
     const response = await handlers.GET({
-      request: new Request("http://localhost/api/v1/cases/x/entities/missing/export.md"),
+      request: new Request(testHttpOrigin("localhost", "/api/v1/cases/x/entities/missing/export.md")),
       params: { caseId: CASE_ID, slug: "missing" },
     });
 

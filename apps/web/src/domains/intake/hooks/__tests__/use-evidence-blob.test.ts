@@ -1,6 +1,6 @@
 import { renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { testId } from "@watchdog/test-kit";
+import {testId, testHttpUrl} from "@watchdog/test-kit";
 
 import type { EvidenceRecord } from "@/domains/intake/types";
 
@@ -61,7 +61,7 @@ describe("useEvidenceBlob", () => {
         return { data: { text: "fetched body" }, isPending: false };
       }
       if (key[0] === "evidence" && key[2] === "download") {
-        return { data: { url: "https://download.test/blob" }, isPending: false };
+        return { data: { url: testHttpUrl("download.test/blob") }, isPending: false };
       }
       return { data: undefined, isPending: false };
     });
@@ -74,7 +74,7 @@ describe("useEvidenceBlob", () => {
     );
 
     expect(result.current.resolvedText).toBe("fetched body");
-    expect(result.current.downloadUrl).toBe("https://download.test/blob");
+    expect(result.current.downloadUrl).toBe(testHttpUrl("download.test/blob"));
     expect(result.current.hasUri).toBe(true);
   });
 });

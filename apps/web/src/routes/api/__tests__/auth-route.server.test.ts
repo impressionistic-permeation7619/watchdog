@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
+import {testHttpOrigin} from "@watchdog/test-kit";
+
 const authHandlerMock = vi.hoisted(() =>
   vi.fn().mockResolvedValue(new Response("auth-ok"))
 );
@@ -20,7 +22,7 @@ import { Route } from "@/routes/api/auth/$";
 
 describe("api auth route", () => {
   it("delegates GET and POST requests to Better Auth", async () => {
-    const request = new Request("http://localhost/api/auth/session");
+    const request = new Request(testHttpOrigin("localhost", "/api/auth/session"));
     const handlers = (
       Route.options as { server: { handlers: Record<string, (ctx: { request: Request }) => Promise<Response>> } }
     ).server.handlers;

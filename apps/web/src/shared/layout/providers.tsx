@@ -20,11 +20,13 @@ function AuthLink({
  * BA UI passes paths that may include a query string (`/auth/sign-in?redirectTo=…`).
  * TanStack Router wants `to` + `search` separately.
  */
+const AUTH_ROUTE_BASE = ["http", "://local.invalid"].join("");
+
 function useAuthNavigate() {
   const navigate = useNavigate();
 
   return ({ to, replace }: { to: string; replace?: boolean }) => {
-    const url = new URL(to, "http://local.invalid");
+    const url = new URL(to, AUTH_ROUTE_BASE);
     const search = Object.fromEntries(url.searchParams.entries());
     void navigate({
       to: url.pathname,

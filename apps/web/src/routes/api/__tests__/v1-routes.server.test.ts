@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
+import {testHttpOrigin} from "@watchdog/test-kit";
+
 const handleOpenApiRequestMock = vi.hoisted(() =>
   vi.fn().mockImplementation(() => Promise.resolve(new Response("openapi-ok")))
 );
@@ -22,7 +24,7 @@ import { Route as V1WildcardRoute } from "@/routes/api/v1.$";
 describe("api v1 routes", () => {
   it("delegates exact root requests to handleOpenApiRequest", async () => {
     handleOpenApiRequestMock.mockClear();
-    const request = new Request("http://localhost/api/v1");
+    const request = new Request(testHttpOrigin("localhost", "/api/v1"));
     const handlers = (
       V1RootRoute.options as {
         server: { handlers: Record<string, (ctx: { request: Request }) => Promise<Response>> };
@@ -37,7 +39,7 @@ describe("api v1 routes", () => {
 
   it("delegates wildcard requests to handleOpenApiRequest", async () => {
     handleOpenApiRequestMock.mockClear();
-    const request = new Request("http://localhost/api/v1/health");
+    const request = new Request(testHttpOrigin("localhost", "/api/v1/health"));
     const handlers = (
       V1WildcardRoute.options as {
         server: { handlers: Record<string, (ctx: { request: Request }) => Promise<Response>> };

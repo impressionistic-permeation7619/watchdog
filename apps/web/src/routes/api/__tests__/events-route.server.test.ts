@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
+import {testHttpOrigin} from "@watchdog/test-kit";
+
 const createApiContextMock = vi.hoisted(() =>
   vi.fn().mockResolvedValue({ actor: null })
 );
@@ -42,7 +44,7 @@ describe("api events route", () => {
     ).server.handlers;
 
     const response = await handlers.OPTIONS({
-      request: new Request("http://localhost/api/events", { method: "OPTIONS" }),
+      request: new Request(testHttpOrigin("localhost", "/api/events"), { method: "OPTIONS" }),
     });
 
     expect(response).toBe(preflight);
@@ -55,7 +57,7 @@ describe("api events route", () => {
     ).server.handlers;
 
     const response = await handlers.GET({
-      request: new Request("http://localhost/api/events"),
+      request: new Request(testHttpOrigin("localhost", "/api/events")),
     });
 
     expect(response.status).toBe(401);

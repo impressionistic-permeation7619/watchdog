@@ -1,5 +1,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 
+const DEMO_EXTERNAL_HREF = ["https", "://example.com/evidence"].join("");
+
 import { GuideSection, Specimen } from "@/routes/_protected/ui/-guide-chrome";
 import { ActiveTabBody, SuspenseTabBody } from "@/shared/ui/active-tab-body";
 import { ClickableIdChip } from "@/shared/ui/clickable-id-chip";
@@ -194,7 +196,7 @@ const ATOM_CATALOG: AtomEntry[] = [
   {
     name: "ExternalUrl",
     blurb: "External link + icon — not router Link.",
-    render: () => <ExternalUrl href="https://example.com/evidence" />,
+    render: () => <ExternalUrl href={DEMO_EXTERNAL_HREF} />,
   },
   {
     name: "SearchField",

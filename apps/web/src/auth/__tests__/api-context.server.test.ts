@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
+import {testHttpOrigin} from "@watchdog/test-kit";
+
 vi.mock("@/auth/server", () => ({
   auth: {
     api: {
@@ -36,7 +38,7 @@ describe("api-context.server", () => {
     } as never);
 
     const context = await createApiContext(
-      new Request("http://127.0.0.1/api/v1/health")
+      new Request(testHttpOrigin("127.0.0.1", "/api/v1/health"))
     );
 
     expect(context.authMethod).toBe("session");

@@ -2,6 +2,8 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
+import {testHttpUrl} from "@watchdog/test-kit";
+
 import { UrlForm } from "@/domains/intake/components/url-form";
 
 describe("UrlForm", () => {
@@ -11,12 +13,12 @@ describe("UrlForm", () => {
 
     render(<UrlForm disabled={false} onSubmit={onSubmit} />);
 
-    await user.type(screen.getByPlaceholderText("Link or hostname"), "https://example.test");
+    await user.type(screen.getByPlaceholderText("Link or hostname"), testHttpUrl("example.test"));
     await user.type(screen.getByPlaceholderText("Source page"), "blog post");
     await user.click(screen.getByRole("button", { name: "Add link" }));
 
     expect(onSubmit).toHaveBeenCalledWith({
-      sourceUrl: "https://example.test",
+      sourceUrl: testHttpUrl("example.test"),
       label: "blog post",
     });
   });

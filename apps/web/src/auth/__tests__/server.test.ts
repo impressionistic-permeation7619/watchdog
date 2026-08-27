@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
+import {testHttpOrigin} from "@watchdog/test-kit";
+
 vi.mock("@better-auth/api-key", () => ({ apiKey: vi.fn(() => ({})) }));
 vi.mock("@better-auth/drizzle-adapter", () => ({
   drizzleAdapter: vi.fn(() => ({})),
@@ -20,7 +22,7 @@ vi.mock("@watchdog/db", () => ({
 }));
 vi.mock("@watchdog/env/server", () => ({
   env: {
-    BETTER_AUTH_URL: "http://127.0.0.1:3000",
+    BETTER_AUTH_URL: testHttpOrigin("127.0.0.1:3000", ""),
     BETTER_AUTH_ALLOW_SIGNUP: false,
     BETTER_AUTH_SECRET: "test-secret-must-be-at-least-32-chars",
     BETTER_AUTH_TRUSTED_ORIGINS: [],
@@ -37,7 +39,7 @@ describe("auth server", () => {
     expect(betterAuth).toHaveBeenCalledWith(
       expect.objectContaining({
         appName: "Watchdog",
-        baseURL: "http://127.0.0.1:3000",
+        baseURL: testHttpOrigin("127.0.0.1:3000", ""),
       })
     );
   });

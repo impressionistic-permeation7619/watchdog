@@ -2,6 +2,8 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
+import {testHttpUrl} from "@watchdog/test-kit";
+
 import { PasteForm } from "@/domains/intake/components/paste-form";
 
 describe("PasteForm", () => {
@@ -16,13 +18,13 @@ describe("PasteForm", () => {
       "tool output"
     );
     await user.type(screen.getByPlaceholderText("WHOIS dump"), "whois");
-    await user.type(screen.getByPlaceholderText("Link or hostname"), "https://example.test");
+    await user.type(screen.getByPlaceholderText("Link or hostname"), testHttpUrl("example.test"));
     await user.click(screen.getByRole("button", { name: "Add Evidence" }));
 
     expect(onSubmit).toHaveBeenCalledWith({
       body: "tool output",
       label: "whois",
-      sourceUrl: "https://example.test",
+      sourceUrl: testHttpUrl("example.test"),
     });
   });
 

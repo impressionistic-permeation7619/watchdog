@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { testId } from "@watchdog/test-kit";
+import {testId, testHttpUrl} from "@watchdog/test-kit";
 
 const presignUploadFn = vi.hoisted(() => vi.fn());
 const confirmFileUploadFn = vi.hoisted(() => vi.fn());
@@ -24,7 +24,7 @@ describe("uploadFileEvidence", () => {
   it("uploads via presign and confirm", async () => {
     const file = new File(["hello"], "note.txt", { type: "text/plain" });
     presignUploadFn.mockResolvedValue({
-      url: "https://minio.test/put",
+      url: testHttpUrl("minio.test/put"),
       headers: { "Content-Type": "text/plain" },
       uri: "s3://bucket/note.txt",
       sha256: "deadbeef",
@@ -49,7 +49,7 @@ describe("uploadFileEvidence", () => {
     });
 
     expect(fetch).toHaveBeenCalledWith(
-      "https://minio.test/put",
+      testHttpUrl("minio.test/put"),
       expect.objectContaining({ method: "PUT", body: file })
     );
     expect(confirmFileUploadFn).toHaveBeenCalled();

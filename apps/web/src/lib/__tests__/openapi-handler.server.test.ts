@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
+import {testHttpOrigin} from "@watchdog/test-kit";
+
 const handleMock = vi.hoisted(() => vi.fn());
 const createApiContextMock = vi.hoisted(() =>
   vi.fn().mockResolvedValue({ actorId: "test-actor" })
@@ -41,7 +43,7 @@ describe("handleOpenApiRequest", () => {
     });
 
     const response = await handleOpenApiRequest(
-      new Request("http://localhost/api/v1/health")
+      new Request(testHttpOrigin("localhost", "/api/v1/health"))
     );
 
     expect(createApiContextMock).toHaveBeenCalled();
@@ -63,7 +65,7 @@ describe("handleOpenApiRequest", () => {
     });
 
     const response = await handleOpenApiRequest(
-      new Request("http://localhost/api/v1/missing")
+      new Request(testHttpOrigin("localhost", "/api/v1/missing"))
     );
 
     expect(response.status).toBe(404);
