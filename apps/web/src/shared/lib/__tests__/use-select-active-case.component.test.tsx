@@ -22,11 +22,10 @@ import { useSelectActiveCase } from "../use-select-active-case";
 const cases: CaseRecord[] = [
   {
     id: "case-1",
+    name: "Alpha",
     slug: "alpha",
-    title: "Alpha",
-    status: "active",
-    createdAt: "2026-01-01T00:00:00.000Z",
-    updatedAt: "2026-01-01T00:00:00.000Z",
+    description: null,
+    allowThirdPartyEgress: false,
   },
 ];
 
