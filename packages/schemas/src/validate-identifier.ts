@@ -39,44 +39,67 @@ function isValidIpv4(value: string): boolean {
 }
 
 /** At most one `::`; 1–8 groups of 1–4 hex; optional trailing IPv4-mapped dotted-quad. */
-function isValidIpv6(value: string): boolean {
-  if ((value.match(/::/g) ?? []).length > 1) return false;
-  if (value.includes(":::")) return false;
+function ipv6HasInvalidCompression(value: string): boolean {
+  return (value.match(/::/g) ?? []).length > 1 || value.includes(":::");
+}
 
+function splitIpv6Value(
+  value: string
+): { head: string; ipv4Tail: string | null } | null {
   let head = value;
   let ipv4Tail: string | null = null;
   const lastColon = value.lastIndexOf(":");
-  if (lastColon !== -1) {
-    const after = value.slice(lastColon + 1);
-    if (after.includes(".")) {
-      if (!isValidIpv4(after)) return false;
-      ipv4Tail = after;
-      head = value.slice(0, lastColon);
-    }
-  }
+  if (lastColon === -1) return { head, ipv4Tail };
 
-  if (head === "::" || head === "") {
-    return ipv4Tail !== null || value === "::";
-  }
+  const after = value.slice(lastColon + 1);
+  if (!after.includes(".")) return { head, ipv4Tail };
+  if (!isValidIpv4(after)) return null;
+  return { head: value.slice(0, lastColon), ipv4Tail: after };
+}
+
+function parseIpv6HexGroups(head: string): string[] | null {
+  if (head === "::" || head === "") return [];
 
   const compressed = head.includes("::");
   const sides = compressed ? head.split("::") : [head];
-  if (sides.length > 2) return false;
+  if (sides.length > 2) return null;
 
   const groups: string[] = [];
   for (const side of sides) {
     if (side === "") continue;
     const parts = side.split(":");
-    if (parts.some((p) => p === "" || !/^[0-9a-fA-F]{1,4}$/.test(p))) {
-      return false;
+    if (parts.some((part) => part === "" || !/^[0-9a-fA-F]{1,4}$/.test(part))) {
+      return null;
     }
     groups.push(...parts);
   }
+  return groups;
+}
 
+function ipv6GroupsWithinLimit(
+  groups: string[],
+  compressed: boolean,
+  ipv4Tail: string | null
+): boolean {
   const maxGroups = ipv4Tail === null ? 8 : 6;
-  if (compressed) {
-    if (groups.length >= maxGroups) return false;
-  } else if (groups.length !== maxGroups) {
+  if (compressed) return groups.length < maxGroups;
+  return groups.length === maxGroups;
+}
+
+function isValidIpv6(value: string): boolean {
+  if (ipv6HasInvalidCompression(value)) return false;
+
+  const split = splitIpv6Value(value);
+  if (split === null) return false;
+  const { head, ipv4Tail } = split;
+
+  if (head === "::" || head === "") {
+    return ipv4Tail !== null || value === "::";
+  }
+
+  const groups = parseIpv6HexGroups(head);
+  if (groups === null) return false;
+  if (!ipv6GroupsWithinLimit(groups, head.includes("::"), ipv4Tail)) {
     return false;
   }
   return groups.length >= 1 || ipv4Tail !== null || value === "::";
@@ -163,6 +186,52 @@ function validatePgp(
   return fail("Invalid PGP fingerprint or key.");
 }
 
+const SOFT_IDENTIFIER_TYPES = new Set<IdentifierType>([
+  "handle",
+  "crypto",
+  "credential",
+  "other",
+]);
+
+type StrictIdentifierType = Exclude<
+  IdentifierType,
+  "handle" | "crypto" | "credential" | "other"
+>;
+
+function validateDomainValue(normalized: string): ValidateIdentifierResult {
+  if (!isValidDomain(normalized)) {
+    return fail("Invalid domain.");
+  }
+  return { ok: true, value: normalized };
+}
+
+function validateIpValue(normalized: string): ValidateIdentifierResult {
+  if (!isValidIp(normalized)) {
+    return fail("Invalid IP address.");
+  }
+  return { ok: true, value: normalized };
+}
+
+const STRICT_TYPE_VALIDATORS: Record<
+  StrictIdentifierType,
+  (raw: string, normalized: string) => ValidateIdentifierResult
+> = {
+  email: (_raw, normalized) =>
+    validateEmail(normalized) ?? { ok: true, value: normalized },
+  phone: (raw, normalized) =>
+    validatePhone(raw, normalized) ?? { ok: true, value: normalized },
+  url: (_raw, normalized) =>
+    validateUrl(normalized) ?? { ok: true, value: normalized },
+  domain: (_raw, normalized) => validateDomainValue(normalized),
+  ip: (_raw, normalized) => validateIpValue(normalized),
+  pgp: (raw, normalized) =>
+    validatePgp(raw, normalized) ?? { ok: true, value: normalized },
+};
+
+function isStrictIdentifierType(type: string): type is StrictIdentifierType {
+  return Object.hasOwn(STRICT_TYPE_VALIDATORS, type);
+}
+
 /**
  * Normalize then soft-strict shape-check Identifier values.
  * Soft types (`handle` / `crypto` / `credential` / `other`) are non-empty only.
@@ -186,41 +255,14 @@ export function validateIdentifierValue(
     return fail("Value is required.");
   }
 
-  switch (type) {
-    case "email": {
-      return validateEmail(normalized) ?? { ok: true, value: normalized };
-    }
-    case "phone": {
-      return validatePhone(raw, normalized) ?? { ok: true, value: normalized };
-    }
-    case "url": {
-      return validateUrl(normalized) ?? { ok: true, value: normalized };
-    }
-    case "domain": {
-      if (!isValidDomain(normalized)) {
-        return fail("Invalid domain.");
-      }
-      return { ok: true, value: normalized };
-    }
-    case "ip": {
-      if (!isValidIp(normalized)) {
-        return fail("Invalid IP address.");
-      }
-      return { ok: true, value: normalized };
-    }
-    case "pgp": {
-      return validatePgp(raw, normalized) ?? { ok: true, value: normalized };
-    }
-    case "handle":
-    case "crypto":
-    case "credential":
-    case "other": {
-      return { ok: true, value: normalized };
-    }
-    default: {
-      return fail("Invalid identifier type.");
-    }
+  if (SOFT_IDENTIFIER_TYPES.has(type as IdentifierType)) {
+    return { ok: true, value: normalized };
   }
+  if (!isStrictIdentifierType(type)) {
+    return fail("Invalid identifier type.");
+  }
+
+  return STRICT_TYPE_VALIDATORS[type](raw, normalized);
 }
 
 /** Value shape + handle→platform write gate (normalize platform). */
