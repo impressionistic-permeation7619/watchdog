@@ -385,10 +385,3 @@ export const identifiersTableColumns: ColumnDef<CaseIdentifierRecord>[] = [
     size: 180,
   },
 ];
-
-/** @deprecated Pass `identifiersTableColumns` with table `meta` instead. */
-export function createIdentifiersTableColumns(
-  _meta: IdentifiersTableMeta
-): ColumnDef<CaseIdentifierRecord>[] {
-  return identifiersTableColumns;
-}

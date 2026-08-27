@@ -227,10 +227,3 @@ export const entityTableColumns: ColumnDef<EntityRecord>[] = [
     minSize: 90,
   },
 ];
-
-/** @deprecated Pass `entityTableColumns` with table `meta` instead. */
-export function createEntityColumns(
-  _meta: EntityTableMeta
-): ColumnDef<EntityRecord>[] {
-  return entityTableColumns;
-}
