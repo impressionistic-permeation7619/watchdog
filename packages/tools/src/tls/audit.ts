@@ -93,6 +93,36 @@ function snapshotFromSocket(
 
 type AuditOptions = { port?: number; servername?: string };
 
+function wireTlsAuditSocket(
+  socket: TLSSocket,
+  signal: AbortSignal,
+  host: string,
+  port: number,
+  resolve: (snap: TlsAuditSnapshot) => void,
+  reject: (error: Error) => void
+): void {
+  const onAbort = () => {
+    socket.destroy(new Error("TLS audit aborted"));
+  };
+  signal.addEventListener("abort", onAbort, { once: true });
+
+  socket.setTimeout(20_000, () => {
+    socket.destroy(new Error("TLS audit timed out"));
+  });
+  socket.on("error", (err) => {
+    signal.removeEventListener("abort", onAbort);
+    reject(err instanceof Error ? err : new Error(String(err)));
+  });
+  socket.on("close", () => {
+    signal.removeEventListener("abort", onAbort);
+  });
+  socket.on("secureConnect", () => {
+    const snap = snapshotFromSocket(socket, host, port);
+    socket.end();
+    resolve(tlsAuditSnapshotSchema.parse(snap));
+  });
+}
+
 /** Active TLS handshake against host:port — invasive. */
 export function fetchTlsAudit(
   host: string,
@@ -109,34 +139,12 @@ export function fetchTlsAudit(
       return;
     }
 
-    const socket = connect(
-      {
-        host,
-        port,
-        servername,
-        ...TLS_AUDIT_INSECURE_CONNECT,
-      },
-      () => {
-        const snap = snapshotFromSocket(socket, host, port);
-        socket.end();
-        resolve(tlsAuditSnapshotSchema.parse(snap));
-      }
-    );
-
-    const onAbort = () => {
-      socket.destroy(new Error("TLS audit aborted"));
-    };
-    signal.addEventListener("abort", onAbort, { once: true });
-
-    socket.setTimeout(20_000, () => {
-      socket.destroy(new Error("TLS audit timed out"));
+    const socket = connect({
+      host,
+      port,
+      servername,
+      ...TLS_AUDIT_INSECURE_CONNECT,
     });
-    socket.on("error", (err) => {
-      signal.removeEventListener("abort", onAbort);
-      reject(err instanceof Error ? err : new Error(String(err)));
-    });
-    socket.on("close", () => {
-      signal.removeEventListener("abort", onAbort);
-    });
+    wireTlsAuditSocket(socket, signal, host, port, resolve, reject);
   });
 }

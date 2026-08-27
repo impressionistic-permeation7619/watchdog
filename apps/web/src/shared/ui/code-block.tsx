@@ -3,8 +3,8 @@
  * Uses github-dark / github-light matched to the current app theme.
  * Shiki runs once per (code, lang, theme) combo; singleton highlighter cached.
  */
-import { useEffect, useRef, useState } from "react";
-import type { createHighlighter } from "shiki";
+import { useEffect, useState } from "react";
+import type { createHighlighter, ThemedToken } from "shiki";
 
 import { cn } from "@/lib/utils";
 
@@ -40,6 +40,25 @@ function detectLang(mime: string, content: string): ShikiLang {
   return "text";
 }
 
+function HighlightedLines({ lines }: { lines: ThemedToken[][] }) {
+  return (
+    <>
+      {lines.map((line, lineIndex) => (
+        <span key={lineIndex} className="block">
+          {line.map((token, tokenIndex) => (
+            <span
+              key={tokenIndex}
+              style={token.color ? { color: token.color } : undefined}
+            >
+              {token.content}
+            </span>
+          ))}
+        </span>
+      ))}
+    </>
+  );
+}
+
 // ─── component ───────────────────────────────────────────────────────────────
 
 interface CodeBlockProps {
@@ -57,8 +76,7 @@ export function CodeBlock({
   className,
   maxHeight = "60vh",
 }: CodeBlockProps) {
-  const [html, setHtml] = useState<string | null>(null);
-  const highlightedRef = useRef<HTMLDivElement>(null);
+  const [lines, setLines] = useState<ThemedToken[][] | null>(null);
 
   const isDark =
     typeof document !== "undefined" &&
@@ -72,13 +90,13 @@ export function CodeBlock({
       try {
         const hl = await getHighlighter();
         if (cancelled) return;
-        const result = hl.codeToHtml(code, {
+        const { tokens } = hl.codeToTokens(code, {
           lang: language,
           theme: shikiTheme,
         });
-        if (!cancelled) setHtml(result);
+        if (!cancelled) setLines(tokens);
       } catch {
-        if (!cancelled) setHtml(null);
+        if (!cancelled) setLines(null);
       }
     })();
     return () => {
@@ -86,37 +104,22 @@ export function CodeBlock({
     };
   }, [code, mime, lang, shikiTheme]);
 
-  useEffect(() => {
-    if (html === null) return;
-    const node = highlightedRef.current;
-    if (!node) return;
-    node.innerHTML = html;
-  }, [html]);
+  const preClassName = cn(
+    "bg-muted/40 overflow-auto rounded-md p-3 font-mono text-[11px] leading-relaxed break-words whitespace-pre-wrap",
+    className
+  );
 
-  if (html === null) {
+  if (lines === null) {
     return (
-      <pre
-        className={cn(
-          "bg-muted/40 overflow-auto rounded-md p-3 font-mono text-[11px] leading-relaxed break-words whitespace-pre-wrap",
-          className
-        )}
-        style={{ maxHeight }}
-      >
+      <pre className={preClassName} style={{ maxHeight }}>
         {code}
       </pre>
     );
   }
 
   return (
-    <div
-      ref={highlightedRef}
-      className={cn(
-        "overflow-auto rounded-md text-[11px] leading-relaxed",
-        "[&_.shiki]:!bg-muted/40 [&_.shiki]:rounded-md [&_.shiki]:p-3",
-        "[&_code]:font-mono [&_code]:text-[11px] [&_code]:break-words [&_code]:whitespace-pre-wrap",
-        className
-      )}
-      style={{ maxHeight }}
-    />
+    <pre className={preClassName} style={{ maxHeight }}>
+      <HighlightedLines lines={lines} />
+    </pre>
   );
 }

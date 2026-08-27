@@ -74,12 +74,14 @@ async function downloadFeodoBlocklist(
   return parseFeodoEntries(body);
 }
 
-async function fetchBlocklist(
+function fetchBlocklist(
   signal: AbortSignal,
   options: FeodoOptions2
 ): Promise<FeodoEntry[]> {
   const now = Date.now();
-  if (cachedEntries && now - cachedAt < CACHE_TTL_MS) return cachedEntries;
+  if (cachedEntries && now - cachedAt < CACHE_TTL_MS) {
+    return Promise.resolve(cachedEntries);
+  }
   if (inflight) return inflight;
 
   inflight = downloadFeodoBlocklist(signal, options)

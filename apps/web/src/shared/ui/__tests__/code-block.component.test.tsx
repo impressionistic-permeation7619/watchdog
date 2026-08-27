@@ -3,7 +3,9 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("shiki", () => ({
   createHighlighter: vi.fn(async () => ({
-    codeToHtml: (code: string) => `<pre class="shiki">${code}</pre>`,
+    codeToTokens: (code: string) => ({
+      tokens: [[{ content: code, color: "#fff" }]],
+    }),
   })),
 }));
 
@@ -15,13 +17,13 @@ describe("CodeBlock", () => {
     expect(screen.getByText('{"ok":true}')).toBeInTheDocument();
   });
 
-  it("renders highlighted html when shiki resolves", async () => {
+  it("renders highlighted tokens when shiki resolves", async () => {
     const { container } = render(
       <CodeBlock code="hello" mime="text/plain" lang="text" />
     );
 
     await waitFor(() => {
-      expect(container.querySelector(".shiki")).toBeInTheDocument();
+      expect(container.querySelector("pre")?.textContent).toContain("hello");
     });
   });
 });

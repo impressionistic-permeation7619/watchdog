@@ -31,6 +31,29 @@ const whoisXmlResponseSchema = z.object({
     .optional(),
 });
 
+function whoisXmlSnapshot(
+  host: string,
+  raw: z.infer<typeof whoisXmlResponseSchema>
+): WhoisSnapshot {
+  const rec = raw.WhoisRecord ?? {};
+  const registry = rec.registryData;
+  return {
+    host,
+    source: "whoisxml",
+    registrar: rec.registrarName ?? registry?.registrarName ?? null,
+    registrantOrg:
+      rec.registrant?.organization ?? rec.registrant?.name ?? null,
+    nameservers: rec.nameServers?.hostNames ?? [],
+    status: whoisStatusList(rec.status),
+    registeredAt:
+      parseWhoisDate(rec.createdDate) ??
+      parseWhoisDate(registry?.createdDate),
+    expiresAt:
+      parseWhoisDate(rec.expiresDate) ?? parseWhoisDate(registry?.expiresDate),
+    raw,
+  };
+}
+
 export async function fetchWhoisXml(
   host: string,
   apiKey: string,
@@ -49,26 +72,5 @@ export async function fetchWhoisXml(
     );
   }
   const raw = whoisXmlResponseSchema.parse(await res.json());
-  const rec = raw.WhoisRecord ?? {};
-  const registrar =
-    rec.registrarName ?? rec.registryData?.registrarName ?? null;
-  const registrantOrg =
-    rec.registrant?.organization ?? rec.registrant?.name ?? null;
-  const nameservers = rec.nameServers?.hostNames ?? [];
-  const status = whoisStatusList(rec.status);
-  return {
-    host,
-    source: "whoisxml",
-    registrar,
-    registrantOrg,
-    nameservers,
-    status,
-    registeredAt:
-      parseWhoisDate(rec.createdDate) ??
-      parseWhoisDate(rec.registryData?.createdDate),
-    expiresAt:
-      parseWhoisDate(rec.expiresDate) ??
-      parseWhoisDate(rec.registryData?.expiresDate),
-    raw,
-  };
+  return whoisXmlSnapshot(host, raw);
 }
