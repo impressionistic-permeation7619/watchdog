@@ -27,6 +27,16 @@ function parseWatchdogEvent(
   }
 }
 
+function createTypedEventListener(
+  type: WatchdogEvent["type"],
+  handleEvent: EventHandler
+): (event: Event) => void {
+  return (event: Event) => {
+    const parsed = parseWatchdogEvent(event, type);
+    if (parsed) handleEvent(parsed);
+  };
+}
+
 function subscribeLiveEvents(
   caseId: string,
   handleEvent: EventHandler
@@ -35,10 +45,7 @@ function subscribeLiveEvents(
   const es = new EventSource(url);
 
   const listeners = WATCHDOG_EVENT_TYPES.map((type) => {
-    const listener = (event: Event) => {
-      const parsed = parseWatchdogEvent(event, type);
-      if (parsed) handleEvent(parsed);
-    };
+    const listener = createTypedEventListener(type, handleEvent);
     es.addEventListener(type, listener);
     return { type, listener };
   });

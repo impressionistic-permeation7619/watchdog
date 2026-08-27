@@ -19,6 +19,26 @@ function evidenceNeedsBlobText(evidence: EvidenceRecord | null): boolean {
   return isTextMime(evidence.mime);
 }
 
+function buildEvidenceBlobState(input: {
+  evidence: EvidenceRecord | null;
+  needsBlobText: boolean;
+  downloadUrl: string | null;
+  loadingUrl: boolean;
+  blobText: string | null;
+  loadingBlob: boolean;
+}) {
+  return {
+    isImage: input.evidence?.mime?.startsWith("image/") ?? false,
+    downloadUrl: input.downloadUrl,
+    loadingUrl: input.loadingUrl,
+    resolvedText:
+      input.evidence?.text ??
+      (input.needsBlobText ? input.blobText : null),
+    loadingBlob: input.loadingBlob,
+    hasUri: Boolean(input.evidence?.uri),
+  };
+}
+
 export function useEvidenceBlob(
   caseId: string,
   evidence: EvidenceRecord | null
@@ -40,19 +60,12 @@ export function useEvidenceBlob(
     enabled: needsBlobText,
   });
 
-  const isImage = evidence?.mime?.startsWith("image/") ?? false;
-  const downloadUrl = downloadQuery.data?.url ?? null;
-  const loadingUrl = downloadQuery.isPending;
-  const resolvedText =
-    evidence?.text ?? (needsBlobText ? (blobQuery.data?.text ?? null) : null);
-  const loadingBlob = needsBlobText && blobQuery.isPending;
-
-  return {
-    isImage,
-    downloadUrl,
-    loadingUrl,
-    resolvedText,
-    loadingBlob,
-    hasUri: Boolean(evidence?.uri),
-  };
+  return buildEvidenceBlobState({
+    evidence,
+    needsBlobText,
+    downloadUrl: downloadQuery.data?.url ?? null,
+    loadingUrl: downloadQuery.isPending,
+    blobText: blobQuery.data?.text ?? null,
+    loadingBlob: needsBlobText && blobQuery.isPending,
+  });
 }

@@ -44,6 +44,30 @@ function resetTaskFormValues(
   form.reset(createDefaults(props.defaultStatus, props.defaultEntityId));
 }
 
+async function submitTaskFormValues(
+  value: TaskFormValues,
+  onSubmit: (values: TaskFormValues) => void | Promise<void>
+): Promise<void> {
+  if (taskFormIssues(value).length > 0) return;
+  await onSubmit(normalizeTaskForm(value));
+}
+
+function createTaskFormSubmitHandler(
+  onSubmit: (values: TaskFormValues) => void | Promise<void>
+) {
+  return async ({ value }: { value: TaskFormValues }) =>
+    submitTaskFormValues(value, onSubmit);
+}
+
+function preventTaskFormDefault(
+  form: TaskDialogForm,
+  event: SubmitEvent
+): void {
+  event.preventDefault();
+  event.stopPropagation();
+  void form.handleSubmit();
+}
+
 export function useTaskFormDialog(props: TaskFormDialogCoreProps) {
   const { open, mode, task, defaultStatus, defaultEntityId, onSubmit } = props;
 
@@ -52,10 +76,7 @@ export function useTaskFormDialog(props: TaskFormDialogCoreProps) {
       mode === "edit" && task
         ? defaultsFromTask(task)
         : createDefaults(defaultStatus, defaultEntityId),
-    onSubmit: async ({ value }) => {
-      if (taskFormIssues(value).length > 0) return;
-      await onSubmit(normalizeTaskForm(value));
-    },
+    onSubmit: createTaskFormSubmitHandler(onSubmit),
   });
 
   useEffect(() => {
@@ -70,11 +91,8 @@ export function useTaskFormDialog(props: TaskFormDialogCoreProps) {
     });
   }, [open, mode, task, defaultEntityId, defaultStatus, form, onSubmit]);
 
-  function handleSubmit(e: SubmitEvent) {
-    e.preventDefault();
-    e.stopPropagation();
-    void form.handleSubmit();
-  }
+  const handleSubmit = (event: SubmitEvent) =>
+    preventTaskFormDefault(form as TaskDialogForm, event);
 
   return { form: form as TaskDialogForm, handleSubmit };
 }

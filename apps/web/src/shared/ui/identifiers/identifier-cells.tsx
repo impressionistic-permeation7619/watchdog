@@ -49,6 +49,22 @@ export const PLATFORM_OPTIONS: EditableSelectOption[] =
 export const TYPE_OPTIONS: EditableSelectOption[] = IDENTIFIER_TYPE_OPTIONS;
 export const STATUS_OPTIONS: EditableSelectOption[] = IDENTIFIER_STATUS_OPTIONS;
 
+function buildHandleHref(value: string, platform: string): string | null {
+  const meta = identifierPlatformMeta(normalizeIdentifierPlatform(platform));
+  if (meta?.urlTemplate === undefined || meta.urlTemplate === "") return null;
+
+  let handle = value;
+  if (
+    meta.stripSigil !== undefined &&
+    meta.stripSigil !== "" &&
+    handle.startsWith(meta.stripSigil)
+  ) {
+    handle = handle.slice(meta.stripSigil.length);
+  }
+  handle = handle.replace(/^@+/, "").replace(/^u\//, "");
+  return meta.urlTemplate.replaceAll("{value}", handle);
+}
+
 function buildHref(
   type: IdentifierType,
   value: string,
@@ -70,21 +86,7 @@ function buildHref(
       return `https://${v.replace(/^\*\./, "")}`;
     }
     case "handle": {
-      const meta = identifierPlatformMeta(
-        normalizeIdentifierPlatform(platform)
-      );
-      if (meta?.urlTemplate === undefined || meta.urlTemplate === "")
-        return null;
-      let handle = v;
-      if (
-        meta.stripSigil !== undefined &&
-        meta.stripSigil !== "" &&
-        handle.startsWith(meta.stripSigil)
-      ) {
-        handle = handle.slice(meta.stripSigil.length);
-      }
-      handle = handle.replace(/^@+/, "").replace(/^u\//, "");
-      return meta.urlTemplate.replaceAll("{value}", handle);
+      return buildHandleHref(v, platform);
     }
     case "credential":
     case "crypto":

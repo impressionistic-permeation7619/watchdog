@@ -7,12 +7,11 @@ import { KeyRoundIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { ConfigureCredentialDialog } from "@/domains/settings/components/settings-configure-credential-dialog";
+import { SettingsCredentialsDialogs } from "@/domains/settings/components/settings-credentials-dialogs";
 import { credentialsListQuery } from "@/domains/settings/queries";
 import { deleteCredentialFn } from "@/domains/settings/settings.functions";
 import { cn, errMessage } from "@/lib/utils";
 import { invalidateAfterCredentialMutation } from "@/shared/lib/query-invalidation";
-import { DestructiveConfirmDialog } from "@/shared/ui/destructive-confirm-dialog";
 import { SETTINGS_CARD_SURFACE } from "@/shared/ui/form-section";
 import { LocalDateTime } from "@/shared/ui/local-date-time";
 import { Alert, AlertDescription } from "@/shared/ui/shadcn/alert";
@@ -207,18 +206,19 @@ export function SettingsCredentialsForm() {
         </>
       )}
 
-      <ConfigureCredentialDialog
-        key={configureName ?? "closed"}
-        slot={configureSlot}
-        open={configureName !== null}
-        onOpenChange={(open) => closeConfigureDialog(open, setConfigureName)}
-        onSaved={handleCredentialSaved}
-        onError={setError}
-      />
-
-      <DestructiveConfirmDialog
-        open={deleteTarget !== null}
-        onOpenChange={(open) =>
+      <SettingsCredentialsDialogs
+        configureSlot={configureSlot}
+        configureOpen={configureName !== null}
+        onConfigureOpenChange={(open) =>
+          closeConfigureDialog(open, setConfigureName)
+        }
+        onCredentialSaved={handleCredentialSaved}
+        onCredentialError={setError}
+        deleteOpen={deleteTarget !== null}
+        deletePending={deleteMutation.isPending}
+        deleteSlot={deleteSlot}
+        deleteError={deleteError}
+        onDeleteOpenChange={(open) =>
           closeDeleteDialog(
             open,
             deleteMutation.isPending,
@@ -226,20 +226,7 @@ export function SettingsCredentialsForm() {
             setDeleteError
           )
         }
-        title="Remove credential"
-        description={
-          deleteSlot
-            ? `Remove the stored secret for ${deleteSlot.label}. Caps that need it will fail until you reconnect.`
-            : undefined
-        }
-        confirmLabel="Remove credential"
-        verificationPhrase={deleteSlot?.name ?? ""}
-        verificationLabel="Type the credential name"
-        irreversibility="Removing this credential cannot be undone."
-        media={<KeyRoundIcon />}
-        loading={deleteMutation.isPending}
-        error={deleteError}
-        onConfirm={handleDeleteConfirm}
+        onDeleteConfirm={handleDeleteConfirm}
       />
     </div>
   );
