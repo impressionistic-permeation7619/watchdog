@@ -95,6 +95,28 @@ jobs:
           DATABASE_URL_MIGRATE: postgresql://postgres:postgres@127.0.0.1:5432/watchdog
         run: pnpm test-db
 
+      - name: Start MinIO
+        run: |
+          docker run -d --name minio \
+            -p 9100:9000 \
+            -e MINIO_ROOT_USER=minioadmin \
+            -e MINIO_ROOT_PASSWORD=minioadmin \
+            minio/minio server /data
+          for i in $(seq 1 30); do
+            curl -sf http://127.0.0.1:9100/minio/health/live && exit 0
+            sleep 2
+          done
+          echo "MinIO failed to become healthy" >&2
+          docker logs minio
+          exit 1
+
+      - name: Create evidence bucket
+        run: |
+          curl -fsSL https://dl.min.io/client/mc/release/linux-amd64/mc -o /tmp/mc
+          chmod +x /tmp/mc
+          /tmp/mc alias set local http://127.0.0.1:9100 minioadmin minioadmin
+          /tmp/mc mb --ignore-existing local/watchdog-evidence
+
       - name: Integration tests
         env:
           DATABASE_URL: postgresql://watchdog_app:watchdog@127.0.0.1:5432/watchdog_test
