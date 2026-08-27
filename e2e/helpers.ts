@@ -30,10 +30,8 @@ export async function signUp(page: Page, stamp: string): Promise<void> {
 
 export async function createCase(page: Page, name: string): Promise<void> {
   await page.goto("/cases");
-  await waitForHydratedNode(page, "[data-slot=button]");
-  const trigger = page
-    .locator("[data-slot=button]")
-    .filter({ hasText: "New Case" });
+  await page.waitForSelector("html[data-hydrated=true]", { timeout: 30_000 });
+  const trigger = page.getByRole("button", { name: "New Case" });
   await trigger.waitFor({ timeout: 30_000 });
   await trigger.click();
   const dialog = page.locator("[data-slot=alert-dialog-content]");

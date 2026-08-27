@@ -33,7 +33,7 @@ describe("FieldSelect", () => {
       />
     );
     await user.click(screen.getByRole("combobox", { name: "Field" }));
-    await user.click(screen.getByRole("option", { name: "Alpha" }));
+    await user.click(await screen.findByRole("option", { name: "Alpha" }));
     expect(onValueChange).toHaveBeenCalledWith("a");
   });
 });
