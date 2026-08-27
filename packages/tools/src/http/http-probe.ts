@@ -75,7 +75,7 @@ function detectCdnHints(headers: Headers): string[] {
   return [...new Set(hints)];
 }
 
-async function fetchHeadOrGet(
+function fetchHeadOrGet(
   url: string,
   signal: AbortSignal,
   userAgent: string
@@ -86,52 +86,53 @@ async function fetchHeadOrGet(
   finalUrl: string;
   error?: string;
 }> {
-  try {
-    const head = await fetch(url, {
-      method: "HEAD",
+  const getFallback = () =>
+    fetch(url, {
+      method: "GET",
       redirect: "follow",
       signal,
-      headers: { "User-Agent": userAgent, Accept: "*/*" },
-    });
-    // Some hosts reject HEAD — fall through to GET for headers only.
-    if (head.status !== 405 && head.status !== 501) {
-      return {
-        ok: head.ok,
-        status: head.status,
-        headers: head.headers,
-        finalUrl: head.url || url,
-      };
-    }
-  } catch {
-    // fall through to GET
-  }
-  const get = await fetch(url, {
-    method: "GET",
+      headers: {
+        "User-Agent": userAgent,
+        Accept: "*/*",
+        Range: "bytes=0-0",
+      },
+    }).then((get) => ({
+      ok: get.ok,
+      status: get.status,
+      headers: get.headers,
+      finalUrl: get.url || url,
+    }));
+
+  return fetch(url, {
+    method: "HEAD",
     redirect: "follow",
     signal,
-    headers: {
-      "User-Agent": userAgent,
-      Accept: "*/*",
-      Range: "bytes=0-0",
-    },
-  });
-  return {
-    ok: get.ok,
-    status: get.status,
-    headers: get.headers,
-    finalUrl: get.url || url,
-  };
+    headers: { "User-Agent": userAgent, Accept: "*/*" },
+  })
+    .then((head) => {
+      if (head.status !== 405 && head.status !== 501) {
+        return {
+          ok: head.ok,
+          status: head.status,
+          headers: head.headers,
+          finalUrl: head.url || url,
+        };
+      }
+      return getFallback();
+    })
+    .catch(() => getFallback());
 }
 
 /**
  * One Cap / one origin: security headers + security.txt + favicon hash + CDN hints.
  * Active HTTP — invasive.
  */
-export async function fetchHttpProbe(
+export function fetchHttpProbe(
   host: string,
   signal: AbortSignal,
   options: { userAgent: string; preferHttps?: boolean }
 ): Promise<HttpProbeSnapshot> {
+  return (async () => {
   const preferHttps = options.preferHttps ?? true;
   const origins = preferHttps
     ? [`https://${host}/`, `http://${host}/`]
@@ -228,4 +229,5 @@ export async function fetchHttpProbe(
     },
     ...(primary.ok ? {} : { error: `HTTP ${primary.status}` }),
   });
+  })();
 }
