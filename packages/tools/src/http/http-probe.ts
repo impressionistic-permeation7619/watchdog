@@ -209,7 +209,7 @@ function probePrimaryOrigin(
  * One Cap / one origin: security headers + security.txt + favicon hash + CDN hints.
  * Active HTTP — invasive.
  */
-export async function fetchHttpProbe(
+export function fetchHttpProbe(
   host: string,
   signal: AbortSignal,
   options: { userAgent: string; preferHttps?: boolean }
@@ -219,62 +219,61 @@ export async function fetchHttpProbe(
     ? [`https://${host}/`, `http://${host}/`]
     : [`http://${host}/`, `https://${host}/`];
 
-  const { primary, originBase, lastError } = await probePrimaryOrigin(
-    origins,
-    signal,
-    options.userAgent
+  return probePrimaryOrigin(origins, signal, options.userAgent).then(
+    ({ primary, originBase, lastError }) => {
+      if (!primary) {
+        return failedProbeSnapshot(host, origins, lastError);
+      }
+
+      const securityTxtUrl = new URL("/.well-known/security.txt", originBase)
+        .href;
+      const faviconUrl = new URL("/favicon.ico", originBase).href;
+
+      return Promise.all([
+        fetchBytes(securityTxtUrl, signal, {
+          userAgent: options.userAgent,
+          maxBytes: 16_384,
+          accept: "text/plain,*/*",
+        }),
+        fetchBytes(faviconUrl, signal, {
+          userAgent: options.userAgent,
+          maxBytes: 65_536,
+          accept: "image/*,*/*",
+        }),
+      ]).then(([secTxt, favicon]) => {
+        const bodyPreview =
+          secTxt.ok && secTxt.bytes.byteLength > 0
+            ? new TextDecoder().decode(secTxt.bytes).slice(0, 2000)
+            : null;
+
+        return httpProbeSnapshotSchema.parse({
+          host,
+          queriedAt: new Date().toISOString(),
+          finalUrl: primary.finalUrl,
+          status: primary.status,
+          ok: primary.ok,
+          securityHeaders: pickHeaders(primary.headers),
+          server: primary.headers.get("server"),
+          via: primary.headers.get("via"),
+          cdnHints: detectCdnHints(primary.headers),
+          securityTxt: {
+            url: securityTxtUrl,
+            status: secTxt.status,
+            present: secTxt.ok && Boolean(bodyPreview?.includes("Contact:")),
+            bodyPreview,
+          },
+          favicon: {
+            url: faviconUrl,
+            status: favicon.status,
+            sha256:
+              favicon.ok && favicon.bytes.byteLength > 0
+                ? createHash("sha256").update(favicon.bytes).digest("hex")
+                : null,
+            contentType: favicon.contentType,
+          },
+          ...(primary.ok ? {} : { error: `HTTP ${primary.status}` }),
+        });
+      });
+    }
   );
-
-  if (!primary) {
-    return failedProbeSnapshot(host, origins, lastError);
-  }
-
-  const securityTxtUrl = new URL("/.well-known/security.txt", originBase).href;
-  const faviconUrl = new URL("/favicon.ico", originBase).href;
-
-  const [secTxt, favicon] = await Promise.all([
-    fetchBytes(securityTxtUrl, signal, {
-      userAgent: options.userAgent,
-      maxBytes: 16_384,
-      accept: "text/plain,*/*",
-    }),
-    fetchBytes(faviconUrl, signal, {
-      userAgent: options.userAgent,
-      maxBytes: 65_536,
-      accept: "image/*,*/*",
-    }),
-  ]);
-
-  const bodyPreview =
-    secTxt.ok && secTxt.bytes.byteLength > 0
-      ? new TextDecoder().decode(secTxt.bytes).slice(0, 2000)
-      : null;
-
-  return httpProbeSnapshotSchema.parse({
-    host,
-    queriedAt: new Date().toISOString(),
-    finalUrl: primary.finalUrl,
-    status: primary.status,
-    ok: primary.ok,
-    securityHeaders: pickHeaders(primary.headers),
-    server: primary.headers.get("server"),
-    via: primary.headers.get("via"),
-    cdnHints: detectCdnHints(primary.headers),
-    securityTxt: {
-      url: securityTxtUrl,
-      status: secTxt.status,
-      present: secTxt.ok && Boolean(bodyPreview?.includes("Contact:")),
-      bodyPreview,
-    },
-    favicon: {
-      url: faviconUrl,
-      status: favicon.status,
-      sha256:
-        favicon.ok && favicon.bytes.byteLength > 0
-          ? createHash("sha256").update(favicon.bytes).digest("hex")
-          : null,
-      contentType: favicon.contentType,
-    },
-    ...(primary.ok ? {} : { error: `HTTP ${primary.status}` }),
-  });
 }
