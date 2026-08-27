@@ -13,6 +13,7 @@ import {
   listActiveJobIds,
   reconcileStaleJobs,
   reconcileStuckPlaybookRuns,
+  type CapJobPayload,
 } from "@watchdog/core/worker";
 import {
   createLogger,
@@ -63,7 +64,38 @@ async function reconcileWorkerStartup(): Promise<void> {
   }
 }
 
-async function processCapJob(job: {
+async function executeCapJobPayload(
+  data: CapJobPayload,
+  log: ReturnType<typeof createLogger>
+): Promise<void> {
+  try {
+    const outcome = await executeJob(data.jobId);
+    log.set(
+      jobWideEventFields({
+        jobId: data.jobId,
+        outcome: outcome.outcome,
+        stopReason: outcome.stopReason,
+        abortReason: outcome.abortReason,
+        fromCache: outcome.fromCache,
+        reclaim: outcome.reclaim,
+        durationMs: outcome.durationMs,
+        caseId: outcome.caseId,
+        capabilityId: outcome.capabilityId,
+        playbookRunId: outcome.playbookRunId,
+      })
+    );
+  } catch (error: unknown) {
+    log.set(
+      jobWideEventFields({
+        jobId: data.jobId,
+        outcome: "handler_error",
+      })
+    );
+    log.error(error instanceof Error ? error : new Error(String(error)));
+  }
+}
+
+function processCapJob(job: {
   id: string;
   data: unknown;
 }): Promise<void> {
@@ -71,44 +103,21 @@ async function processCapJob(job: {
     scope: "cap.job",
     bossJobId: job.id,
   });
-  try {
-    if (!isCapJobPayload(job.data)) {
-      log.set({
-        job: { outcome: "invalid_payload" },
-        error: { message: "missing jobId in payload" },
-        payloadType: job.data === null ? "null" : typeof job.data,
-      });
-      return;
-    }
-    const data = job.data;
-    try {
-      const outcome = await executeJob(data.jobId);
-      log.set(
-        jobWideEventFields({
-          jobId: data.jobId,
-          outcome: outcome.outcome,
-          stopReason: outcome.stopReason,
-          abortReason: outcome.abortReason,
-          fromCache: outcome.fromCache,
-          reclaim: outcome.reclaim,
-          durationMs: outcome.durationMs,
-          caseId: outcome.caseId,
-          capabilityId: outcome.capabilityId,
-          playbookRunId: outcome.playbookRunId,
-        })
-      );
-    } catch (error: unknown) {
-      log.set(
-        jobWideEventFields({
-          jobId: data.jobId,
-          outcome: "handler_error",
-        })
-      );
-      log.error(error instanceof Error ? error : new Error(String(error)));
-    }
-  } finally {
+  const finish = () => {
     void log.emit();
+  };
+
+  if (!isCapJobPayload(job.data)) {
+    log.set({
+      job: { outcome: "invalid_payload" },
+      error: { message: "missing jobId in payload" },
+      payloadType: job.data === null ? "null" : typeof job.data,
+    });
+    finish();
+    return Promise.resolve();
   }
+
+  return executeCapJobPayload(job.data, log).finally(finish);
 }
 
 function onExportEventPayload(rawPayload: string): void {
@@ -210,10 +219,12 @@ function bindWorkerShutdown(
   process.on("SIGINT", () => onWorkerSignal("SIGINT", ctx));
 }
 
-async function processCapJobBatch(jobs: { id: string; data: unknown }[]): Promise<void> {
+function processCapJobBatch(
+  jobs: { id: string; data: unknown }[]
+): Promise<void> {
   const job = jobs[0];
-  if (!job) return;
-  await processCapJob(job);
+  if (!job) return Promise.resolve();
+  return processCapJob(job);
 }
 
 export async function bootWorker() {
