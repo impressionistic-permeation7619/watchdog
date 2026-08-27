@@ -1,5 +1,5 @@
+import type { QueryClient } from "@tanstack/react-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useCallback } from "react";
 import { toast } from "sonner";
 
 import type { CaseIdentifierRecord } from "@/domains/entities/identifiers/types";
@@ -13,6 +13,55 @@ import type {
   IdentifierType,
 } from "@watchdog/schemas";
 
+type UpdateIdentifierVars = {
+  identifierId: string;
+  value?: string;
+  platform?: string;
+  type?: IdentifierType;
+  status?: IdentifierStatus;
+  confidence?: ConfidenceTier;
+  notes?: string;
+  evidenceIds?: string[];
+};
+
+function updateIdentifierFields(
+  caseId: string,
+  input: UpdateIdentifierVars
+) {
+  return updateIdentifierFn({ data: { caseId, ...input } });
+}
+
+async function onIdentifierUpdated(
+  queryClient: QueryClient,
+  caseId: string,
+  rows: CaseIdentifierRecord[],
+  identifierId: string
+): Promise<void> {
+  toast.success("Updated");
+  const row = rows.find((entry) => entry.id === identifierId);
+  await invalidateAfterEntityChanged(queryClient, caseId, {
+    entityId: row?.entityId,
+  });
+}
+
+function onIdentifierUpdateError(error: unknown): void {
+  toast.error(errMessage(error, "Update failed"));
+}
+
+function buildIdentifierMutationHandlers(
+  mutate: (input: UpdateIdentifierVars) => void,
+  mutateAsync: (input: UpdateIdentifierVars) => Promise<unknown>
+) {
+  return {
+    updateField(identifierId: string, field: IdentifierFieldUpdate) {
+      mutate({ identifierId, ...field });
+    },
+    async saveEvidence(identifierId: string, evidenceIds: string[]) {
+      await mutateAsync({ identifierId, evidenceIds });
+    },
+  };
+}
+
 export function useIdentifiersTableMutations(
   caseId: string,
   rows: CaseIdentifierRecord[]
@@ -20,41 +69,12 @@ export function useIdentifiersTableMutations(
   const queryClient = useQueryClient();
 
   const { mutate, mutateAsync } = useMutation({
-    mutationFn: async (input: {
-      identifierId: string;
-      value?: string;
-      platform?: string;
-      type?: IdentifierType;
-      status?: IdentifierStatus;
-      confidence?: ConfidenceTier;
-      notes?: string;
-      evidenceIds?: string[];
-    }) => updateIdentifierFn({ data: { caseId, ...input } }),
-    onSuccess: async (_data, vars) => {
-      toast.success("Updated");
-      const row = rows.find((r) => r.id === vars.identifierId);
-      await invalidateAfterEntityChanged(queryClient, caseId, {
-        entityId: row?.entityId,
-      });
-    },
-    onError: (e) => {
-      toast.error(errMessage(e, "Update failed"));
-    },
+    mutationFn: (input: UpdateIdentifierVars) =>
+      updateIdentifierFields(caseId, input),
+    onSuccess: (_data, vars) =>
+      onIdentifierUpdated(queryClient, caseId, rows, vars.identifierId),
+    onError: onIdentifierUpdateError,
   });
 
-  const updateField = useCallback(
-    (identifierId: string, field: IdentifierFieldUpdate) => {
-      mutate({ identifierId, ...field });
-    },
-    [mutate]
-  );
-
-  const saveEvidence = useCallback(
-    async (identifierId: string, evidenceIds: string[]) => {
-      await mutateAsync({ identifierId, evidenceIds });
-    },
-    [mutateAsync]
-  );
-
-  return { updateField, saveEvidence };
+  return buildIdentifierMutationHandlers(mutate, mutateAsync);
 }

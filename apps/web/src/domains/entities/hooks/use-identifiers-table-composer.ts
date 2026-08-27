@@ -1,5 +1,6 @@
 import type { QueryClient } from "@tanstack/react-query";
-import { useCallback, useState } from "react";
+import type { Dispatch, MutableRefObject, SetStateAction } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { createIdentifierFn } from "@/domains/entities/identifiers/identifiers.functions";
@@ -16,17 +17,26 @@ import { invalidateAfterEntityChanged } from "@/shared/lib/query-invalidation";
 import { tableComposerKeyDown } from "@/shared/ui/data-table";
 import { normalizeIdentifierPlatform } from "@watchdog/schemas";
 
+type IdentifierCreateValues = Parameters<
+  Parameters<typeof useIdentifierCreateForm>[0]
+>[0]["value"];
+
+type IdentifierComposerSubmitContext = {
+  caseId: string;
+  queryClient: QueryClient;
+  resetFormRef: MutableRefObject<(() => void) | null>;
+  setComposing: Dispatch<SetStateAction<boolean>>;
+  setSubmitError: Dispatch<SetStateAction<string | null>>;
+};
+
 async function submitIdentifierCreate(
-  caseId: string,
-  queryClient: QueryClient,
-  value: Parameters<
-    Parameters<typeof useIdentifierCreateForm>[0]
-  >[0]["value"]
+  ctx: IdentifierComposerSubmitContext,
+  value: IdentifierCreateValues
 ): Promise<void> {
   const platform = normalizeIdentifierPlatform(value.platform);
   await createIdentifierFn({
     data: {
-      caseId,
+      caseId: ctx.caseId,
       entityId: value.entityId,
       type: value.type,
       value: value.value.trim(),
@@ -37,9 +47,78 @@ async function submitIdentifierCreate(
     },
   });
   toast.success("Identifier added");
-  await invalidateAfterEntityChanged(queryClient, caseId, {
+  await invalidateAfterEntityChanged(ctx.queryClient, ctx.caseId, {
     entityId: value.entityId,
   });
+}
+
+async function handleIdentifierCreateSubmit(
+  ctx: IdentifierComposerSubmitContext,
+  value: IdentifierCreateValues,
+  reset: () => void
+): Promise<void> {
+  if (!identifierCreateCanSubmit(value, { requireEntity: true })) {
+    if (isHandleWithoutPlatform(value.type, value.platform)) {
+      ctx.setSubmitError(HANDLE_REQUIRES_PLATFORM);
+    }
+    return;
+  }
+  ctx.setSubmitError(null);
+  try {
+    await submitIdentifierCreate(ctx, value);
+    reset();
+    ctx.setComposing(false);
+  } catch (error) {
+    ctx.setSubmitError(errMessage(error, "Failed to add"));
+  }
+}
+
+function identifierCreateOnSubmit(ctx: IdentifierComposerSubmitContext) {
+  return ({
+    value,
+    reset,
+  }: {
+    value: IdentifierCreateValues;
+    reset: () => void;
+  }) => handleIdentifierCreateSubmit(ctx, value, reset);
+}
+
+function buildIdentifierComposerControls(
+  createForm: {
+    reset: () => void;
+    handleSubmit: () => Promise<void> | void;
+    state: { isSubmitting: boolean; values: IdentifierCreateValues };
+  },
+  setSubmitError: Dispatch<SetStateAction<string | null>>,
+  setComposing: Dispatch<SetStateAction<boolean>>
+) {
+  const closeComposer = () => {
+    createForm.reset();
+    setComposing(false);
+  };
+
+  const openComposer = () => {
+    createForm.reset();
+    setSubmitError(null);
+    setComposing(true);
+  };
+
+  const submitCreate = () => {
+    void createForm.handleSubmit();
+  };
+
+  const onComposerKey = (e: React.KeyboardEvent) => {
+    tableComposerKeyDown({
+      busy: createForm.state.isSubmitting,
+      canSubmit: identifierCreateCanSubmit(createForm.state.values, {
+        requireEntity: true,
+      }),
+      onSubmit: submitCreate,
+      onCancel: closeComposer,
+    })(e);
+  };
+
+  return { closeComposer, openComposer, submitCreate, onComposerKey };
 }
 
 export function useIdentifiersTableComposer(
@@ -48,60 +127,32 @@ export function useIdentifiersTableComposer(
 ) {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [composing, setComposing] = useState(false);
+  const resetFormRef = useRef<(() => void) | null>(null);
 
-  const createForm = useIdentifierCreateForm(async ({ value, reset }) => {
-    if (!identifierCreateCanSubmit(value, { requireEntity: true })) {
-      if (isHandleWithoutPlatform(value.type, value.platform)) {
-        setSubmitError(HANDLE_REQUIRES_PLATFORM);
-      }
-      return;
-    }
-    setSubmitError(null);
-    try {
-      await submitIdentifierCreate(caseId, queryClient, value);
-      reset();
-      setComposing(false);
-    } catch (error) {
-      setSubmitError(errMessage(error, "Failed to add"));
-    }
-  });
+  const submitContext: IdentifierComposerSubmitContext = {
+    caseId,
+    queryClient,
+    resetFormRef,
+    setComposing,
+    setSubmitError,
+  };
 
-  const closeComposer = useCallback(() => {
-    createForm.reset();
-    setComposing(false);
-  }, [createForm]);
+  const createForm = useIdentifierCreateForm(
+    identifierCreateOnSubmit(submitContext)
+  );
 
-  const openComposer = useCallback(() => {
-    createForm.reset();
-    setSubmitError(null);
-    setComposing(true);
-  }, [createForm]);
+  resetFormRef.current = () => createForm.reset();
 
-  const submitCreate = useCallback(() => {
-    void createForm.handleSubmit();
-  }, [createForm]);
-
-  const onComposerKey = useCallback(
-    (e: React.KeyboardEvent) => {
-      tableComposerKeyDown({
-        busy: createForm.state.isSubmitting,
-        canSubmit: identifierCreateCanSubmit(createForm.state.values, {
-          requireEntity: true,
-        }),
-        onSubmit: submitCreate,
-        onCancel: closeComposer,
-      })(e);
-    },
-    [closeComposer, createForm, submitCreate]
+  const controls = buildIdentifierComposerControls(
+    createForm,
+    setSubmitError,
+    setComposing
   );
 
   return {
     createForm,
     submitError,
     composing,
-    openComposer,
-    closeComposer,
-    submitCreate,
-    onComposerKey,
+    ...controls,
   };
 }
