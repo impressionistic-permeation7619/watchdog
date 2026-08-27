@@ -18,7 +18,7 @@ import { startJob, type JobRecord, toJobRecord } from "../jobs/start-job";
 /**
  * Shared Intake glue: load Evidence, dedupe against active Cap Jobs, startJob.
  */
-async function startCapForEvidence(input: {
+function startCapForEvidence(input: {
   caseId: string;
   evidenceId: string;
   actorId: string;
@@ -30,7 +30,7 @@ async function startCapForEvidence(input: {
 }): Promise<JobRecord> {
   return evidenceRepo
     .getCapSeedInCase(db, input.caseId, input.evidenceId)
-    .then(async (seed) => {
+    .then((seed) => {
       if (!seed) throw new DomainError("not_found", "Evidence not found");
       input.assertSeed?.(seed);
       return jobsRepo
@@ -51,7 +51,7 @@ async function startCapForEvidence(input: {
     });
 }
 
-export async function processEvidence(input: {
+export function processEvidence(input: {
   caseId: string;
   evidenceId: string;
   actorId: string;
@@ -84,7 +84,7 @@ export async function processEvidence(input: {
   });
 }
 
-export async function markEvidenceProcessed(input: {
+export function markEvidenceProcessed(input: {
   caseId: string;
   evidenceId: string;
 }): Promise<void> {
@@ -93,7 +93,7 @@ export async function markEvidenceProcessed(input: {
     .then(() => {});
 }
 
-export async function enrichUrlEvidence(input: {
+export function enrichUrlEvidence(input: {
   caseId: string;
   evidenceId: string;
   actorId: string;
