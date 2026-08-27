@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import type { HarvestCtx } from "../types";
 import { quotesExtractor } from "../quotes";
+import type { HarvestCtx } from "../types";
 
 function makeCtx(text: string, quotedAuthor: string | null): HarvestCtx {
   return {

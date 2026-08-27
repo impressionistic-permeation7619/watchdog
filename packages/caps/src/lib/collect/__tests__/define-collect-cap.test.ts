@@ -50,7 +50,7 @@ describe("defineCollectCap", () => {
       interpretSnap,
     });
 
-    const runResult = await cap.run!({
+    const runResult = await cap.run({
       input: {},
       uploadArtifact,
       log: () => {},
@@ -76,7 +76,7 @@ describe("defineCollectCap", () => {
       interpretSnap,
     });
 
-    const result = await cap.interpret!({ ok: true }, { input: {} } as never);
+    const result = await cap.interpret!({ ok: true }, { input: {} });
     expect(interpretSnap).toHaveBeenCalledWith({ ok: true }, expect.anything());
     expect(result.summary).toBe("interpreted");
   });

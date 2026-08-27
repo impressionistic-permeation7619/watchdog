@@ -9,7 +9,10 @@ type UploadFn = (input: {
 
 /** Upload report.json + a named JSON artifact with identical body (Collect Caps). */
 
-type UploadJsonReportPairResult = { report: CapArtifact; artifact: CapArtifact };
+interface UploadJsonReportPairResult {
+  report: CapArtifact;
+  artifact: CapArtifact;
+}
 export async function uploadJsonReportPair(
   uploadArtifact: UploadFn,
   snap: unknown,

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import type { HarvestCtx } from "../types";
 import { phonesExtractor } from "../phones";
+import type { HarvestCtx } from "../types";
 
 function makeCtx(text: string): HarvestCtx {
   return {
@@ -29,7 +29,9 @@ describe("phones extractor", () => {
     const intl = makeCtx("intl +1 555 987 6543");
     phonesExtractor.collect(intl);
     expect(
-      intl.identifiers.some((i) => i.type === "phone" && i.value.includes("987"))
+      intl.identifiers.some(
+        (i) => i.type === "phone" && i.value.includes("987")
+      )
     ).toBe(true);
   });
 });

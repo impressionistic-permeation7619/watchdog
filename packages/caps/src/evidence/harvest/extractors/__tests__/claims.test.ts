@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import type { HarvestCtx } from "../types";
 import { claimsExtractor } from "../claims";
+import type { HarvestCtx } from "../types";
 
 function makeCtx(text: string): HarvestCtx {
   return {
@@ -25,9 +25,7 @@ describe("claims extractor", () => {
       true
     );
     expect(
-      ctx.identifiers.some(
-        (i) => i.type === "other" && i.value === "Jane Doe"
-      )
+      ctx.identifiers.some((i) => i.type === "other" && i.value === "Jane Doe")
     ).toBe(true);
   });
 });

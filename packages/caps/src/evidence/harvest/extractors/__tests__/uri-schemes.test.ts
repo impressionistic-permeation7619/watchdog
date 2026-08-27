@@ -18,9 +18,7 @@ function makeCtx(text: string): HarvestCtx {
 
 describe("uri schemes extractor", () => {
   it("collects mailto emails and tel numbers", () => {
-    const ctx = makeCtx(
-      "mailto:alice@mailhost.test and tel:+15551234567"
-    );
+    const ctx = makeCtx("mailto:alice@mailhost.test and tel:+15551234567");
     uriSchemesExtractor.collect(ctx);
 
     expect(
@@ -29,9 +27,7 @@ describe("uri schemes extractor", () => {
       )
     ).toBe(true);
     expect(
-      ctx.identifiers.some(
-        (i) => i.type === "phone" && i.value.includes("555")
-      )
+      ctx.identifiers.some((i) => i.type === "phone" && i.value.includes("555"))
     ).toBe(true);
   });
 });

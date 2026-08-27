@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import type { HarvestCtx } from "../types";
 import { historicalMessengersExtractor } from "../historical-messengers";
+import type { HarvestCtx } from "../types";
 
 function makeCtx(text: string): HarvestCtx {
   return {
@@ -22,9 +22,7 @@ describe("historical messengers extractor", () => {
     historicalMessengersExtractor.collect(ctx);
 
     expect(
-      ctx.identifiers.some(
-        (i) => i.type === "handle" && i.platform === "icq"
-      )
+      ctx.identifiers.some((i) => i.type === "handle" && i.platform === "icq")
     ).toBe(true);
   });
 });

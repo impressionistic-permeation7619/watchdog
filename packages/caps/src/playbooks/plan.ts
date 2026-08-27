@@ -278,10 +278,7 @@ function resolveStepInput(
 ): JsonObject | PlanError | "deferred" {
   const deferInput = def.bind !== undefined || def.fanOut !== undefined;
   if (deferInput) return "deferred";
-  return parseCapInput(
-    def.capabilityId,
-    mergeJson(candidate, def.input)
-  );
+  return parseCapInput(def.capabilityId, mergeJson(candidate, def.input));
 }
 
 function addProducesToAvailability(

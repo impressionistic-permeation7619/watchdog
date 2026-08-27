@@ -31,7 +31,7 @@ function identifierNotes(
 
 function identifierToPatchOp(
   id: ProcessExtractDraft["identifiers"][number],
-  ctx: DraftToPatchOpsCtx,
+  entityId: string,
   evidenceIds: string[]
 ): PatchOp {
   const notesParts = identifierNotes(id.notes, id.evidenceQuote);
@@ -43,7 +43,7 @@ function identifierToPatchOp(
     id: randomUUID(),
     evidenceIds,
     data: {
-      entityId: ctx.entityId!,
+      entityId,
       type: id.type,
       value,
       platform,
@@ -55,7 +55,7 @@ function identifierToPatchOp(
 
 function claimToPatchOp(
   claim: ProcessExtractDraft["claims"][number],
-  ctx: DraftToPatchOpsCtx,
+  entityId: string,
   evidenceIds: string[]
 ): PatchOp {
   return {
@@ -64,7 +64,7 @@ function claimToPatchOp(
     id: randomUUID(),
     evidenceIds,
     data: {
-      entityId: ctx.entityId!,
+      entityId,
       text: textWithQuote(claim.text, claim.evidenceQuote),
       class: claim.class ?? "observation",
     },
@@ -73,7 +73,7 @@ function claimToPatchOp(
 
 function questionToPatchOp(
   question: ProcessExtractDraft["questions"][number],
-  ctx: DraftToPatchOpsCtx,
+  entityId: string,
   evidenceIds: string[]
 ): PatchOp {
   return {
@@ -82,7 +82,7 @@ function questionToPatchOp(
     id: randomUUID(),
     evidenceIds,
     data: {
-      entityId: ctx.entityId!,
+      entityId,
       text: textWithQuote(question.text, question.evidenceQuote),
     },
   };
@@ -101,10 +101,15 @@ export function draftToPatchOps(
   if (ctx.entityId === undefined || ctx.entityId === "") return [];
 
   const evidenceIds = [ctx.evidenceId];
+  const entityId = ctx.entityId;
   return [
-    ...draft.identifiers.map((id) => identifierToPatchOp(id, ctx, evidenceIds)),
-    ...draft.claims.map((claim) => claimToPatchOp(claim, ctx, evidenceIds)),
-    ...draft.questions.map((q) => questionToPatchOp(q, ctx, evidenceIds)),
+    ...draft.identifiers.map((id) =>
+      identifierToPatchOp(id, entityId, evidenceIds)
+    ),
+    ...draft.claims.map((claim) =>
+      claimToPatchOp(claim, entityId, evidenceIds)
+    ),
+    ...draft.questions.map((q) => questionToPatchOp(q, entityId, evidenceIds)),
   ];
 }
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import type { HarvestCtx } from "../types";
 import { handlesExtractor } from "../handles";
+import type { HarvestCtx } from "../types";
 
 function makeCtx(text: string): HarvestCtx {
   return {

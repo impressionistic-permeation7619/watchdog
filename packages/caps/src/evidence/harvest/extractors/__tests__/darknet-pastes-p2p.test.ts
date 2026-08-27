@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import type { HarvestCtx } from "../types";
 import { darknetExtractor } from "../darknet-pastes-p2p";
+import type { HarvestCtx } from "../types";
 
 function makeCtx(text: string): HarvestCtx {
   return {
@@ -22,9 +22,7 @@ describe("darknet extractor", () => {
     darknetExtractor.collect(ctx);
 
     expect(
-      ctx.identifiers.some(
-        (i) => i.type === "url" && i.notes === "onion"
-      )
+      ctx.identifiers.some((i) => i.type === "url" && i.notes === "onion")
     ).toBe(true);
   });
 });

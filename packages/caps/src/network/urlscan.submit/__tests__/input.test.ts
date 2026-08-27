@@ -9,6 +9,9 @@ describe("urlscan.submit input", () => {
         url: "https://example.com/page",
         visibility: "unlisted",
       })
-    ).toMatchObject({ url: "https://example.com/page", visibility: "unlisted" });
+    ).toMatchObject({
+      url: "https://example.com/page",
+      visibility: "unlisted",
+    });
   });
 });

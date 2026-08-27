@@ -8,10 +8,10 @@ import type { IpctlLookupSnapshot } from "./report-schema";
 
 type IpctlInput = z.infer<typeof ipctlLookupInput>;
 
-type SummaryPart = {
+interface SummaryPart {
   when: (report: IpctlLookupSnapshot) => boolean;
   format: (report: IpctlLookupSnapshot) => string;
-};
+}
 
 const SUMMARY_PARTS: SummaryPart[] = [
   { when: (r) => r.asn !== null, format: (r) => `ASN=${r.asn}` },
@@ -34,8 +34,7 @@ const SUMMARY_PARTS: SummaryPart[] = [
     format: (r) => `PTR=${r.reverseDns}`,
   },
   {
-    when: (r) =>
-      Boolean(r.geoCountryCode || r.geoCity || r.geoCountryName),
+    when: (r) => Boolean(r.geoCountryCode ?? r.geoCity ?? r.geoCountryName),
     format: (r) => {
       const geo = [r.geoCity, r.geoRegion, r.geoCountryName ?? r.geoCountryCode]
         .filter(Boolean)

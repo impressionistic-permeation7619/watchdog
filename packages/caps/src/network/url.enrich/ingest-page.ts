@@ -23,7 +23,7 @@ type UploadFn = (input: {
   name?: string;
 }) => Promise<CapArtifact>;
 
-type IngestRemotePageOpts = {
+interface IngestRemotePageOpts {
   fetchUrl: string;
   /** Base URL for resolving relative hrefs (usually the live page URL). */
   linkBaseUrl: string;
@@ -34,18 +34,18 @@ type IngestRemotePageOpts = {
   /** Live may keep opaque/binary as text; Wayback treats that as failure. */
   allowPlainBinary: boolean;
   stepExtras?: Partial<StepResult>;
-};
+}
 
 type FetchedPage = Awaited<ReturnType<typeof fetchBytes>>;
 
-type IngestContext = {
+interface IngestContext {
   fetched: FetchedPage;
   step: StepResult;
   label: IngestRemotePageOpts["label"];
   linkBaseUrl: string;
   uploadArtifact: UploadFn;
   log: IngestRemotePageOpts["log"];
-};
+}
 
 function buildStep(
   fetched: FetchedPage,

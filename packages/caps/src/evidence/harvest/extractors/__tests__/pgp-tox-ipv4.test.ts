@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import type { HarvestCtx } from "../types";
 import {
   pgpExtractor,
   publicIpv4Extractor,
   toxExtractor,
 } from "../pgp-tox-ipv4";
+import type { HarvestCtx } from "../types";
 
 function makeCtx(text: string): HarvestCtx {
   return {

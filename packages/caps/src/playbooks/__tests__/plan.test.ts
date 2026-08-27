@@ -347,7 +347,9 @@ describe("authoring gates", () => {
   it("public identity/hash/url books do not require keys; plus siblings do", () => {
     const email = toPlaybookDescriptor(requirePlaybook("email-identity"));
     expect(email.requires.credentials).toEqual([]);
-    const emailPlus = toPlaybookDescriptor(requirePlaybook("email-identity-plus"));
+    const emailPlus = toPlaybookDescriptor(
+      requirePlaybook("email-identity-plus")
+    );
     expect(
       emailPlus.requires.credentials.some((c) =>
         "name" in c ? c.name === "EMAILREP_API_KEY" : false
@@ -361,7 +363,9 @@ describe("authoring gates", () => {
 
     const url = toPlaybookDescriptor(requirePlaybook("url-reputation"));
     expect(url.requires.credentials).toEqual([]);
-    const urlPlus = toPlaybookDescriptor(requirePlaybook("url-reputation-plus"));
+    const urlPlus = toPlaybookDescriptor(
+      requirePlaybook("url-reputation-plus")
+    );
     expect(urlPlus.requires.credentials.length).toBeGreaterThan(0);
   });
 });

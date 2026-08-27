@@ -19,9 +19,12 @@ import {
 import { evidenceExtractAiInput } from "./input";
 
 /** Local OpenAI-compatible default when AI_COMPAT_BASE_URL is unset. */
-const DEFAULT_AI_COMPAT_BASE_URL = ["http", "://", "127.0.0.1:8080", "/v1"].join(
-  ""
-);
+const DEFAULT_AI_COMPAT_BASE_URL = [
+  "http",
+  "://",
+  "127.0.0.1:8080",
+  "/v1",
+].join("");
 
 /**
  * Cap-owned extract instructions (kept local until a second consumer needs a shared store).
@@ -86,10 +89,10 @@ function buildMessages(snapshot: EvidenceSnapshot): {
   return { system, prompt };
 }
 
-type ResolveProviderCtx = {
+interface ResolveProviderCtx {
   getCredential: (name: string) => Promise<string>;
   hasCredential: (name: string) => Promise<boolean>;
-};
+}
 
 async function resolveProvider(
   ctx: ResolveProviderCtx,

@@ -21,13 +21,16 @@ describe("playbook seed helpers", () => {
   });
 
   it("presentSeedKinds lists non-empty seed kinds", () => {
-    expect(
-      [...presentSeedKinds({ email: "a@b.com", host: "example.com" })]
-    ).toEqual(expect.arrayContaining(["email", "host"]));
+    expect([
+      ...presentSeedKinds({ email: "a@b.com", host: "example.com" }),
+    ]).toEqual(expect.arrayContaining(["email", "host"]));
   });
 
   it("round-trips seed values through json helpers", () => {
-    const seed = { host: "example.com", entityId: "00000000-0000-4000-8000-000000000001" };
+    const seed = {
+      host: "example.com",
+      entityId: "00000000-0000-4000-8000-000000000001",
+    };
     const json = seedValuesToJson(seed);
     expect(seedValuesFromJson(json)).toEqual(seed);
   });

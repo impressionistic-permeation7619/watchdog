@@ -10,7 +10,11 @@ import { fediverseExtractor, matrixExtractor } from "./fediverse-matrix";
 import { handlesExtractor } from "./handles";
 import { historicalMessengersExtractor } from "./historical-messengers";
 import { modernMessengersExtractor } from "./modern-messengers";
-import { pgpExtractor, publicIpv4Extractor, toxExtractor } from "./pgp-tox-ipv4";
+import {
+  pgpExtractor,
+  publicIpv4Extractor,
+  toxExtractor,
+} from "./pgp-tox-ipv4";
 import { phonesExtractor } from "./phones";
 import { quotesExtractor } from "./quotes";
 import { searchableSelectorsExtractor } from "./searchable-selectors";

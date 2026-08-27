@@ -94,7 +94,9 @@ describe("harvest", () => {
   });
 
   it("fediverse before email", () => {
-    const draft = harvestDeterministic("Follow @alice@social.example.org on fedi");
+    const draft = harvestDeterministic(
+      "Follow @alice@social.example.org on fedi"
+    );
     expect(
       draft.identifiers.some(
         (i) =>
