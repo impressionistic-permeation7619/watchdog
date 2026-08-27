@@ -66,7 +66,7 @@ Jobs category grouping derives from `id.split(".")[0]` until `CapDescriptor` gro
 - Rendered page markup (OG/JSON-LD, tracker script IDs) = **`web`** (`web.page.enrich`).
 - Historical snapshots / CDX = **`archive`**.
 - `network.url.enrich` stays **network** (Intake Job artifacts for a URL seed).
-- Code-host account lookup = **`identity.github.lookup`**, not `web.*`. No broad code-host *search* Cap ships today; if one lands it belongs in `breach` (leaked-secret sweeps) or `identity` (account discovery) depending on what it returns.
+- Code-host account lookup = **`identity.github.lookup`**, not `web.*`. No broad code-host _search_ Cap ships today; if one lands it belongs in `breach` (leaked-secret sweeps) or `identity` (account discovery) depending on what it returns.
 
 ### Salient axis
 

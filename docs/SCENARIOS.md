@@ -9,7 +9,6 @@ document_updated: 2026-08-15T10:35
 
 Status: `shipped` · `partial` · `missing` · `lying` (doc/UI claim a path that cannot complete).
 
-
 ---
 
 ## Verdict
