@@ -23,8 +23,7 @@
     </p>
 </div>
 
-> [!WARNING]
-> **Pre-1.0 and under active development.** Schemas, Cap ids, and API shapes change without notice, and several surfaces in [`ROADMAP.md`](ROADMAP.md) are half-built. It is built for solo and small-team use and has not been hardened for multi-tenant or production deployment.
+> [!WARNING] **Pre-1.0 and under active development.** Schemas, Cap ids, and API shapes change without notice, and several surfaces in [`ROADMAP.md`](ROADMAP.md) are half-built. It is built for solo and small-team use and has not been hardened for multi-tenant or production deployment.
 
 ## Why
 

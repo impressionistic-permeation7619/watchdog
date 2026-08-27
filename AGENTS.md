@@ -61,9 +61,9 @@ Breach data carries its own caveats: treat a hit as evidence that a record exist
 
 ## External References
 
-| Need | File |
-| --- | --- |
-| Platform docs | [`docs/README.md`](docs/README.md) |
-| Web docs | [`apps/web/docs/README.md`](apps/web/docs/README.md) |
-| Roadmap | [`ROADMAP.md`](ROADMAP.md) |
-| Human README | [`README.md`](README.md) |
+| Need          | File                                                 |
+| ------------- | ---------------------------------------------------- |
+| Platform docs | [`docs/README.md`](docs/README.md)                   |
+| Web docs      | [`apps/web/docs/README.md`](apps/web/docs/README.md) |
+| Roadmap       | [`ROADMAP.md`](ROADMAP.md)                           |
+| Human README  | [`README.md`](README.md)                             |
