@@ -142,6 +142,6 @@ Fictional tokens (`probable`, `active`/`dormant`/`merged`, vault kinds, `--sever
 - Fictional vocab literals
 - `COMPONENTS.md` present
 
-Hook (`.cursor/hooks/ds-ban-stop.mjs`) runs `ds:ban` **and** `@watchdog/web` typecheck.
+Stop hook (`.cursor/hooks/stop-gate.mjs`) lint-checks files changed this turn and runs `ds:ban` when web UI paths are dirty; pre-push owns the full typecheck.
 
 New atoms: `node scripts/new-atom-checklist.mjs <Name> <file>`.

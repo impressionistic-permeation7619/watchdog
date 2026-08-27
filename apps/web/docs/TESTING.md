@@ -18,7 +18,7 @@ pnpm --filter @watchdog/web ds:check    # typecheck + ds:ban greps
 | `ds:check` | `typecheck` + design-system ban greps |
 | `ds:ban` | SectionLabel SoT, freestyle palette in domains, opaque-id `.slice`, WD manifest (`shared/ui` excl. `shadcn/` + `__tests__/`) |
 
-Dirty UI paths also trip `.cursor/hooks/ds-ban-stop.mjs` — fix `ds:ban` before ending the turn.
+Dirty UI paths also trip `.cursor/hooks/stop-gate.mjs` (runs `ds:ban` when web UI paths are dirty) — fix violations before ending the turn.
 
 ## Automated (web)
 

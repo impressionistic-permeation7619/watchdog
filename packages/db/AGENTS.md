@@ -4,20 +4,13 @@
 
 Drizzle ORM + postgres.js for the Watchdog Case Graph and Better Auth tables.
 
-## Entrypoints
-
-| Import | Purpose |
-| --- | --- |
-| `@watchdog/db` | `db`, `client`, schema tables, `<table>Repo`, `notifyEvent` / `listenForEvents`, `DbExec` |
-| `@watchdog/db/schema` | Schema-only (rare) |
-
-## Layers
+## Structure
 
 | Layer | Location | Owns |
 | --- | --- | --- |
 | Model | `src/schema/*` | Table definitions |
 | Repository | `src/repos/*.repo.ts` | SQL only — queries/commands over `DbExec` |
-| Barrel | `src/repos/index.ts` | Named re-exports (`claimsRepo`, `ClaimRow`, …) |
+| Barrel | `src/repos/index.ts` | Named re-exports (`claimsRepo`, `ClaimRow`, …) — entrypoint `@watchdog/db`; `@watchdog/db/schema` for schema-only |
 
 Services (`@watchdog/core`) call repos. Controllers (`@watchdog/api`) call services. Apps never write SQL except documented exceptions (`auth/server.ts`, SSE `listenForEvents`).
 
@@ -25,14 +18,12 @@ The barrel is **re-exports only**. Do not add an aggregate `repos` object: build
 
 ## Repo contract (six rules)
 
-1. **Rows, not DTOs** — no `.toISOString()`, no API-shaped objects. Read-model joins for display _are_ allowed (`EdgeListRow` carries peer names; `JobWithPlaybook` carries `playbookId` + `playbookRunStatus`); name them `…Row` or `…With…` and keep all formatting in core.
+1. **Rows, not DTOs** — no `.toISOString()`, no API-shaped objects. Read-model joins for display _are_ allowed (`EdgeListRow` carries peer names; `JobWithPlaybook` carries `playbookId` + `playbookRunStatus`); name them `…Row` or `…With…`, keep formatting in core, and return multi-aggregate joins **nested** (never flattened — flattening invites `"x" in row` probes).
 2. **Never `notifyEvent`** — fire after commit in the service.
 3. **Never throw domain errors** — return `null` / `[]`; the service decides 404 vs conflict.
 4. **Never open a transaction** — only services call `db.transaction`.
 5. **Plain values only** — no `SQL` / `eq(...)` in public signatures. Options like `{ includeRetracted?: boolean }`; the repo builds `where` internally.
 6. **Soft delete is the repo's job** — only `evidence` has `deletedAt`; exclude deleted by default (`isNull(deletedAt)`), require `includeDeleted`. A method that deliberately includes deleted rows says so in its name (`getUriInCaseIncludingDeleted`).
-
-When a join returns more than one aggregate, return them **nested** (`{ job, playbookId, playbookRunStatus }`), never flattened — flattening forces callers to destructure them apart again and invites `"x" in row` probes.
 
 ### Red flags — STOP
 
@@ -42,16 +33,6 @@ When a join returns more than one aggregate, return them **nested** (`{ job, pla
 - Hand-written row interfaces when `$inferSelect` / column maps suffice
 - Accepting optional trailing `exec` that defaults to global `db` inside repos (always leading `exec: DbExec`)
 - A repo method that only forwards to another repo method with a narrower input type
-
-### Success checklist (new repo)
-
-- [ ] File under `src/repos/<table>.repo.ts`, re-exported from `src/repos/index.ts`
-- [ ] Every method: `exec: DbExec` first
-- [ ] Returns row types (`$inferSelect` / column projection), not API DTOs
-- [ ] Multi-aggregate reads nested, not flattened
-- [ ] Filters built inside with `term ? eq(...) : undefined` + `and(...)`
-- [ ] Soft-delete tables default to active rows
-- [ ] No `notifyEvent`, `.transaction(`, domain throws
 
 ## DbExec convention
 
@@ -73,14 +54,7 @@ Repos take `exec` first. Outside a TX pass `db`; inside pass `tx`. This **invert
 - **Events:** `notifyEvent` on the shared pool; `listenForEvents` opens a dedicated LISTEN connection.
 - **Boot URL:** runtime via `@watchdog/env/server`. **`drizzle.config.ts` does not** — loads repo-root `.env` with dotenv.
 
-## Soft refs (no FK)
-
-| Column | Why |
-| --- | --- |
-| `jobs.proposal_id` | Would cycle with `proposals.job_id` |
-| `claims.superseded_by_claim_id` / `proposals.superseded_by_proposal_id` | Self-ref; app-enforced |
-| `cap_cache.job_id` | Cache may outlive Job (`case_id` is a real FK) |
-| `credentials.user_id` | Auth user id as text; no cross-schema FK |
+**Soft refs (no FK):** `jobs.proposal_id` (would cycle with `proposals.job_id`) · `claims.superseded_by_claim_id` / `proposals.superseded_by_proposal_id` (self-ref, app-enforced) · `cap_cache.job_id` (cache may outlive Job; `case_id` is a real FK) · `credentials.user_id` (auth id as text, no cross-schema FK).
 
 ## Migrations
 
@@ -100,13 +74,9 @@ Repos take `exec` first. Outside a TX pass `db`; inside pass `tx`. This **invert
 
 | Task | Command |
 | --- | --- |
-| Typecheck | `pnpm --filter @watchdog/db typecheck` |
 | Repo soft-rule gate | `pnpm --filter @watchdog/db check:repos` |
-| Generate migrations | `pnpm db:generate` |
-| Apply migrations | `pnpm db:migrate` |
+| Generate / apply migrations | `pnpm db:generate` · `pnpm db:migrate` |
 | Studio | `pnpm db:studio` |
-| Unit tests | `pnpm test:unit` |
-| Integration tests | `pnpm test:integration` |
 | Wipe case data | `just wipe` / `just wipe yes` — truncates public Graph/Jobs/Inbox/Evidence; keeps `auth.*` + `credentials` + migrations. Empties MinIO objects, not the bucket. Not `docker compose down -v`. |
 
 `check:repos` gates `src/repos/*.repo.ts` on the mechanically checkable parts of the contract: leading `exec: DbExec`, plus no `notifyEvent` (2), `throw new` (3), `.transaction(` (4), `.toISOString()` (1), or `: SQL` in a signature (5). Rule 6 and the nested-read-model rule stay review conventions, as does update/delete without `.where()` (oxlint hosts no drizzle plugin).
