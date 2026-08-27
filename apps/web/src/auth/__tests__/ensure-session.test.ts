@@ -6,7 +6,7 @@ const fetchQuery = vi.fn();
 vi.mock("@tanstack/react-start", () => ({
   createIsomorphicFn: () => ({
     server: (_handler: () => unknown) => ({
-      client: (clientHandler: () => Promise<unknown>) => () =>
+      client: (clientHandler: () => Promise<unknown>) => async () =>
         clientHandler(),
     }),
   }),

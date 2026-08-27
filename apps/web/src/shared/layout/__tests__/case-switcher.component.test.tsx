@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import { Suspense } from "react";
 import { describe, expect, it, vi } from "vitest";
+
 import { testId } from "@watchdog/test-kit";
 
 vi.mock("@/auth/server", () => ({
@@ -14,15 +15,21 @@ const useSelectActiveCaseMock = vi.hoisted(() =>
 );
 
 vi.mock("@tanstack/react-router", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@tanstack/react-router")>();
+  const actual =
+    await importOriginal<typeof import("@tanstack/react-router")>();
   return {
     ...actual,
     Link: ({ to, children }: { to: string; children: React.ReactNode }) => (
       <a href={to}>{children}</a>
     ),
     useNavigate: () => vi.fn(),
-    useRouterState: ({ select }: { select: (state: { location: { pathname: string; search: Record<string, unknown> } }) => unknown }) =>
-      select({ location: { pathname: "/tasks", search: {} } }),
+    useRouterState: ({
+      select,
+    }: {
+      select: (state: {
+        location: { pathname: string; search: Record<string, unknown> };
+      }) => unknown;
+    }) => select({ location: { pathname: "/tasks", search: {} } }),
   };
 });
 
@@ -43,8 +50,12 @@ vi.mock("@/shared/lib/query-invalidation", () => ({
 }));
 
 vi.mock("@/shared/ui/shadcn/sidebar", () => ({
-  SidebarGroupLabel: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  SidebarMenu: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  SidebarGroupLabel: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  SidebarMenu: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
   SidebarMenuButton: ({
     children,
     render,
@@ -57,13 +68,19 @@ vi.mock("@/shared/ui/shadcn/sidebar", () => ({
       {children}
     </div>
   ),
-  SidebarMenuItem: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  SidebarMenuItem: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
   useSidebar: () => ({ state: "expanded", isMobile: false }),
 }));
 
 vi.mock("@/shared/ui/shadcn/dropdown-menu", () => ({
-  DropdownMenu: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  DropdownMenuContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DropdownMenu: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  DropdownMenuContent: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
   DropdownMenuItem: ({
     children,
     onClick,
@@ -76,7 +93,9 @@ vi.mock("@/shared/ui/shadcn/dropdown-menu", () => ({
     </button>
   ),
   DropdownMenuSeparator: () => <hr />,
-  DropdownMenuTrigger: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DropdownMenuTrigger: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
 }));
 
 import { CaseSwitcher } from "@/shared/layout/case-switcher";

@@ -1,6 +1,10 @@
 import { describe, it, expect } from "vitest";
 
-import { buildPageTrail, type PageTrailInput, type TrailItem } from "../page-trail.ts";
+import {
+  buildPageTrail,
+  type PageTrailInput,
+  type TrailItem,
+} from "../page-trail.ts";
 
 const CASE = { name: "Boy Moment", slug: "boy-moment" };
 const ENTITY = { name: "Ada" };
@@ -27,9 +31,9 @@ describe("buildPageTrail", () => {
   });
 
   it("cases list", () => {
-    expect(labels(buildPageTrail({ ...BASE_TRAIL_INPUT, pathname: "/cases" }))).toEqual([
-      "Cases",
-    ]);
+    expect(
+      labels(buildPageTrail({ ...BASE_TRAIL_INPUT, pathname: "/cases" }))
+    ).toEqual(["Cases"]);
   });
 
   it("case overview links Cases to the manage list", () => {

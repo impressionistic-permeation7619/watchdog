@@ -9,14 +9,14 @@ import { invalidateAfterCaseSwitch } from "./query-invalidation";
 
 export { isCaseOverviewPath } from "./case-path";
 
-export function optimisticActiveCaseSwitch(
+export async function optimisticActiveCaseSwitch(
   queryClient: QueryClient,
   cases: CaseRecord[],
   caseId: string
 ): Promise<{ prev: CasesContext | undefined; next: CaseRecord | undefined }> {
   const next = cases.find((c) => c.id === caseId);
   if (!next) {
-    return Promise.resolve({ prev: undefined, next: undefined });
+    return { prev: undefined, next: undefined };
   }
   bumpActiveCaseHealEpoch();
   return queryClient
@@ -42,7 +42,7 @@ export function rollbackActiveCaseSwitch(
   }
 }
 
-export function finalizeActiveCaseSwitch(
+export async function finalizeActiveCaseSwitch(
   queryClient: QueryClient,
   next: CaseRecord | undefined
 ): Promise<void> {
@@ -55,7 +55,7 @@ export function finalizeActiveCaseSwitch(
   });
 }
 
-export function navigateAfterActiveCaseSwitch(input: {
+export async function navigateAfterActiveCaseSwitch(input: {
   next: CaseRecord;
   pathname: string;
   entityId?: string;
@@ -67,18 +67,14 @@ export function navigateAfterActiveCaseSwitch(input: {
   }) => Promise<void> | void;
 }): Promise<void> {
   if (isCaseOverviewPath(input.pathname)) {
-    return Promise.resolve(
-      input.navigate({
-        to: "/cases/$caseSlug",
-        params: { caseSlug: input.next.slug },
-        replace: true,
-      })
-    ).then(() => undefined);
+    await input.navigate({
+      to: "/cases/$caseSlug",
+      params: { caseSlug: input.next.slug },
+      replace: true,
+    });
+    return;
   }
   if (input.pathname === "/tasks" && input.entityId) {
-    return Promise.resolve(
-      input.navigate({ to: "/tasks", search: {}, replace: true })
-    ).then(() => undefined);
+    await input.navigate({ to: "/tasks", search: {}, replace: true });
   }
-  return Promise.resolve();
 }

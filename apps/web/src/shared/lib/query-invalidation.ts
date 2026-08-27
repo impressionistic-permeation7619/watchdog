@@ -15,7 +15,10 @@ import { jobsKeys } from "@/domains/jobs/jobs-keys";
 import { credentialsKeys } from "@/domains/settings/queries";
 import { tasksKeys } from "@/domains/tasks/queries";
 
-type EntityChangedOpts = { entityId?: string; slug?: string };
+interface EntityChangedOpts {
+  entityId?: string;
+  slug?: string;
+}
 
 /** Soft settle: mark stale without flashing loading, then refetch active observers. */
 async function softInvalidate(

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import {testHttpOrigin} from "@watchdog/test-kit";
+import { testHttpOrigin } from "@watchdog/test-kit";
 
 const handleMock = vi.hoisted(() =>
   vi.fn().mockResolvedValue({ response: new Response("rpc-ok") })
@@ -10,7 +10,8 @@ const createApiContextMock = vi.hoisted(() =>
 );
 
 vi.mock("@tanstack/react-router", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@tanstack/react-router")>();
+  const actual =
+    await importOriginal<typeof import("@tanstack/react-router")>();
   return {
     ...actual,
     createFileRoute: () => (options: Record<string, unknown>) => ({ options }),
@@ -18,7 +19,7 @@ vi.mock("@tanstack/react-router", async (importOriginal) => {
 });
 
 vi.mock("@orpc/server/fetch", () => ({
-  RPCHandler: vi.fn().mockImplementation(function RPCHandler() {
+  RPCHandler: vi.fn().mockImplementation(() => {
     return { handle: handleMock };
   }),
 }));
@@ -39,9 +40,18 @@ import { Route } from "@/routes/api/rpc.$";
 
 describe("api rpc route", () => {
   it("delegates requests to the oRPC handler with api context", async () => {
-    const request = new Request(testHttpOrigin("localhost", "/api/rpc/cases.list"));
+    const request = new Request(
+      testHttpOrigin("localhost", "/api/rpc/cases.list")
+    );
     const handlers = (
-      Route.options as { server: { handlers: Record<string, (ctx: { request: Request }) => Promise<Response>> } }
+      Route.options as {
+        server: {
+          handlers: Record<
+            string,
+            (ctx: { request: Request }) => Promise<Response>
+          >;
+        };
+      }
     ).server.handlers;
 
     const response = await handlers.ANY({ request });
@@ -61,7 +71,14 @@ describe("api rpc route", () => {
   it("returns 404 when the oRPC handler has no matching route", async () => {
     handleMock.mockResolvedValue({ response: undefined });
     const handlers = (
-      Route.options as { server: { handlers: Record<string, (ctx: { request: Request }) => Promise<Response>> } }
+      Route.options as {
+        server: {
+          handlers: Record<
+            string,
+            (ctx: { request: Request }) => Promise<Response>
+          >;
+        };
+      }
     ).server.handlers;
 
     const response = await handlers.ANY({

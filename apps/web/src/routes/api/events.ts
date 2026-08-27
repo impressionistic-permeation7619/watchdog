@@ -2,8 +2,7 @@
  * GET /api/events
  *
  * Server-Sent Events endpoint. Uses listenForEvents() from @watchdog/db
- * (which holds the postgres dep) to LISTEN on watchdog_events and stream
- * notifications to the browser.
+ * (which holds the postgres dep) to stream notifications to the browser.
  *
  * Query params:
  *   caseId  — filter events to this Case (optional)
@@ -23,8 +22,7 @@ export const Route = createFileRoute("/api/events")({
   server: {
     handlers: {
       OPTIONS: async ({ request }: { request: Request }) =>
-        corsPreflightResponse(request) ??
-        new Response(null, { status: 204 }),
+        corsPreflightResponse(request) ?? new Response(null, { status: 204 }),
       GET: async ({ request }: { request: Request }) => {
         const ctx = await createApiContext(request);
         if (!ctx.actor) {
@@ -37,8 +35,17 @@ export const Route = createFileRoute("/api/events")({
         const stream = new ReadableStream({
           start(controller) {
             const enc = new TextEncoder();
-            let listener: { end: () => Promise<void> } | undefined;
             let closed = false;
+            let listener: ReturnType<typeof listenForEvents> | undefined;
+
+            // Heartbeat to keep connection alive through proxies
+            const heartbeat = setInterval(() => {
+              try {
+                controller.enqueue(enc.encode(": heartbeat\n\n"));
+              } catch {
+                clearInterval(heartbeat);
+              }
+            }, 25_000);
 
             function send(eventType: string, data: string) {
               try {
@@ -64,15 +71,6 @@ export const Route = createFileRoute("/api/events")({
                 // already closed
               }
             }
-
-            // Heartbeat to keep connection alive through proxies
-            const heartbeat = setInterval(() => {
-              try {
-                controller.enqueue(enc.encode(": heartbeat\n\n"));
-              } catch {
-                clearInterval(heartbeat);
-              }
-            }, 25_000);
 
             listener = listenForEvents(
               (rawPayload) => {

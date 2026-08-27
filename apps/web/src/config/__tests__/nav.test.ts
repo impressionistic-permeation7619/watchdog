@@ -15,8 +15,8 @@ describe("nav config", () => {
       "/identifiers",
       "/graph",
     ]);
-    expect(NAV_GROUPS.flatMap((group) => group.items.map((item) => item.to))).toContain(
-      "/tasks"
-    );
+    expect(
+      NAV_GROUPS.flatMap((group) => group.items.map((item) => item.to))
+    ).toContain("/tasks");
   });
 });

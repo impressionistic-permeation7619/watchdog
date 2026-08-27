@@ -38,7 +38,10 @@ import {
 import { Skeleton } from "@/shared/ui/shadcn/skeleton";
 import { trimmedOrUndefined } from "@watchdog/schemas";
 
-function userDisplayName(user: { name?: string | null; email?: string | null }) {
+function userDisplayName(user: {
+  name?: string | null;
+  email?: string | null;
+}) {
   return (
     trimmedOrUndefined(user.name) ??
     trimmedOrUndefined(user.email) ??

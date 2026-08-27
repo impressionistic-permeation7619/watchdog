@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import {testId, testHttpOrigin} from "@watchdog/test-kit";
+
+import { testId, testHttpOrigin } from "@watchdog/test-kit";
 
 const createApiContextMock = vi.hoisted(() =>
   vi.fn().mockResolvedValue({ actor: { id: "actor-1" } })
@@ -8,7 +9,8 @@ const getEntityByCaseSlugMock = vi.hoisted(() => vi.fn());
 const renderEntityMarkdownMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@tanstack/react-router", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@tanstack/react-router")>();
+  const actual =
+    await importOriginal<typeof import("@tanstack/react-router")>();
   return {
     ...actual,
     createFileRoute: () => (options: Record<string, unknown>) => ({ options }),
@@ -32,7 +34,10 @@ const handlers = (
     server: {
       handlers: Record<
         string,
-        (ctx: { request: Request; params: { caseId: string; slug: string } }) => Promise<Response>
+        (ctx: {
+          request: Request;
+          params: { caseId: string; slug: string };
+        }) => Promise<Response>
       >;
     };
   }
@@ -43,7 +48,9 @@ describe("entity export markdown route", () => {
     createApiContextMock.mockResolvedValueOnce({ actor: null });
 
     const response = await handlers.GET({
-      request: new Request(testHttpOrigin("localhost", "/api/v1/cases/x/entities/y/export.md")),
+      request: new Request(
+        testHttpOrigin("localhost", "/api/v1/cases/x/entities/y/export.md")
+      ),
       params: { caseId: CASE_ID, slug: "target" },
     });
 
@@ -56,7 +63,9 @@ describe("entity export markdown route", () => {
     renderEntityMarkdownMock.mockResolvedValueOnce({ markdown: "# Target\n" });
 
     const response = await handlers.GET({
-      request: new Request(testHttpOrigin("localhost", "/api/v1/cases/x/entities/target/export.md")),
+      request: new Request(
+        testHttpOrigin("localhost", "/api/v1/cases/x/entities/target/export.md")
+      ),
       params: { caseId: CASE_ID, slug: "target" },
     });
 
@@ -70,7 +79,12 @@ describe("entity export markdown route", () => {
     getEntityByCaseSlugMock.mockResolvedValueOnce(null);
 
     const response = await handlers.GET({
-      request: new Request(testHttpOrigin("localhost", "/api/v1/cases/x/entities/missing/export.md")),
+      request: new Request(
+        testHttpOrigin(
+          "localhost",
+          "/api/v1/cases/x/entities/missing/export.md"
+        )
+      ),
       params: { caseId: CASE_ID, slug: "missing" },
     });
 

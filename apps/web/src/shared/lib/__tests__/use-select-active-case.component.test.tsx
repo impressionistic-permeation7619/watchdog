@@ -36,14 +36,13 @@ describe("useSelectActiveCase", () => {
       defaultOptions: { mutations: { retry: false } },
     });
 
-    const { result } = renderHook(
-      () => useSelectActiveCase({ cases }),
-      {
-        wrapper: ({ children }) => (
-          <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-        ),
-      }
-    );
+    const { result } = renderHook(() => useSelectActiveCase({ cases }), {
+      wrapper: ({ children }) => (
+        <QueryClientProvider client={queryClient}>
+          {children}
+        </QueryClientProvider>
+      ),
+    });
 
     result.current.mutate("case-1");
 

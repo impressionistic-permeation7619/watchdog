@@ -1,6 +1,11 @@
 import type { PageTrailInput, TrailItem, TrailTo } from "./page-trail.types";
 
-export type { CountOnTrailId, PageTrailInput, TrailItem, TrailTo } from "./page-trail.types";
+export type {
+  CountOnTrailId,
+  PageTrailInput,
+  TrailItem,
+  TrailTo,
+} from "./page-trail.types";
 
 function pathSegments(pathname: string): string[] {
   return pathname.replace(/\/+$/, "").split("/").filter(Boolean);
@@ -33,10 +38,7 @@ function buildDashboardTrail(): TrailItem[] {
   return [current("dashboard", "Dashboard")];
 }
 
-function buildCasesTrail(
-  input: PageTrailInput,
-  segs: string[]
-): TrailItem[] {
+function buildCasesTrail(input: PageTrailInput, segs: string[]): TrailItem[] {
   const next = segs[1];
   if (next === undefined) {
     return [current("cases", "Cases")];

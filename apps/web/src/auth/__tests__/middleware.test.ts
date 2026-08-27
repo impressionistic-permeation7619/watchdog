@@ -9,9 +9,7 @@ vi.mock("@/auth/session.server", () => ({
 const serverHandlerRef = vi.hoisted(() => ({
   current: undefined as
     | ((ctx: {
-        next: (input: {
-          context: { session: unknown };
-        }) => Promise<Response>;
+        next: (input: { context: { session: unknown } }) => Promise<Response>;
       }) => Promise<Response>)
     | undefined,
 }));
@@ -20,9 +18,7 @@ vi.mock("@tanstack/react-start", () => ({
   createMiddleware: () => ({
     server: (
       handler: (ctx: {
-        next: (input: {
-          context: { session: unknown };
-        }) => Promise<Response>;
+        next: (input: { context: { session: unknown } }) => Promise<Response>;
       }) => Promise<Response>
     ) => {
       serverHandlerRef.current = handler;

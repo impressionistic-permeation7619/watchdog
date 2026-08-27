@@ -27,17 +27,19 @@ import { usePageTrail } from "@/shared/layout/use-page-trail";
 
 describe("usePageTrail", () => {
   it("builds trail items from pathname and case context", () => {
-    useQueryMock.mockImplementation((query: { queryKey?: readonly unknown[] }) => {
-      if (query.queryKey?.[0] === "cases") {
-        return {
-          data: {
-            active: { id: "1", slug: "alpha", name: "Alpha" },
-            cases: [{ id: "1", slug: "alpha", name: "Alpha" }],
-          },
-        };
+    useQueryMock.mockImplementation(
+      (query: { queryKey?: readonly unknown[] }) => {
+        if (query.queryKey?.[0] === "cases") {
+          return {
+            data: {
+              active: { id: "1", slug: "alpha", name: "Alpha" },
+              cases: [{ id: "1", slug: "alpha", name: "Alpha" }],
+            },
+          };
+        }
+        return { data: null, isPending: false };
       }
-      return { data: null, isPending: false };
-    });
+    );
 
     const { result } = renderHook(() => usePageTrail());
 

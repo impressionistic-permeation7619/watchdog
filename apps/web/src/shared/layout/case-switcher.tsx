@@ -1,17 +1,11 @@
-import {
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
+import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { Suspense, useEffect } from "react";
 
 import { casesContextQuery } from "@/domains/cases/queries";
 import { bindCasesChangedInvalidation } from "@/shared/lib/query-invalidation";
 import { useSelectActiveCase } from "@/shared/lib/use-select-active-case";
-import {
-  SidebarGroupLabel,
-  useSidebar,
-} from "@/shared/ui/shadcn/sidebar";
+import { SidebarGroupLabel, useSidebar } from "@/shared/ui/shadcn/sidebar";
 
 import {
   CaseSwitcherCollapsed,

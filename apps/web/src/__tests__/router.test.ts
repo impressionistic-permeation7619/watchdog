@@ -1,7 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 
 const createAppQueryClientMock = vi.hoisted(() => vi.fn(() => ({ id: "qc" })));
-const createTanStackRouterMock = vi.hoisted(() => vi.fn(() => ({ id: "router" })));
+const createTanStackRouterMock = vi.hoisted(() =>
+  vi.fn(() => ({ id: "router" }))
+);
 const setupRouterSsrQueryIntegrationMock = vi.hoisted(() => vi.fn());
 
 vi.mock("../routeTree.gen", () => ({

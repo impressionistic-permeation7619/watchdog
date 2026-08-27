@@ -15,8 +15,8 @@ vi.mock("@/auth/server", () => ({
 import { getRequestHeaders } from "@tanstack/react-start/server";
 
 import { auth } from "@/auth/server";
-import { UnauthorizedError } from "@/auth/unauthorized-error";
 import { readSession, requireSession } from "@/auth/session.server";
+import { UnauthorizedError } from "@/auth/unauthorized-error";
 
 describe("session.server", () => {
   it("reads the session from request headers", async () => {

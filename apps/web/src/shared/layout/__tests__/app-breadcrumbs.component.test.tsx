@@ -12,7 +12,8 @@ const usePageTrailMock = vi.hoisted(() =>
 );
 
 vi.mock("@tanstack/react-router", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@tanstack/react-router")>();
+  const actual =
+    await importOriginal<typeof import("@tanstack/react-router")>();
   return {
     ...actual,
     Link: ({ to, children }: { to: string; children: React.ReactNode }) => (

@@ -14,7 +14,7 @@ describe("useGlobalHotkeys", () => {
     const addSpy = vi.spyOn(window, "addEventListener");
     const removeSpy = vi.spyOn(window, "removeEventListener");
 
-    const { unmount } = renderHook(() =>
+    const { unmount } = renderHook(() => {
       useGlobalHotkeys([
         {
           id: "palette",
@@ -22,8 +22,8 @@ describe("useGlobalHotkeys", () => {
           mod: true,
           run: vi.fn(),
         },
-      ])
-    );
+      ]);
+    });
     expect(createHotkeyListener).toHaveBeenCalled();
     expect(addSpy).toHaveBeenCalledWith("keydown", expect.any(Function));
 

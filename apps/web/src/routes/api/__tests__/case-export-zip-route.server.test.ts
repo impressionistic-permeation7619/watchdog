@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import {testId, testHttpOrigin} from "@watchdog/test-kit";
+
+import { testId, testHttpOrigin } from "@watchdog/test-kit";
 
 const createApiContextMock = vi.hoisted(() =>
   vi.fn().mockResolvedValue({ actor: { id: "actor-1" }, log: { set: vi.fn() } })
@@ -9,7 +10,8 @@ const renderCaseExportMock = vi.hoisted(() => vi.fn());
 const zipSyncMock = vi.hoisted(() => vi.fn(() => new Uint8Array([1, 2, 3])));
 
 vi.mock("@tanstack/react-router", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@tanstack/react-router")>();
+  const actual =
+    await importOriginal<typeof import("@tanstack/react-router")>();
   return {
     ...actual,
     createFileRoute: () => (options: Record<string, unknown>) => ({ options }),
@@ -39,7 +41,10 @@ const handlers = (
     server: {
       handlers: Record<
         string,
-        (ctx: { request: Request; params: { caseId: string } }) => Promise<Response>
+        (ctx: {
+          request: Request;
+          params: { caseId: string };
+        }) => Promise<Response>
       >;
     };
   }
@@ -47,10 +52,15 @@ const handlers = (
 
 describe("case export zip route", () => {
   it("returns 401 when unauthenticated", async () => {
-    createApiContextMock.mockResolvedValueOnce({ actor: null, log: { set: vi.fn() } });
+    createApiContextMock.mockResolvedValueOnce({
+      actor: null,
+      log: { set: vi.fn() },
+    });
 
     const response = await handlers.GET({
-      request: new Request(testHttpOrigin("localhost", "/api/v1/cases/x/export.zip")),
+      request: new Request(
+        testHttpOrigin("localhost", "/api/v1/cases/x/export.zip")
+      ),
       params: { caseId: CASE_ID },
     });
 
@@ -69,7 +79,9 @@ describe("case export zip route", () => {
     });
 
     const response = await handlers.GET({
-      request: new Request(testHttpOrigin("localhost", "/api/v1/cases/x/export.zip")),
+      request: new Request(
+        testHttpOrigin("localhost", "/api/v1/cases/x/export.zip")
+      ),
       params: { caseId: CASE_ID },
     });
 
@@ -90,7 +102,9 @@ describe("case export zip route", () => {
     });
 
     const response = await handlers.GET({
-      request: new Request(testHttpOrigin("localhost", "/api/v1/cases/x/export.zip")),
+      request: new Request(
+        testHttpOrigin("localhost", "/api/v1/cases/x/export.zip")
+      ),
       params: { caseId: CASE_ID },
     });
 

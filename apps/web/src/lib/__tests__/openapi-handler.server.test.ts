@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import {testHttpOrigin} from "@watchdog/test-kit";
+import { testHttpOrigin } from "@watchdog/test-kit";
 
 const handleMock = vi.hoisted(() => vi.fn());
 const createApiContextMock = vi.hoisted(() =>
@@ -8,7 +8,7 @@ const createApiContextMock = vi.hoisted(() =>
 );
 
 vi.mock("@orpc/openapi/fetch", () => ({
-  OpenAPIHandler: vi.fn().mockImplementation(function OpenAPIHandler() {
+  OpenAPIHandler: vi.fn().mockImplementation(() => {
     return { handle: handleMock };
   }),
 }));

@@ -12,8 +12,12 @@ vi.mock("@/shared/layout/app-sidebar", () => ({
 }));
 
 vi.mock("@/shared/ui/shadcn/sidebar", () => ({
-  SidebarProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  SidebarInset: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  SidebarProvider: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  SidebarInset: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
 }));
 
 import { AppShell } from "@/shared/layout/app-shell";
@@ -28,10 +32,9 @@ describe("AppShell", () => {
 
     expect(screen.getByTestId("search-chrome")).toBeInTheDocument();
     expect(screen.getByTestId("app-sidebar")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Skip to main content" })).toHaveAttribute(
-      "href",
-      "#app-main"
-    );
+    expect(
+      screen.getByRole("link", { name: "Skip to main content" })
+    ).toHaveAttribute("href", "#app-main");
     expect(screen.getByText("Main content")).toBeInTheDocument();
   });
 });

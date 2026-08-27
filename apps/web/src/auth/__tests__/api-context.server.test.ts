@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import {testHttpOrigin} from "@watchdog/test-kit";
+import { testHttpOrigin } from "@watchdog/test-kit";
 
 vi.mock("@/auth/server", () => ({
   auth: {
@@ -16,8 +16,8 @@ vi.mock("@watchdog/log", () => ({
   peekRequestLogger: vi.fn(() => null),
 }));
 
-import { auth } from "@/auth/server";
 import { actorFromSession, createApiContext } from "@/auth/api-context.server";
+import { auth } from "@/auth/server";
 
 describe("api-context.server", () => {
   it("maps a session user to an ApiActor", () => {

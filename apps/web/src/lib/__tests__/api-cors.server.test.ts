@@ -1,11 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import {testHttpUrl} from "@watchdog/test-kit";
+import { testHttpUrl } from "@watchdog/test-kit";
 
-import {
-  applyWatchdogCors,
-  corsPreflightResponse,
-} from "../api-cors.server";
+import { applyWatchdogCors, corsPreflightResponse } from "../api-cors.server";
 
 describe("api-cors.server", () => {
   it("applyWatchdogCors reflects Origin on responses", () => {
@@ -34,6 +31,8 @@ describe("api-cors.server", () => {
     const res = corsPreflightResponse(request);
 
     expect(res?.status).toBe(204);
-    expect(res?.headers.get("Access-Control-Allow-Headers")).toBe("content-type");
+    expect(res?.headers.get("Access-Control-Allow-Headers")).toBe(
+      "content-type"
+    );
   });
 });

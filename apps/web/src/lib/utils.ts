@@ -1,6 +1,8 @@
 import { clsx, type ClassValue } from "clsx";
 import { extendTailwindMerge } from "tailwind-merge";
 
+import { slugifyName as schemaSlugifyName } from "@watchdog/schemas";
+
 /**
  * Type-role utilities (`text-label-mono-sm`, `text-chip`, …) must live in the
  * font-size group — otherwise twMerge treats them as text-color and strips them
@@ -31,8 +33,6 @@ const twMerge = extendTailwindMerge({
     },
   },
 });
-
-import { slugifyName as schemaSlugifyName } from "@watchdog/schemas";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

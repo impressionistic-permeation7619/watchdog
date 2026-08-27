@@ -29,7 +29,9 @@ describe("createAppQueryClient", () => {
     expect(toastErrorMock).toHaveBeenCalledWith("boom");
 
     toastErrorMock.mockClear();
-    cache.config.onError?.(new Error("quiet"), { meta: { silentError: true } } as never);
+    cache.config.onError?.(new Error("quiet"), {
+      meta: { silentError: true },
+    } as never);
     expect(toastErrorMock).not.toHaveBeenCalled();
   });
 });

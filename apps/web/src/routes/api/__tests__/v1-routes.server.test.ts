@@ -1,13 +1,16 @@
 import { describe, expect, it, vi } from "vitest";
 
-import {testHttpOrigin} from "@watchdog/test-kit";
+import { testHttpOrigin } from "@watchdog/test-kit";
 
 const handleOpenApiRequestMock = vi.hoisted(() =>
-  vi.fn().mockImplementation(() => Promise.resolve(new Response("openapi-ok")))
+  vi
+    .fn()
+    .mockImplementation(async () => Promise.resolve(new Response("openapi-ok")))
 );
 
 vi.mock("@tanstack/react-router", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@tanstack/react-router")>();
+  const actual =
+    await importOriginal<typeof import("@tanstack/react-router")>();
   return {
     ...actual,
     createFileRoute: () => (options: Record<string, unknown>) => ({ options }),
@@ -27,7 +30,12 @@ describe("api v1 routes", () => {
     const request = new Request(testHttpOrigin("localhost", "/api/v1"));
     const handlers = (
       V1RootRoute.options as {
-        server: { handlers: Record<string, (ctx: { request: Request }) => Promise<Response>> };
+        server: {
+          handlers: Record<
+            string,
+            (ctx: { request: Request }) => Promise<Response>
+          >;
+        };
       }
     ).server.handlers;
 
@@ -42,7 +50,12 @@ describe("api v1 routes", () => {
     const request = new Request(testHttpOrigin("localhost", "/api/v1/health"));
     const handlers = (
       V1WildcardRoute.options as {
-        server: { handlers: Record<string, (ctx: { request: Request }) => Promise<Response>> };
+        server: {
+          handlers: Record<
+            string,
+            (ctx: { request: Request }) => Promise<Response>
+          >;
+        };
       }
     ).server.handlers;
 

@@ -79,7 +79,7 @@ export const auth = betterAuth({
       rateLimit: {
         enabled: true,
         timeWindow: 60 * 60 * 1000,
-        maxRequests: 2_000,
+        maxRequests: 2000,
       },
     }),
     // Must be last — otherwise later plugins' Set-Cookie can be dropped.

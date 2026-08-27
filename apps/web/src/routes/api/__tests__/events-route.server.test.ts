@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import {testHttpOrigin} from "@watchdog/test-kit";
+import { testHttpOrigin } from "@watchdog/test-kit";
 
 const createApiContextMock = vi.hoisted(() =>
   vi.fn().mockResolvedValue({ actor: null })
@@ -12,7 +12,8 @@ const applyWatchdogCorsMock = vi.hoisted(() =>
 const listenForEventsMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@tanstack/react-router", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@tanstack/react-router")>();
+  const actual =
+    await importOriginal<typeof import("@tanstack/react-router")>();
   return {
     ...actual,
     createFileRoute: () => (options: Record<string, unknown>) => ({ options }),
@@ -40,11 +41,20 @@ describe("api events route", () => {
     const preflight = new Response(null, { status: 204 });
     corsPreflightResponseMock.mockReturnValue(preflight);
     const handlers = (
-      Route.options as { server: { handlers: Record<string, (ctx: { request: Request }) => Promise<Response>> } }
+      Route.options as {
+        server: {
+          handlers: Record<
+            string,
+            (ctx: { request: Request }) => Promise<Response>
+          >;
+        };
+      }
     ).server.handlers;
 
     const response = await handlers.OPTIONS({
-      request: new Request(testHttpOrigin("localhost", "/api/events"), { method: "OPTIONS" }),
+      request: new Request(testHttpOrigin("localhost", "/api/events"), {
+        method: "OPTIONS",
+      }),
     });
 
     expect(response).toBe(preflight);
@@ -53,7 +63,14 @@ describe("api events route", () => {
   it("returns 401 when the request is unauthenticated", async () => {
     createApiContextMock.mockResolvedValue({ actor: null });
     const handlers = (
-      Route.options as { server: { handlers: Record<string, (ctx: { request: Request }) => Promise<Response>> } }
+      Route.options as {
+        server: {
+          handlers: Record<
+            string,
+            (ctx: { request: Request }) => Promise<Response>
+          >;
+        };
+      }
     ).server.handlers;
 
     const response = await handlers.GET({

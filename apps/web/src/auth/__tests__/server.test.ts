@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import {testHttpOrigin} from "@watchdog/test-kit";
+import { testHttpOrigin } from "@watchdog/test-kit";
 
 vi.mock("@better-auth/api-key", () => ({ apiKey: vi.fn(() => ({})) }));
 vi.mock("@better-auth/drizzle-adapter", () => ({
