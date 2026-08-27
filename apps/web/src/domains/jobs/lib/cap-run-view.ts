@@ -1,8 +1,6 @@
 import type { CapListItem } from "../types";
 import {
   capPrimaryField,
-  formatCapCredentials,
-  formatCapIo,
   type CapPrimaryField,
 } from "./cap-run-input";
 import {
@@ -24,6 +22,8 @@ export interface CapInfoRow {
   value: string;
   mono?: boolean;
 }
+
+export { capInfoRows } from "./cap-info-rows";
 
 export interface CapRunView {
   selected: CapListItem | undefined;
@@ -58,42 +58,6 @@ function blockedReason({
     return missingCredentialReason(missingCredentials, "Cap");
   }
   return hasInput ? undefined : "Enter Cap input before Run";
-}
-
-function pushInfoRow(
-  rows: CapInfoRow[],
-  label: string,
-  value: string,
-  mono = false
-): void {
-  if (value === "") return;
-  rows.push({ label, value, mono });
-}
-
-/** Cap detail rows for hover card / picker preview panel. */
-export function capInfoRows(cap: CapListItem): CapInfoRow[] {
-  const rows: CapInfoRow[] = [];
-  const flags = new Set(cap.flags);
-
-  pushInfoRow(rows, "Kind", cap.kind ?? "");
-  pushInfoRow(rows, "Source", cap.dataSource ?? "");
-  const useCases = cap.useCases ?? [];
-  if (useCases.length > 0) {
-    rows.push({ label: "Intent", value: useCases.join(", ") });
-  }
-  if (flags.size > 0) {
-    rows.push({
-      label: "Flags",
-      value: [...flags].map((f) => f.replaceAll("_", " ")).join(", "),
-    });
-  }
-  if ((cap.egress ?? "none") === "third_party") {
-    rows.push({ label: "Egress", value: "third_party" });
-  }
-  pushInfoRow(rows, "Consumes", formatCapIo(cap.consumes) ?? "");
-  pushInfoRow(rows, "Produces", formatCapIo(cap.produces) ?? "");
-  pushInfoRow(rows, "Secrets", formatCapCredentials(cap.credentials) ?? "", true);
-  return rows;
 }
 
 /** Selected Cap metadata + run gate for the Jobs Cap run form. */

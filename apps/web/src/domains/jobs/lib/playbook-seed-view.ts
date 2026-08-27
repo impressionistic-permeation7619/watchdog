@@ -1,10 +1,12 @@
-import type { PlaybookSeedKind } from "@watchdog/schemas";
-
 import type { PlaybookListItem } from "../types";
 import {
   missingCredentialNames,
   missingCredentialReason,
 } from "./credential-gate";
+import {
+  playbookSeedOk,
+  playbookSeedRequirements,
+} from "./playbook-seed-requirements";
 
 export interface PlaybookSeedInput {
   playbooks: readonly PlaybookListItem[];
@@ -23,7 +25,7 @@ export interface PlaybookSeedInput {
 
 export interface PlaybookSeedView {
   selected: PlaybookListItem | undefined;
-  needs: readonly PlaybookSeedKind[];
+  needs: ReturnType<typeof playbookSeedRequirements>["needs"];
   needsHost: boolean;
   needsUrl: boolean;
   needsEvidence: boolean;
@@ -31,7 +33,6 @@ export interface PlaybookSeedView {
   needsEmail: boolean;
   needsHash: boolean;
   needsHandle: boolean;
-  /** Playbook seeds both url + evidence — one Intake URL dump fills both. */
   pickUrlDump: boolean;
   needsEgress: boolean;
   missingCredentials: string[] | undefined;
@@ -72,48 +73,6 @@ function blockedReason({
     : "Fill required seed fields before Run Playbook";
 }
 
-function seedFieldOk(
-  required: boolean,
-  value: string
-): boolean {
-  return !required || Boolean(value.trim());
-}
-
-function playbookSeedOk(input: {
-  needsHost: boolean;
-  needsIp: boolean;
-  needsEmail: boolean;
-  needsHash: boolean;
-  needsHandle: boolean;
-  pickUrlDump: boolean;
-  needsUrl: boolean;
-  needsEvidence: boolean;
-  host: string;
-  ip: string;
-  email: string;
-  hash: string;
-  handle: string;
-  url: string;
-  evidenceId: string;
-}): boolean {
-  const baseOk =
-    seedFieldOk(input.needsHost, input.host) &&
-    seedFieldOk(input.needsIp, input.ip) &&
-    seedFieldOk(input.needsEmail, input.email) &&
-    seedFieldOk(input.needsHash, input.hash) &&
-    seedFieldOk(input.needsHandle, input.handle);
-
-  if (input.pickUrlDump) {
-    return baseOk && Boolean(input.evidenceId.trim() && input.url.trim());
-  }
-
-  return (
-    baseOk &&
-    seedFieldOk(input.needsUrl, input.url) &&
-    seedFieldOk(input.needsEvidence, input.evidenceId)
-  );
-}
-
 /** Seed requirements + run gate for the Jobs playbook run form. */
 export function buildPlaybookSeedView(
   input: PlaybookSeedInput
@@ -141,26 +100,9 @@ export function buildPlaybookSeedView(
     selected?.requires.credentials,
     configuredCredentials
   );
-  const needs = selected?.seedKinds ?? [];
-  const needsKind = (kind: PlaybookSeedKind) => needs.includes(kind);
-  const needsHost = needsKind("host");
-  const needsUrl = needsKind("url");
-  const needsEvidence = needsKind("evidence");
-  const needsIp = needsKind("ip");
-  const needsEmail = needsKind("email");
-  const needsHash = needsKind("hash");
-  const needsHandle = needsKind("handle");
-  const pickUrlDump = needsUrl && needsEvidence;
-
+  const requirements = playbookSeedRequirements(selected);
   const seedOk = playbookSeedOk({
-    needsHost,
-    needsIp,
-    needsEmail,
-    needsHash,
-    needsHandle,
-    pickUrlDump,
-    needsUrl,
-    needsEvidence,
+    requirements,
     host,
     ip,
     email,
@@ -172,15 +114,7 @@ export function buildPlaybookSeedView(
 
   return {
     selected,
-    needs,
-    needsHost,
-    needsUrl,
-    needsEvidence,
-    needsIp,
-    needsEmail,
-    needsHash,
-    needsHandle,
-    pickUrlDump,
+    ...requirements,
     needsEgress,
     missingCredentials,
     showEgressRow: thirdPartyEgress,
@@ -192,12 +126,12 @@ export function buildPlaybookSeedView(
       seedOk &&
       !needsEgress &&
       missingCredentials === undefined &&
-      !(pickUrlDump && urlDumpCount === 0),
+      !(requirements.pickUrlDump && urlDumpCount === 0),
     blockedReason: blockedReason({
       selected: Boolean(selected),
       needsEgress,
       missingCredentials,
-      pickUrlDump,
+      pickUrlDump: requirements.pickUrlDump,
       hasUrlDumps: urlDumpCount > 0,
       seedOk,
     }),

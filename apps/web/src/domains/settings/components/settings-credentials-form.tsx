@@ -7,6 +7,14 @@ import { KeyRoundIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import {
+  closeConfigureDialog,
+  closeDeleteDialog,
+  handleCredentialSaved,
+  handleDeleteConfirm,
+  openConfigureCredential,
+  openDeleteCredential,
+} from "@/domains/settings/components/settings-credentials-handlers";
 import { SettingsCredentialsDialogs } from "@/domains/settings/components/settings-credentials-dialogs";
 import { credentialsListQuery } from "@/domains/settings/queries";
 import { deleteCredentialFn } from "@/domains/settings/settings.functions";
@@ -20,6 +28,14 @@ import { Card, CardContent } from "@/shared/ui/shadcn/card";
 import { Separator } from "@/shared/ui/shadcn/separator";
 import { StatusDot } from "@/shared/ui/status-dot";
 import type { CredentialSlot } from "@watchdog/core";
+
+function configureSlot(slotName: string, onConfigure: (name: string) => void) {
+  onConfigure(slotName);
+}
+
+function deleteSlot(slotName: string, onDelete: (name: string) => void) {
+  onDelete(slotName);
+}
 
 function CredentialSlotRow({
   slot,
@@ -54,7 +70,7 @@ function CredentialSlotRow({
           type="button"
           size="sm"
           variant="outline"
-          onClick={() => onConfigure(slot.name)}
+          onClick={() => configureSlot(slot.name, onConfigure)}
         >
           {slot.configured ? "Update" : "Connect"}
         </Button>
@@ -63,7 +79,7 @@ function CredentialSlotRow({
             type="button"
             size="sm"
             variant="ghost"
-            onClick={() => onDelete(slot.name)}
+            onClick={() => deleteSlot(slot.name, onDelete)}
           >
             Remove
           </Button>
@@ -109,25 +125,6 @@ function CredentialSlotGroup({
   );
 }
 
-function closeConfigureDialog(
-  open: boolean,
-  setConfigureName: (name: string | null) => void
-): void {
-  if (!open) setConfigureName(null);
-}
-
-function closeDeleteDialog(
-  open: boolean,
-  pending: boolean,
-  setDeleteTarget: (name: string | null) => void,
-  setDeleteError: (message: string | null) => void
-): void {
-  if (!open && !pending) {
-    setDeleteTarget(null);
-    setDeleteError(null);
-  }
-}
-
 export function SettingsCredentialsForm() {
   const queryClient = useQueryClient();
   const { data: slots } = useSuspenseQuery(credentialsListQuery());
@@ -149,30 +146,10 @@ export function SettingsCredentialsForm() {
     },
   });
 
-  const configureSlot = slots.find((s) => s.name === configureName) ?? null;
-  const deleteSlot = slots.find((s) => s.name === deleteTarget) ?? null;
+  const configureSlotRow = slots.find((s) => s.name === configureName) ?? null;
+  const deleteSlotRow = slots.find((s) => s.name === deleteTarget) ?? null;
   const connected = slots.filter((s) => s.configured);
   const disconnected = slots.filter((s) => !s.configured);
-
-  function openConfigure(name: string) {
-    setError(null);
-    setConfigureName(name);
-  }
-
-  function openDelete(name: string) {
-    setDeleteError(null);
-    setDeleteTarget(name);
-  }
-
-  function handleCredentialSaved() {
-    setError(null);
-    toast.success("Credential saved");
-    void invalidateAfterCredentialMutation(queryClient);
-  }
-
-  function handleDeleteConfirm() {
-    if (deleteTarget) deleteMutation.mutate(deleteTarget);
-  }
 
   return (
     <div className="flex max-w-2xl flex-col gap-6">
@@ -194,29 +171,37 @@ export function SettingsCredentialsForm() {
           <CredentialSlotGroup
             title="Connected"
             slots={connected}
-            onConfigure={openConfigure}
-            onDelete={openDelete}
+            onConfigure={(name) =>
+              openConfigureCredential(name, setError, setConfigureName)
+            }
+            onDelete={(name) =>
+              openDeleteCredential(name, setDeleteError, setDeleteTarget)
+            }
           />
           <CredentialSlotGroup
             title="Not connected"
             slots={disconnected}
-            onConfigure={openConfigure}
-            onDelete={openDelete}
+            onConfigure={(name) =>
+              openConfigureCredential(name, setError, setConfigureName)
+            }
+            onDelete={(name) =>
+              openDeleteCredential(name, setDeleteError, setDeleteTarget)
+            }
           />
         </>
       )}
 
       <SettingsCredentialsDialogs
-        configureSlot={configureSlot}
+        configureSlot={configureSlotRow}
         configureOpen={configureName !== null}
         onConfigureOpenChange={(open) =>
           closeConfigureDialog(open, setConfigureName)
         }
-        onCredentialSaved={handleCredentialSaved}
+        onCredentialSaved={() => handleCredentialSaved(queryClient, setError)}
         onCredentialError={setError}
         deleteOpen={deleteTarget !== null}
         deletePending={deleteMutation.isPending}
-        deleteSlot={deleteSlot}
+        deleteSlot={deleteSlotRow}
         deleteError={deleteError}
         onDeleteOpenChange={(open) =>
           closeDeleteDialog(
@@ -226,7 +211,9 @@ export function SettingsCredentialsForm() {
             setDeleteError
           )
         }
-        onDeleteConfirm={handleDeleteConfirm}
+        onDeleteConfirm={() =>
+          handleDeleteConfirm(deleteTarget, deleteMutation.mutate)
+        }
       />
     </div>
   );
