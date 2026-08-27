@@ -19,7 +19,7 @@ async function findGraphWriteByIdempotency(input: {
   actorId: string;
   idempotencyKey: string;
 }): Promise<string | null> {
-  return graphWritesRepo.findIdByIdempotency(db, input);
+  return await graphWritesRepo.findIdByIdempotency(db, input);
 }
 
 export async function createAgentProposal(input: {

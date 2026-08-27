@@ -21,21 +21,19 @@ export type { JobListRecord, JobRecord } from "@watchdog/core";
 
 export const listCapabilitiesFn = createServerFn({ method: "GET" }).handler(
   async ({ context }): Promise<CapListItem[]> =>
-    orpcFromContext(context).capabilities.list()
+    await orpcFromContext(context).capabilities.list()
 );
 
 export const listPlaybooksFn = createServerFn({ method: "GET" }).handler(
   async ({ context }): Promise<PlaybookListItem[]> =>
-    orpcFromContext(context).capabilities.listPlaybooks() as Promise<
-      PlaybookListItem[]
-    >
+    (await orpcFromContext(context).capabilities.listPlaybooks()) as PlaybookListItem[]
 );
 
 export const listJobsFn = createServerFn({ method: "GET" })
   .validator(listJobsInputSchema)
   .handler(
     async ({ data, context }): Promise<JobListRecord[]> =>
-      orpcFromContext(context).jobs.listForCase({
+      await orpcFromContext(context).jobs.listForCase({
         caseId: data.caseId,
       })
   );
@@ -44,7 +42,7 @@ export const getJobFn = createServerFn({ method: "GET" })
   .validator(getJobInputSchema)
   .handler(
     async ({ data, context }): Promise<JobRecord> =>
-      orpcFromContext(context).jobs.get({
+      await orpcFromContext(context).jobs.get({
         caseId: data.caseId,
         jobId: data.jobId,
       })
@@ -54,26 +52,26 @@ export const startJobFn = createServerFn({ method: "POST" })
   .validator(startJobInputSchema)
   .handler(
     async ({ data, context }): Promise<JobRecord> =>
-      orpcFromContext(context).jobs.start(data)
+      await orpcFromContext(context).jobs.start(data)
   );
 
 export const cancelJobFn = createServerFn({ method: "POST" })
   .validator(cancelJobInputSchema)
   .handler(
     async ({ data, context }): Promise<JobRecord> =>
-      orpcFromContext(context).jobs.cancel(data)
+      await orpcFromContext(context).jobs.cancel(data)
   );
 
 export const startPlaybookFn = createServerFn({ method: "POST" })
   .validator(startPlaybookInputSchema)
   .handler(async ({ data, context }) =>
-    orpcFromContext(context).jobs.startPlaybook(data)
+    await orpcFromContext(context).jobs.startPlaybook(data)
   );
 
 export const cancelPlaybookFn = createServerFn({ method: "POST" })
   .validator(cancelPlaybookInputSchema)
   .handler(async ({ data, context }) =>
-    orpcFromContext(context).jobs.cancelPlaybook(data)
+    await orpcFromContext(context).jobs.cancelPlaybook(data)
   );
 
 function isTextMime(mime: string): boolean {

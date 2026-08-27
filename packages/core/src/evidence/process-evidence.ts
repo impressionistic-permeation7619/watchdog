@@ -43,7 +43,7 @@ async function startCapForEvidence(input: {
   );
   for (const job of active) {
     if (input.matchActive(job, seed)) {
-      return toJobRecord(job);
+      return await Promise.resolve(toJobRecord(job));
     }
   }
 
