@@ -16,7 +16,7 @@ export async function optimisticActiveCaseSwitch(
 ): Promise<{ prev: CasesContext | undefined; next: CaseRecord | undefined }> {
   const next = cases.find((c) => c.id === caseId);
   if (!next) {
-    return { prev: undefined, next: undefined };
+    return await Promise.resolve({ prev: undefined, next: undefined });
   }
   bumpActiveCaseHealEpoch();
   await queryClient.cancelQueries({ queryKey: casesKeys.context() });
@@ -72,5 +72,7 @@ export async function navigateAfterActiveCaseSwitch(input: {
   }
   if (input.pathname === "/tasks" && input.entityId) {
     await input.navigate({ to: "/tasks", search: {}, replace: true });
+    return;
   }
+  await Promise.resolve();
 }

@@ -94,17 +94,16 @@ export async function uploadArtifact(input: {
   const cfg = s3Config();
   const sha256 = sha256Hex(input.bytes);
   const uri = artifactUri(input.caseId, sha256, input.name);
-
-  await getClient().send(
-    new PutObjectCommand({
-      Bucket: cfg.bucket,
-      Key: uri,
-      Body: input.bytes,
-      ContentType: input.mime,
-      ContentLength: input.bytes.byteLength,
-      Metadata: { sha256 },
-    })
-  );
+  const client = getClient();
+  const command = new PutObjectCommand({
+    Bucket: cfg.bucket,
+    Key: uri,
+    Body: input.bytes,
+    ContentType: input.mime,
+    ContentLength: input.bytes.byteLength,
+    Metadata: { sha256 },
+  });
+  await client.send(command);
 
   return {
     uri,
@@ -145,7 +144,8 @@ export async function createPresignedPut(input: {
     Metadata: { sha256 },
   });
 
-  const url = await getSignedUrl(getClient(), command, {
+  const client = getClient();
+  const url = await getSignedUrl(client, command, {
     expiresIn: PRESIGN_EXPIRES_IN,
     signableHeaders: new Set(["content-type"]),
   });
@@ -169,7 +169,8 @@ export async function assertUploadedObject(input: {
 }): Promise<void> {
   const sha256 = assertSha256Hex(input.sha256);
   const cfg = s3Config();
-  const head = await getClient().send(
+  const client = getClient();
+  const head = await client.send(
     new HeadObjectCommand({ Bucket: cfg.bucket, Key: input.uri })
   );
 

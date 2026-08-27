@@ -21,11 +21,11 @@ async function logPlaybookAdvanceFailure(
   const msg =
     advanceError instanceof Error ? advanceError.message : String(advanceError);
   jobLog.log(`playbook advance failed: ${msg}`);
-  await jobsRepo
-    .update(db, jobId, { logs: jobLog.lines })
-    .catch((persistError: unknown) => {
-      logSwallowed("playbook.advance_log", persistError, { jobId });
-    });
+  try {
+    await jobsRepo.update(db, jobId, { logs: jobLog.lines });
+  } catch (persistError: unknown) {
+    logSwallowed("playbook.advance_log", persistError, { jobId });
+  }
   logSwallowed("playbook.advance", advanceError, {
     jobId,
     caseId,
@@ -55,7 +55,10 @@ export async function runSucceededPath(opts: {
   });
 
   const playbookRunId = state.job.playbookRunId;
-  if (playbookRunId === null) return;
+  if (playbookRunId === null) {
+    await Promise.resolve();
+    return;
+  }
 
   try {
     await advancePlaybookRun({
@@ -69,16 +72,16 @@ export async function runSucceededPath(opts: {
       playbookRunId,
       jobLog,
     });
-    await playbookRunsRepo
-      .setStatus(db, playbookRunId, "cancelled", new Date(), {
+    try {
+      await playbookRunsRepo.setStatus(db, playbookRunId, "cancelled", new Date(), {
         onlyStatuses: ["running"],
-      })
-      .catch((cancelError: unknown) => {
-        logSwallowed("playbook.advance_cancel", cancelError, {
-          jobId,
-          playbookRunId,
-        });
       });
+    } catch (cancelError: unknown) {
+      logSwallowed("playbook.advance_cancel", cancelError, {
+        jobId,
+        playbookRunId,
+      });
+    }
   }
 }
 
@@ -94,13 +97,13 @@ export async function runFailedPath(opts: {
   jobLog.log(`run failed: ${msg}`);
   await failJob(jobId, msg, jobLog.lines);
   if (playbookRunId !== null) {
-    await advancePlaybookRun({ playbookRunId, caseId }).catch(
-      (advanceError: unknown) => {
-        logSwallowed("playbook.abandon", advanceError, {
-          jobId,
-          playbookRunId,
-        });
-      }
-    );
+    try {
+      await advancePlaybookRun({ playbookRunId, caseId });
+    } catch (advanceError: unknown) {
+      logSwallowed("playbook.abandon", advanceError, {
+        jobId,
+        playbookRunId,
+      });
+    }
   }
 }

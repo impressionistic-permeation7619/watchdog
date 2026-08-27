@@ -89,11 +89,13 @@ export function processEvidence(input: {
   });
 }
 
-export async function markEvidenceProcessed(input: {
+export function markEvidenceProcessed(input: {
   caseId: string;
   evidenceId: string;
 }): Promise<void> {
-  await evidenceRepo.markProcessed(db, input.caseId, input.evidenceId);
+  return evidenceRepo
+    .markProcessed(db, input.caseId, input.evidenceId)
+    .then(() => undefined);
 }
 
 export function enrichUrlEvidence(input: {

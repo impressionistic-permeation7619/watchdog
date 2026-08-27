@@ -206,7 +206,7 @@ export async function attachEvidenceEntity(input: {
     entityId
   );
   if (!row) throw new DomainError("not_found", "Evidence not found");
-  return toRecord(row);
+  return await Promise.resolve(toRecord(row));
 }
 
 export async function presignUpload(
@@ -265,9 +265,11 @@ export async function getEvidenceDownloadUrl(
     caseId,
     evidenceId
   );
-  if (row === null || row.uri === null || row.uri === "") return { url: null };
+  if (row === null || row.uri === null || row.uri === "") {
+    return await Promise.resolve({ url: null });
+  }
   const url = await createPresignedGet(row.uri);
-  return { url };
+  return await Promise.resolve({ url });
 }
 
 /**

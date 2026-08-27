@@ -25,7 +25,10 @@ async function markExistingInGraph(
   known: Set<string>
 ): Promise<void> {
   const unchecked = fps.filter((x) => !known.has(x.fp));
-  if (unchecked.length === 0) return;
+  if (unchecked.length === 0) {
+    await Promise.resolve();
+    return;
+  }
 
   const identifierOps: { op: PatchOp; fp: string }[] = [];
   const claimOps: { op: PatchOp; fp: string }[] = [];
@@ -218,7 +221,9 @@ export async function suppressKnownFindings(
   caseId: string,
   patch: PatchOp[]
 ): Promise<{ kept: PatchOp[]; suppressed: number }> {
-  if (patch.length === 0) return { kept: [], suppressed: 0 };
+  if (patch.length === 0) {
+    return Promise.resolve({ kept: [], suppressed: 0 });
+  }
 
   const fps = patch.map((op) => ({
     op,
@@ -281,7 +286,10 @@ export async function recordRejectedFingerprints(input: {
       reason: "rejected",
       proposalId: input.proposalId,
     }));
-  if (rows.length === 0) return;
+  if (rows.length === 0) {
+    await Promise.resolve();
+    return;
+  }
   const exec = input.tx ?? db;
   await findingSuppressionsRepo.insertMany(exec, rows);
 }

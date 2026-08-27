@@ -21,7 +21,7 @@ export function hashCapInput(input: unknown): string {
   return createHash("sha256").update(body).digest("hex");
 }
 
-export async function lookupCapCache(input: {
+export function lookupCapCache(input: {
   caseId: string;
   capabilityId: string;
   inputHash: string;
@@ -31,7 +31,7 @@ export async function lookupCapCache(input: {
   jobId: string | null;
   evidenceIds: string[];
 } | null> {
-  return await capCacheRepo.lookupActive(
+  return capCacheRepo.lookupActive(
     db,
     input.caseId,
     input.capabilityId,

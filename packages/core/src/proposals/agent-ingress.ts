@@ -14,12 +14,12 @@ import { parseAgentPatch } from "../graph/patch/parse-agent-patch";
 
 const GRAPH_WRITE_IDEMPOTENCY_INDEX = "graph_writes_case_actor_idem_uidx";
 
-async function findGraphWriteByIdempotency(input: {
+function findGraphWriteByIdempotency(input: {
   caseId: string;
   actorId: string;
   idempotencyKey: string;
 }): Promise<string | null> {
-  return await graphWritesRepo.findIdByIdempotency(db, input);
+  return graphWritesRepo.findIdByIdempotency(db, input);
 }
 
 export async function createAgentProposal(input: {

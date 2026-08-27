@@ -40,8 +40,8 @@ export function formatCapAvailabilityError(
         : `Missing credential — set one of ${err.names.join(" | ")} in Settings before running ${capabilityId}`;
     }
     default: {
-      const _exhaustive: never = err;
-      return _exhaustive;
+      err satisfies never;
+      return "Capability unavailable";
     }
   }
 }
@@ -91,7 +91,10 @@ export async function assertCapAvailability(input: {
   cap: CapabilityDef<z.ZodType>;
 }): Promise<void> {
   const { result } = await evaluateCapAvailability(input);
-  if (result.ok) return;
+  if (result.ok) {
+    await Promise.resolve();
+    return;
+  }
   throw new DomainError(
     "forbidden",
     formatCapAvailabilityError(result, input.cap.id)

@@ -101,8 +101,10 @@ async function resolveJobArtifactUri(
     jobId: data.jobId,
   });
   const artifact = job.output?.find((row) => row.sha256 === data.sha256);
-  if (artifact?.uri === undefined || artifact.uri === "") return null;
-  return caseScopedArtifactUri(data.caseId, artifact.uri);
+  if (artifact?.uri === undefined || artifact.uri === "") {
+    return await Promise.resolve(null);
+  }
+  return await Promise.resolve(caseScopedArtifactUri(data.caseId, artifact.uri));
 }
 
 async function fetchEvidenceBlobText(
@@ -113,12 +115,14 @@ async function fetchEvidenceBlobText(
     caseId: data.caseId,
     evidenceId: data.evidenceId,
   });
-  if (url === null || url === "") return null;
+  if (url === null || url === "") return await Promise.resolve(null);
 
   const res = await fetch(url);
-  if (!res.ok) return null;
+  if (!res.ok) return await Promise.resolve(null);
   const bytes = new Uint8Array(await res.arrayBuffer());
-  return truncateArtifactText(new TextDecoder().decode(bytes));
+  return await Promise.resolve(
+    truncateArtifactText(new TextDecoder().decode(bytes))
+  );
 }
 
 /**

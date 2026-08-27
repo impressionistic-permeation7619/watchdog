@@ -26,27 +26,26 @@ async function loadTextFromEvidence(row: {
   kind: string;
 }): Promise<string> {
   if (row.text !== null && row.text.trim() !== "") {
-    return row.text;
+    return await Promise.resolve(row.text);
   }
   if (row.uri === null) {
-    if (row.kind === "other" || row.kind === "attestation") {
-      return "";
-    }
-    return "";
+    return await Promise.resolve("");
   }
   const mime = row.mime ?? "";
   if (mime && !TEXTISH_MIME.test(mime) && !mime.includes("charset")) {
     // Non-text binary — Day-0: no OCR/PDF extract
-    return "";
+    return await Promise.resolve("");
   }
   try {
     const bytes = await readArtifactBytes(row.uri);
     // Skip obvious binary (NUL in first 512)
     const head = bytes.slice(0, 512);
-    if (head.includes(0)) return "";
-    return new TextDecoder("utf-8", { fatal: false }).decode(bytes);
+    if (head.includes(0)) return await Promise.resolve("");
+    return await Promise.resolve(
+      new TextDecoder("utf-8", { fatal: false }).decode(bytes)
+    );
   } catch {
-    return "";
+    return await Promise.resolve("");
   }
 }
 
@@ -89,7 +88,7 @@ async function loadEnrichOutputText(input: {
       // try older job
     }
   }
-  return null;
+  return await Promise.resolve(null);
 }
 
 export async function packEvidenceSnapshot(input: {
