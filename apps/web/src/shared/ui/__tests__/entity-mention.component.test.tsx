@@ -10,9 +10,7 @@ vi.mock("@tanstack/react-router", () => ({
     children: React.ReactNode;
     to?: string;
     params?: { entitySlug?: string };
-  }) => (
-    <a href={`${to ?? "#"}/${params?.entitySlug ?? ""}`}>{children}</a>
-  ),
+  }) => <a href={`${to ?? "#"}/${params?.entitySlug ?? ""}`}>{children}</a>,
 }));
 
 import { EntityMention } from "@/shared/ui/entity-mention";

@@ -2,19 +2,10 @@
 
 import { useForm } from "@tanstack/react-form";
 
-import { EvidencePicker } from "@/shared/ui/intake/evidence-picker";
-import {
-  HANDLE_REQUIRES_PLATFORM,
-  isHandleWithoutPlatform,
-  PLATFORM_OPTIONS,
-  STATUS_OPTIONS,
-  TYPE_OPTIONS,
-} from "@/shared/ui/identifiers/identifier-cells";
 import {
   CONFIRMED_REQUIRES_EVIDENCE,
   isConfirmedBlocked,
 } from "@/shared/lib/confirmed-evidence";
-import type { EvidenceOption } from "@/shared/ui/intake/evidence-option";
 import {
   DataTableComposerActions,
   DataTableComposerRow,
@@ -24,6 +15,15 @@ import {
 } from "@/shared/ui/data-table";
 import { EntityCombobox, type EntityOption } from "@/shared/ui/entity-combobox";
 import { FormInlineWarning } from "@/shared/ui/form-inline-message";
+import {
+  HANDLE_REQUIRES_PLATFORM,
+  isHandleWithoutPlatform,
+  PLATFORM_OPTIONS,
+  STATUS_OPTIONS,
+  TYPE_OPTIONS,
+} from "@/shared/ui/identifiers/identifier-cells";
+import type { EvidenceOption } from "@/shared/ui/intake/evidence-option";
+import { EvidencePicker } from "@/shared/ui/intake/evidence-picker";
 import { TableCell } from "@/shared/ui/shadcn/table";
 import { CONFIDENCE_OPTIONS } from "@/shared/ui/vocab";
 import {

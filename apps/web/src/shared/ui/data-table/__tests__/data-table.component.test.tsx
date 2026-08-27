@@ -1,8 +1,8 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { useDataTable } from "@/shared/ui/data-table/use-data-table";
 import { DataTable } from "@/shared/ui/data-table/data-table";
+import { useDataTable } from "@/shared/ui/data-table/use-data-table";
 
 function TableHarness({
   onRowClick,
@@ -11,10 +11,18 @@ function TableHarness({
 }) {
   const { table } = useDataTable({
     data: [{ name: "Alpha" }],
-    columns: [{ accessorKey: "name", header: "Name", cell: ({ getValue }) => getValue() }],
+    columns: [
+      {
+        accessorKey: "name",
+        header: "Name",
+        cell: ({ getValue }) => getValue(),
+      },
+    ],
   });
 
-  return <DataTable table={table} onRowClick={onRowClick} emptyText="Nothing here" />;
+  return (
+    <DataTable table={table} onRowClick={onRowClick} emptyText="Nothing here" />
+  );
 }
 
 describe("DataTable", () => {

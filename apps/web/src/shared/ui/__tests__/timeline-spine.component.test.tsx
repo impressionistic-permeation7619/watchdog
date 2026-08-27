@@ -7,7 +7,7 @@ describe("TimelineSpine", () => {
   it("renders dashed spine content and dot markers", () => {
     render(
       <TimelineSpine className="ml-2">
-        <TimelineDot className="left-0 size-2 bg-accent" />
+        <TimelineDot className="bg-accent left-0 size-2" />
         <div>Event body</div>
       </TimelineSpine>
     );

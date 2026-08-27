@@ -11,7 +11,12 @@ import {
 describe("QueueRow", () => {
   it("renders row chrome and instant meta helpers", () => {
     render(
-      <QueueRow selected live leading={<span>L</span>} trailing={<span>T</span>}>
+      <QueueRow
+        selected
+        live
+        leading={<span>L</span>}
+        trailing={<span>T</span>}
+      >
         <QueueRowTitle>Job run</QueueRowTitle>
         <QueueRowMeta>Queued</QueueRowMeta>
       </QueueRow>

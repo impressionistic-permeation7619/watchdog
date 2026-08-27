@@ -9,7 +9,13 @@ describe("CopyControl", () => {
     vi.stubGlobal("navigator", { clipboard: { writeText } });
     const onCopied = vi.fn();
 
-    render(<CopyControl value="secret-token" onCopied={onCopied} label="Copy token" />);
+    render(
+      <CopyControl
+        value="secret-token"
+        onCopied={onCopied}
+        label="Copy token"
+      />
+    );
 
     fireEvent.click(screen.getByRole("button", { name: "Copy token" }));
 

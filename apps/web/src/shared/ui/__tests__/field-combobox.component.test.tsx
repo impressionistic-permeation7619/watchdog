@@ -28,11 +28,21 @@ vi.mock("@/shared/ui/shadcn/combobox", () => ({
     </div>
   ),
   ComboboxInput: () => <input aria-label="Field combobox" />,
-  ComboboxContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  ComboboxList: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  ComboboxCollection: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  ComboboxGroup: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  ComboboxLabel: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  ComboboxContent: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  ComboboxList: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  ComboboxCollection: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  ComboboxGroup: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  ComboboxLabel: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
   ComboboxItem: () => null,
   ComboboxEmpty: () => null,
 }));

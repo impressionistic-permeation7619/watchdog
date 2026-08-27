@@ -93,9 +93,9 @@ export function RichTextHeadingToggleGroup({
       size="sm"
       spacing={0}
       value={headingValue}
-      onValueChange={(next: string[]) =>
-        applyHeadingChange(editor, next, isH1, isH2, isH3)
-      }
+      onValueChange={(next: string[]) => {
+        applyHeadingChange(editor, next, isH1, isH2, isH3);
+      }}
       aria-label="Headings"
     >
       <ToggleGroupItem value="h1" aria-label="Heading 1" title="Heading 1">
@@ -131,9 +131,9 @@ export function RichTextMarkToggleGroup({
       size="sm"
       spacing={0}
       value={markValue}
-      onValueChange={(next: string[]) =>
-        applyMarkChange(editor, next, isBold, isItalic, isUnderline)
-      }
+      onValueChange={(next: string[]) => {
+        applyMarkChange(editor, next, isBold, isItalic, isUnderline);
+      }}
       aria-label="Text style"
     >
       <ToggleGroupItem value="bold" aria-label="Bold" title="Bold">

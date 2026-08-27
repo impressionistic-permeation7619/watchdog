@@ -8,7 +8,9 @@ vi.mock("platejs/react", () => ({
   PlateContent: ({ placeholder }: { placeholder?: string }) => (
     <textarea aria-label="Rich text editor" placeholder={placeholder} />
   ),
-  PlateContainer: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  PlateContainer: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
   usePlateEditor: () => ({
     tf: { reset: vi.fn() },
     api: { markdown: { serialize: () => "updated" } },
@@ -32,7 +34,11 @@ import { RichTextEditor } from "@/shared/ui/rich-text/rich-text-editor";
 describe("RichTextEditor", () => {
   it("renders the editor shell and toolbar", () => {
     render(
-      <RichTextEditor value="Hello" onChange={onChangeMock} placeholder="Write notes" />
+      <RichTextEditor
+        value="Hello"
+        onChange={onChangeMock}
+        placeholder="Write notes"
+      />
     );
 
     expect(screen.getByText("Toolbar")).toBeInTheDocument();

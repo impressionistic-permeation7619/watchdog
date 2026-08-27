@@ -1,11 +1,11 @@
 import { ChevronDownIcon, PaperclipIcon, XIcon } from "lucide-react";
 import { useId, useMemo, useState } from "react";
 
-import type { EvidenceOption } from "@/shared/ui/intake/evidence-option";
 import { cn } from "@/lib/utils";
 import { CONTROL_FIELD_TRIGGER } from "@/shared/ui/control-chrome";
 import { DetailStatusChip } from "@/shared/ui/detail-status-chip";
 import { formatOpaqueId } from "@/shared/ui/format-opaque-id";
+import type { EvidenceOption } from "@/shared/ui/intake/evidence-option";
 import { Checkbox } from "@/shared/ui/shadcn/checkbox";
 import { Input } from "@/shared/ui/shadcn/input";
 import {

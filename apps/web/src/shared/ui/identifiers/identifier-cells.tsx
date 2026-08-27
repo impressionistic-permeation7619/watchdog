@@ -1,13 +1,11 @@
 /* oxlint-disable react/only-export-components, react-doctor/only-export-components -- column factory + shared options for IdentifiersSection */
-import type { CellContext, ColumnDef, HeaderContext } from "@tanstack/react-table";
+import type {
+  CellContext,
+  ColumnDef,
+  HeaderContext,
+} from "@tanstack/react-table";
 import { toast } from "sonner";
 
-import { IdentifierEvidenceCell } from "@/shared/ui/identifiers/identifier-evidence-cell";
-import {
-  CONFIRMED_REQUIRES_EVIDENCE_HINT,
-  isConfirmedBlocked,
-} from "@/shared/lib/confirmed-evidence";
-import type { EvidenceOption } from "@/shared/ui/intake/evidence-option";
 import type { IdentifierRecord } from "@/domains/entities/identifiers/identifiers.functions";
 import {
   tryCommitIdentifierPlatform,
@@ -15,12 +13,18 @@ import {
   tryCommitIdentifierValue,
 } from "@/domains/entities/lib/commit-identifier-field";
 import {
+  CONFIRMED_REQUIRES_EVIDENCE_HINT,
+  isConfirmedBlocked,
+} from "@/shared/lib/confirmed-evidence";
+import {
   DataTableColumnHeader,
   EditableSelectCell,
   EditableSuggestCell,
   EditableTextCell,
   type EditableSelectOption,
 } from "@/shared/ui/data-table";
+import { IdentifierEvidenceCell } from "@/shared/ui/identifiers/identifier-evidence-cell";
+import type { EvidenceOption } from "@/shared/ui/intake/evidence-option";
 import {
   CONFIDENCE_OPTIONS,
   IDENTIFIER_PLATFORM_OPTIONS,
@@ -217,7 +221,11 @@ function renderIdentifierTypeCell(ctx: CellContext<IdentifierRecord, unknown>) {
       aria-label="Type"
       onCommit={(next) => {
         const type = identifierTypeSchema.parse(next);
-        const committed = tryCommitIdentifierType(type, row.value, row.platform);
+        const committed = tryCommitIdentifierType(
+          type,
+          row.value,
+          row.platform
+        );
         if (committed === false) return;
         meta.updateField(row.id, committed);
       }}
@@ -256,7 +264,9 @@ function renderIdentifierStatusCell(
       options={STATUS_OPTIONS}
       aria-label="Status"
       onCommit={(next) => {
-        meta.updateField(row.id, { status: identifierStatusSchema.parse(next) });
+        meta.updateField(row.id, {
+          status: identifierStatusSchema.parse(next),
+        });
       }}
     />
   );
@@ -299,7 +309,9 @@ function renderIdentifierEvidenceCell(
   );
 }
 
-function renderIdentifierNotesCell(ctx: CellContext<IdentifierRecord, unknown>) {
+function renderIdentifierNotesCell(
+  ctx: CellContext<IdentifierRecord, unknown>
+) {
   const row = ctx.row.original;
   const meta = identifierMeta(ctx);
   return (

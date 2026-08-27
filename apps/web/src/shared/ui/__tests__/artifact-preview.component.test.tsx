@@ -53,12 +53,7 @@ describe("ArtifactPreview", () => {
   });
 
   it("renders binary placeholder copy", () => {
-    render(
-      <ArtifactPreview
-        name="blob.bin"
-        body={{ kind: "binary" }}
-      />
-    );
+    render(<ArtifactPreview name="blob.bin" body={{ kind: "binary" }} />);
 
     expect(
       screen.getByText("Binary artifact — not renderable.")

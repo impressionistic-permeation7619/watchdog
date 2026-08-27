@@ -30,6 +30,8 @@ describe("RichTextToolbar", () => {
   it("renders formatting controls", () => {
     render(<RichTextToolbar />);
     expect(screen.getByRole("button", { name: "Bold" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Heading 1" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Heading 1" })
+    ).toBeInTheDocument();
   });
 });

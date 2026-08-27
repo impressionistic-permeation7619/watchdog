@@ -1,8 +1,8 @@
 import { useState } from "react";
 
-import { EvidencePicker } from "@/shared/ui/intake/evidence-picker";
-import type { EvidenceOption } from "@/shared/ui/intake/evidence-option";
 import { IdChip } from "@/shared/ui/id-chip";
+import type { EvidenceOption } from "@/shared/ui/intake/evidence-option";
+import { EvidencePicker } from "@/shared/ui/intake/evidence-picker";
 import { Button } from "@/shared/ui/shadcn/button";
 import {
   Popover,

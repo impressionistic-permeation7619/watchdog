@@ -16,7 +16,7 @@ describe("FormInlineMessage", () => {
   });
 
   it("renders nothing for empty children", () => {
-    const { container } = render(<FormInlineError>{""}</FormInlineError>);
+    const { container } = render(<FormInlineError>{null}</FormInlineError>);
     expect(container).toBeEmptyDOMElement();
   });
 });

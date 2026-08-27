@@ -15,7 +15,9 @@ describe("DetailHeader", () => {
       />
     );
 
-    expect(screen.getByRole("heading", { name: "Evidence item" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Evidence item" })
+    ).toBeInTheDocument();
     expect(screen.getByText("Queued · 2m ago")).toBeInTheDocument();
     expect(screen.getByText("Pending")).toBeInTheDocument();
     expect(screen.getByText("Summary text")).toBeInTheDocument();

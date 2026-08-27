@@ -12,7 +12,11 @@ describe("table composer", () => {
     render(
       <table>
         <tbody>
-          <DataTableAddRow colSpan={2} label="Add identifier" onClick={onClick} />
+          <DataTableAddRow
+            colSpan={2}
+            label="Add identifier"
+            onClick={onClick}
+          />
         </tbody>
       </table>
     );
@@ -31,7 +35,11 @@ describe("table composer", () => {
       onCancel,
     });
 
-    handler({ key: "Enter", shiftKey: false, preventDefault: vi.fn() } as never);
+    handler({
+      key: "Enter",
+      shiftKey: false,
+      preventDefault: vi.fn(),
+    } as never);
     handler({ key: "Escape", preventDefault: vi.fn() } as never);
 
     expect(onSubmit).toHaveBeenCalled();

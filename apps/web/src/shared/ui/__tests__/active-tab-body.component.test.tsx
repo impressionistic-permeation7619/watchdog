@@ -1,10 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import {
-  ActiveTabBody,
-  SuspenseTabBody,
-} from "@/shared/ui/active-tab-body";
+import { ActiveTabBody, SuspenseTabBody } from "@/shared/ui/active-tab-body";
 
 describe("ActiveTabBody", () => {
   it("renders nothing when inactive", () => {

@@ -1,5 +1,5 @@
-import { fireEvent, render, screen } from "@testing-library/react";
 import type { Table } from "@tanstack/react-table";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { DataTablePagination } from "@/shared/ui/data-table/data-table-pagination";
@@ -31,7 +31,7 @@ describe("DataTablePagination", () => {
 
     expect(screen.getByText(/Page 1 of 3 · 3 total/)).toBeInTheDocument();
     const buttons = screen.getAllByRole("button");
-    fireEvent.click(buttons[1]!);
+    fireEvent.click(buttons[1]);
     expect(nextPage).toHaveBeenCalled();
   });
 });

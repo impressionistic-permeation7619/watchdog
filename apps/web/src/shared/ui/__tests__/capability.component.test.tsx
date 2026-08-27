@@ -1,10 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import {
-  capabilityLabel,
-  CapabilityLabel,
-} from "@/shared/ui/vocab/capability";
+import { capabilityLabel, CapabilityLabel } from "@/shared/ui/vocab/capability";
 
 describe("Capability vocab", () => {
   it("prefers catalog title over derived label", () => {

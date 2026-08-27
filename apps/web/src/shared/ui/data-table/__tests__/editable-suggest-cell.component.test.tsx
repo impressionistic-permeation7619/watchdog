@@ -28,8 +28,12 @@ vi.mock("@/shared/ui/shadcn/combobox", () => ({
     </div>
   ),
   ComboboxInput: () => <input aria-label="Suggest" />,
-  ComboboxContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  ComboboxList: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  ComboboxContent: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  ComboboxList: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
   ComboboxItem: () => null,
   ComboboxEmpty: () => null,
 }));

@@ -9,7 +9,9 @@ vi.mock("@/shared/ui/shadcn/resizable", () => ({
   ResizablePanelGroup: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="split-group">{children}</div>
   ),
-  ResizablePanel: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  ResizablePanel: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
   ResizableHandle: () => <div />,
 }));
 

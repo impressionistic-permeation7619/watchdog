@@ -17,7 +17,9 @@ describe("FormSection", () => {
       </FormSection>
     );
 
-    expect(screen.getByRole("heading", { name: "Credentials" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Credentials" })
+    ).toBeInTheDocument();
     expect(screen.getByText("Vault-backed keys")).toBeInTheDocument();
     expect(screen.getByText("Form body")).toBeInTheDocument();
     expect(screen.getByText("Unsaved changes")).toBeInTheDocument();

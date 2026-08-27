@@ -1,13 +1,23 @@
-import { render, screen } from "@testing-library/react";
 import type { Column, Table } from "@tanstack/react-table";
+import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@/shared/ui/shadcn/dropdown-menu", () => ({
-  DropdownMenu: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  DropdownMenuTrigger: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  DropdownMenuContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  DropdownMenuGroup: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  DropdownMenuLabel: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DropdownMenu: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  DropdownMenuTrigger: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  DropdownMenuContent: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  DropdownMenuGroup: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  DropdownMenuLabel: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
   DropdownMenuSeparator: () => <hr />,
   DropdownMenuCheckboxItem: ({
     children,
@@ -20,20 +30,23 @@ vi.mock("@/shared/ui/shadcn/dropdown-menu", () => ({
 
 import { DataTableViewOptions } from "@/shared/ui/data-table/data-table-view-options";
 
-function mockColumn(id: string, visible: boolean): Column<unknown, unknown> {
+function mockColumn(id: string, visible: boolean): Column<unknown> {
   return {
     id,
     getCanHide: () => true,
     getIsVisible: () => visible,
     toggleVisibility: vi.fn(),
     columnDef: { meta: { label: id } },
-  } as unknown as Column<unknown, unknown>;
+  } as unknown as Column<unknown>;
 }
 
 describe("DataTableViewOptions", () => {
   it("shows visible column count in the trigger label", () => {
     const table = {
-      getAllColumns: () => [mockColumn("name", true), mockColumn("status", false)],
+      getAllColumns: () => [
+        mockColumn("name", true),
+        mockColumn("status", false),
+      ],
       resetColumnVisibility: vi.fn(),
     } as unknown as Table<unknown>;
 

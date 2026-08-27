@@ -19,10 +19,7 @@ describe("VocabBadge", () => {
 
   it("prefers children over the label", () => {
     render(
-      <VocabBadge
-        label="Hidden"
-        tone={{ low: "bg-muted", high: "bg-muted" }}
-      >
+      <VocabBadge label="Hidden" tone={{ low: "bg-muted", high: "bg-muted" }}>
         Visible
       </VocabBadge>
     );
