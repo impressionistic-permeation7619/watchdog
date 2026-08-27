@@ -113,6 +113,8 @@ describe("EntityTable", () => {
       "href",
       "/cases"
     );
+    expect(screen.queryByLabelText("Search entities")).not.toBeInTheDocument();
+    expect(useSuspenseQueryMock).toHaveBeenCalled();
   });
 
   it("renders entity search and create controls for the active case", () => {
@@ -131,5 +133,6 @@ describe("EntityTable", () => {
     expect(screen.getByLabelText("Search entities")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Create" })).toBeInTheDocument();
     expect(screen.getByText("No entities yet — add one below.")).toBeInTheDocument();
+    expect(useEntityTableMock).toHaveBeenCalledWith(ACTIVE);
   });
 });

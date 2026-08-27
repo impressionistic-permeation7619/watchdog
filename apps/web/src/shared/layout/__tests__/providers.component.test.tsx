@@ -34,5 +34,6 @@ describe("Providers", () => {
     expect(screen.getByTestId("auth-provider")).toBeInTheDocument();
     expect(screen.getByText("App child")).toBeInTheDocument();
     expect(document.documentElement.dataset.hydrated).toBe("true");
+    expect(document.documentElement).toHaveAttribute("data-hydrated", "true");
   });
 });

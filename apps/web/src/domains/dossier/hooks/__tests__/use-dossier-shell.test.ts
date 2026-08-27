@@ -109,5 +109,9 @@ describe("useDossierShell", () => {
       result.current.handleEvidenceClick("evidence-1");
     });
     expect(result.current.previewEvidence?.id).toBe("evidence-1");
+    expect(result.current.evidenceAll).toHaveLength(2);
+    expect(result.current.evidencePending).toBe(false);
+    expect(result.current.editOpen).toBe(false);
+    expect(useQueryMock).toHaveBeenCalled();
   });
 });

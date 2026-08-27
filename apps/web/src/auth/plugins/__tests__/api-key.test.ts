@@ -29,5 +29,6 @@ describe("apiKeyPlugin", () => {
       securityCards: [],
       organizationCards: ["OrganizationApiKeys"],
     });
+    expect(coreFactory).toHaveBeenCalledTimes(1);
   });
 });

@@ -96,6 +96,12 @@ describe("CaseOverview", () => {
     renderOverview(CASE.id);
     expect(screen.getByText("Active")).toBeInTheDocument();
     expect(screen.getByText("Overview tab body")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Export" })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Set Active" })
+    ).not.toBeInTheDocument();
+    expect(useSuspenseQueryMock).toHaveBeenCalled();
+    expect(useMutationMock).toHaveBeenCalled();
   });
 
   it("offers Set Active when this case is not the active case", () => {
@@ -103,5 +109,10 @@ describe("CaseOverview", () => {
     expect(
       screen.getByRole("button", { name: "Set Active" })
     ).toBeInTheDocument();
+    expect(screen.queryByText("Active")).not.toBeInTheDocument();
+    expect(screen.getByText("Overview tab body")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Export" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Delete" })).toBeInTheDocument();
+    expect(useQueryMock).toHaveBeenCalled();
   });
 });

@@ -94,10 +94,14 @@ describe("useIdentifiersTable", () => {
     expect(result.current.emptyText).toBe("No identifiers yet — add one below.");
     expect(result.current.entityOptions).toEqual([]);
     expect(result.current.evidenceOptions).toEqual([]);
+    expect(result.current.rows).toEqual([]);
+    expect(useSuspenseQueryMock).toHaveBeenCalled();
 
     act(() => {
       result.current.openComposer();
     });
     expect(result.current.composing).toBe(true);
+    expect(useMutationMock).toHaveBeenCalled();
+    expect(result.current.typeFilter).toEqual([]);
   });
 });

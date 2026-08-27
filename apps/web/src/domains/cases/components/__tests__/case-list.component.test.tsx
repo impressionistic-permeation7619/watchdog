@@ -94,8 +94,10 @@ describe("CaseList", () => {
 
     expect(screen.getByText("Alpha")).toBeInTheDocument();
     expect(screen.getByText("Beta")).toBeInTheDocument();
+    expect(screen.getByText("First case")).toBeInTheDocument();
     expect(screen.getByText("Active")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Select" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Active" })).not.toBeInTheDocument();
   });
 
   it("shows a no-results empty state when search matches nothing", async () => {
@@ -115,5 +117,9 @@ describe("CaseList", () => {
     );
 
     expect(screen.getByText(/No cases Match/i)).toBeInTheDocument();
+    expect(screen.queryByText("Alpha")).not.toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Search cases" })).toHaveValue(
+      "missing"
+    );
   });
 });

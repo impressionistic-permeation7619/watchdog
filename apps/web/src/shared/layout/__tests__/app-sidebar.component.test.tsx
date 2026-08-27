@@ -93,5 +93,11 @@ describe("AppSidebar", () => {
     expect(screen.getByText("Case switcher")).toBeInTheDocument();
     expect(screen.getAllByText("Analyst").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Settings").length).toBeGreaterThan(0);
+    expect(screen.getByText("Tasks")).toBeInTheDocument();
+    expect(screen.getByText("Intake")).toBeInTheDocument();
+    expect(screen.getByText("Inbox")).toBeInTheDocument();
+    expect(screen.getByText("Jobs")).toBeInTheDocument();
+    expect(screen.getByText("Cases")).toBeInTheDocument();
+    expect(screen.getByText("Theme menu")).toBeInTheDocument();
   });
 });

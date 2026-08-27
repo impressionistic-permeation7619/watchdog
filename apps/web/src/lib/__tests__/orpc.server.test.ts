@@ -61,5 +61,6 @@ describe("orpc.server", () => {
 
   it("re-exports actorFromSession", () => {
     expect(exportedActorFromSession).toBe(actorFromSession);
+    expect(createRouterClient).toBeDefined();
   });
 });

@@ -103,6 +103,8 @@ describe("Inbox", () => {
       "href",
       "/cases"
     );
+    expect(screen.queryByText("Inbox queue toolbar")).not.toBeInTheDocument();
+    expect(useSuspenseQueryMock).toHaveBeenCalled();
   });
 
   it("renders queue chrome for the active case", () => {
@@ -121,5 +123,9 @@ describe("Inbox", () => {
     expect(screen.getByText("Inbox queue toolbar")).toBeInTheDocument();
     expect(screen.getByText("Inbox queue list")).toBeInTheDocument();
     expect(screen.getByText("Inbox detail panel")).toBeInTheDocument();
+    expect(screen.getByTestId("split-list")).toBeInTheDocument();
+    expect(screen.getByTestId("split-detail")).toBeInTheDocument();
+    expect(useInboxWorkspaceMock).toHaveBeenCalled();
+    expect(useSuspenseQueryMock).toHaveBeenCalled();
   });
 });

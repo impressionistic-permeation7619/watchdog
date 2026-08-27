@@ -108,6 +108,8 @@ describe("CaseSwitcher", () => {
 
     renderCaseSwitcher();
     expect(screen.getByText("Create a case…")).toBeInTheDocument();
+    expect(screen.queryByText("Overview")).not.toBeInTheDocument();
+    expect(useSuspenseQueryMock).toHaveBeenCalled();
   });
 
   it("shows the active case name when cases exist", () => {
@@ -118,5 +120,7 @@ describe("CaseSwitcher", () => {
     renderCaseSwitcher();
     expect(screen.getAllByText("Alpha Case").length).toBeGreaterThan(0);
     expect(screen.getByText("Overview")).toBeInTheDocument();
+    expect(screen.getByText("Entities")).toBeInTheDocument();
+    expect(useSelectActiveCaseMock).toHaveBeenCalled();
   });
 });

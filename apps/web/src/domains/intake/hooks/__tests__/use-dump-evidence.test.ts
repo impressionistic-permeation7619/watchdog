@@ -76,5 +76,6 @@ describe("useDumpEvidence", () => {
     });
 
     expect(mutations[0]?.mutate).toHaveBeenCalledWith([file]);
+    expect(result.current.uploading).toBe(false);
   });
 });

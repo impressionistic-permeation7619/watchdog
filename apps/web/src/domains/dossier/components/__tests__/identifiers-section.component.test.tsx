@@ -73,5 +73,6 @@ describe("IdentifiersSection", () => {
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Add" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Bulk add" })).toBeInTheDocument();
+    expect(useSuspenseQueryMock).toHaveBeenCalled();
   });
 });

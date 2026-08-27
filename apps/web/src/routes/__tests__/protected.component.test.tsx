@@ -79,5 +79,6 @@ describe("_protected route", () => {
 
     expect(screen.getByTestId("app-shell")).toBeInTheDocument();
     expect(screen.getByText("Protected outlet")).toBeInTheDocument();
+    expect(Route.options.component).toBeDefined();
   });
 });

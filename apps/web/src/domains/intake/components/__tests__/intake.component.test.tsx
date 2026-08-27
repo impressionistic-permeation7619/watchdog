@@ -176,6 +176,12 @@ describe("Intake", () => {
 
     expect(screen.getByText("No Active Case")).toBeInTheDocument();
     expect(screen.getByText("Select a Case")).toBeInTheDocument();
+    expect(screen.queryByText("Evidence queue list")).not.toBeInTheDocument();
+    expect(useSuspenseQueryMock).toHaveBeenCalled();
+    expect(screen.getByRole("link", { name: "Select a Case" })).toHaveAttribute(
+      "href",
+      "/cases"
+    );
   });
 
   it("renders intake workspace chrome when a case is active", () => {
@@ -192,5 +198,10 @@ describe("Intake", () => {
     expect(screen.getByText("Intake queue toolbar")).toBeInTheDocument();
     expect(screen.getByText("Evidence queue list")).toBeInTheDocument();
     expect(screen.getByText("Evidence detail panel")).toBeInTheDocument();
+    expect(screen.getByTestId("split-list")).toBeInTheDocument();
+    expect(screen.getByTestId("split-detail")).toBeInTheDocument();
+    expect(useIntakeActionsMock).toHaveBeenCalled();
+    expect(useSuspenseQueryMock).toHaveBeenCalled();
+    expect(screen.queryByText("No Active Case")).not.toBeInTheDocument();
   });
 });

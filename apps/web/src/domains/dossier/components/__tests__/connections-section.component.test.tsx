@@ -86,5 +86,6 @@ describe("ConnectionsSection", () => {
     expect(
       screen.getByRole("heading", { name: "Connections" })
     ).toBeInTheDocument();
+    expect(useSuspenseQueryMock).toHaveBeenCalledTimes(2);
   });
 });

@@ -57,5 +57,8 @@ describe("startInstance", () => {
     expect(startConfigRef.current?.requestMiddleware).toHaveLength(2);
     expect(startConfigRef.current?.functionMiddleware).toHaveLength(2);
     expect(startConfigRef.current?.functionMiddleware?.[1]).toBe("require-auth");
+    expect(startConfigRef.current?.requestMiddleware?.[0]).toBeDefined();
+    expect(startConfigRef.current?.requestMiddleware?.[1]).toBe("csrf-middleware");
+    expect(startConfigRef.current?.functionMiddleware?.[0]).toBeDefined();
   });
 });

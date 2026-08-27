@@ -71,6 +71,7 @@ describe("InboxDetail", () => {
       />
     );
     expect(screen.getByText("Select a proposal")).toBeInTheDocument();
+    expect(useQueryMock).toHaveBeenCalled();
   });
 
   it("renders decide header and patch body for a selected proposal", () => {
@@ -87,5 +88,6 @@ describe("InboxDetail", () => {
     );
     expect(screen.getByText("Inbox decide header")).toBeInTheDocument();
     expect(screen.getByText("Inbox patch body")).toBeInTheDocument();
+    expect(screen.queryByText("Select a proposal")).not.toBeInTheDocument();
   });
 });

@@ -156,6 +156,10 @@ describe("Dossier", () => {
       "href",
       "/cases"
     );
+    expect(screen.queryByRole("button", { name: "Edit" })).not.toBeInTheDocument();
+    expect(screen.queryByText("Export menu")).not.toBeInTheDocument();
+    expect(screen.queryByRole("tab")).not.toBeInTheDocument();
+    expect(screen.queryByText("Export menu")).not.toBeInTheDocument();
   });
 
   it("renders the entity dossier chrome when a case is active", () => {
@@ -163,5 +167,16 @@ describe("Dossier", () => {
     expect(screen.getByRole("button", { name: "Edit" })).toBeInTheDocument();
     expect(screen.getByText("Export menu")).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: /Overview/i })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /Notes/i })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /Claims/i })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /Identifiers/i })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /Connections/i })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /Evidence/i })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /Events/i })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /Questions/i })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /Tasks/i })).toBeInTheDocument();
+    expect(screen.getByRole("tablist")).toBeInTheDocument();
+    expect(useSuspenseQueryMock).toHaveBeenCalled();
+    expect(useSuspenseQueryMock.mock.calls.length).toBeGreaterThanOrEqual(2);
   });
 });

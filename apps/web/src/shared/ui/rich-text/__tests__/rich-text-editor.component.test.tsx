@@ -37,5 +37,7 @@ describe("RichTextEditor", () => {
 
     expect(screen.getByText("Toolbar")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("Write notes")).toBeInTheDocument();
+    expect(screen.getByLabelText("Rich text editor")).toBeInTheDocument();
+    expect(onChangeMock).not.toHaveBeenCalled();
   });
 });

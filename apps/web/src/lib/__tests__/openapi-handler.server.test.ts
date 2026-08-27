@@ -53,6 +53,7 @@ describe("handleOpenApiRequest", () => {
       })
     );
     expect(await response.text()).toBe("ok");
+    expect(response.status).toBe(200);
   });
 
   it("returns 404 when the OpenAPI handler does not match", async () => {

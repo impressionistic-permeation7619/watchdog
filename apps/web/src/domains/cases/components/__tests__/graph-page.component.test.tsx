@@ -59,6 +59,8 @@ describe("GraphPage", () => {
       "href",
       "/cases"
     );
+    expect(screen.queryByText("Graph canvas")).not.toBeInTheDocument();
+    expect(vi.mocked(useSuspenseQuery)).toHaveBeenCalled();
   });
 
   it("renders the graph canvas when an active case exists", () => {
@@ -72,5 +74,7 @@ describe("GraphPage", () => {
 
     render(<GraphPage />);
     expect(screen.getByText("Graph canvas")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Go to Cases" })).not.toBeInTheDocument();
+    expect(vi.mocked(useSuspenseQuery)).toHaveBeenCalled();
   });
 });

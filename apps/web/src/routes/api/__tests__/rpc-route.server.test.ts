@@ -53,6 +53,7 @@ describe("api rpc route", () => {
       })
     );
     expect(await response.text()).toBe("rpc-ok");
+    expect(response.status).toBe(200);
   });
 
   it("returns 404 when the oRPC handler has no matching route", async () => {

@@ -121,6 +121,7 @@ describe("IdentifiersPage", () => {
       "href",
       "/cases"
     );
+    expect(screen.queryByLabelText("Search identifiers")).not.toBeInTheDocument();
   });
 
   it("renders identifier toolbar controls and opens bulk dialog", async () => {
@@ -145,5 +146,6 @@ describe("IdentifiersPage", () => {
 
     await user.click(screen.getByRole("button", { name: "Bulk add" }));
     expect(screen.getByText("Bulk identifiers dialog")).toBeInTheDocument();
+    expect(useIdentifiersTableMock).toHaveBeenCalledWith(ACTIVE);
   });
 });

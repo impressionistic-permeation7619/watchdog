@@ -55,12 +55,18 @@ describe("CaseSettingsForm", () => {
   it("renders editable name and description fields from the case record", () => {
     renderForm();
     expect(screen.getByRole("region", { name: "Case settings" })).toBeInTheDocument();
+    expect(screen.getByText("Case settings")).toBeInTheDocument();
     expect(screen.getByLabelText("Name")).toHaveValue("Alpha Case");
     expect(screen.getByLabelText("Description")).toHaveValue("Notes");
+    expect(
+      screen.getByRole("switch", { name: "Third-party egress" })
+    ).not.toBeChecked();
   });
 
   it("reflects the third-party egress switch from the case record", () => {
     renderForm({ ...CASE, allowThirdPartyEgress: true });
     expect(screen.getByRole("switch", { name: "Third-party egress" })).toBeChecked();
+    expect(screen.getByLabelText("Name")).toHaveValue("Alpha Case");
+    expect(screen.getByLabelText("Description")).toHaveValue("Notes");
   });
 });

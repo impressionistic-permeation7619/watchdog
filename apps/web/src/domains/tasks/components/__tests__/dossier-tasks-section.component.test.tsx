@@ -71,5 +71,6 @@ describe("DossierTasksSection", () => {
       entityId: ENTITY_ID,
       live: false,
     });
+    expect(screen.queryByText("Task form open")).not.toBeInTheDocument();
   });
 });

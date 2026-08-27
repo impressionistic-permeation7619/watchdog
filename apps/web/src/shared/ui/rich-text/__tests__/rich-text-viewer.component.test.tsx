@@ -23,5 +23,7 @@ describe("RichTextViewer", () => {
   it("renders read-only markdown content", () => {
     render(<RichTextViewer value="# Hello" />);
     expect(screen.getByText("Viewer content")).toBeInTheDocument();
+    expect(screen.getByText("Viewer content")).toHaveClass("text-sm");
+    expect(screen.getByText("Viewer content")).toBeVisible();
   });
 });

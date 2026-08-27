@@ -97,10 +97,16 @@ describe("useEntityTable", () => {
 
     expect(result.current.emptyText).toBe("No entities yet — add one below.");
     expect(result.current.composing).toBe(false);
+    expect(result.current.rows).toEqual([]);
+    expect(result.current.search).toBe("");
+    expect(result.current.filterChips).toEqual([]);
+    expect(useSuspenseQueryMock).toHaveBeenCalled();
 
     act(() => {
       result.current.openComposer();
     });
     expect(result.current.composing).toBe(true);
+    expect(useMutationMock).toHaveBeenCalled();
+    expect(result.current.kindFilter).toEqual([]);
   });
 });
