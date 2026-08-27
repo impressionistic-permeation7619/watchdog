@@ -18,7 +18,7 @@ import { startJob, type JobRecord, toJobRecord } from "../jobs/start-job";
 /**
  * Shared Intake glue: load Evidence, dedupe against active Cap Jobs, startJob.
  */
-async function startCapForEvidence(input: {
+function startCapForEvidence(input: {
   caseId: string;
   evidenceId: string;
   actorId: string;
@@ -28,32 +28,27 @@ async function startCapForEvidence(input: {
   /** Optional gate after Evidence load (e.g. require http(s) URL). */
   assertSeed?: (seed: EvidenceCapSeed) => void;
 }): Promise<JobRecord> {
-  const seed = await evidenceRepo.getCapSeedInCase(
-    db,
-    input.caseId,
-    input.evidenceId
-  );
-  if (!seed) throw new DomainError("not_found", "Evidence not found");
-  input.assertSeed?.(seed);
-
-  const active = await jobsRepo.listActiveForCapability(
-    db,
-    input.caseId,
-    input.capabilityId
-  );
-  for (const job of active) {
-    if (input.matchActive(job, seed)) {
-      return await Promise.resolve(toJobRecord(job));
-    }
-  }
-
-  const job = await startJob({
-    caseId: input.caseId,
-    capabilityId: input.capabilityId,
-    actorId: input.actorId,
-    input: input.buildInput(seed),
-  });
-  return job;
+  return evidenceRepo
+    .getCapSeedInCase(db, input.caseId, input.evidenceId)
+    .then((seed) => {
+      if (!seed) throw new DomainError("not_found", "Evidence not found");
+      input.assertSeed?.(seed);
+      return jobsRepo
+        .listActiveForCapability(db, input.caseId, input.capabilityId)
+        .then((active) => {
+          for (const job of active) {
+            if (input.matchActive(job, seed)) {
+              return Promise.resolve(toJobRecord(job));
+            }
+          }
+          return startJob({
+            caseId: input.caseId,
+            capabilityId: input.capabilityId,
+            actorId: input.actorId,
+            input: input.buildInput(seed),
+          });
+        });
+    });
 }
 
 export function processEvidence(input: {
