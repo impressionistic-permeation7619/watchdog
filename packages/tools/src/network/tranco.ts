@@ -5,9 +5,9 @@ import {
   parseToolsError,
   rateLimitedToolsError,
 } from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
 import { isRecord } from "../parse/coerce";
 import { normalizeHost } from "../whois/normalize";
-import { watchdogUserAgent } from "../errors/user-agent";
 
 export const trancoLookupSnapshotSchema = z.object({
   domain: z.string().min(1),
@@ -50,7 +50,9 @@ function parseRanks(value: unknown): TrancoRankRow[] {
  * @see https://tranco-list.eu/api_documentation
  */
 
-type TrancoOptions = { userAgent?: string };
+interface TrancoOptions {
+  userAgent?: string;
+}
 
 async function readTrancoBody(
   domain: string,
@@ -97,8 +99,7 @@ export async function fetchTrancoLookup(
   options?: TrancoOptions
 ): Promise<TrancoLookupSnapshot> {
   const domain = normalizeHost(domainRaw);
-  const ua =
-    options?.userAgent ?? watchdogUserAgent("network.tranco.lookup");
+  const ua = options?.userAgent ?? watchdogUserAgent("network.tranco.lookup");
 
   const body = await readTrancoBody(domain, signal, ua);
   const rows = parseRanks(body.ranks).sort((a, b) =>

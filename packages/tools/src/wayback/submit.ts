@@ -1,9 +1,9 @@
+import { errorMessage } from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
 import {
   archiveSubmitSnapshotSchema,
   type ArchiveSubmitSnapshot,
 } from "./submit-schema";
-import { errorMessage } from "../errors/tools-error";
-import { watchdogUserAgent } from "../errors/user-agent";
 
 export {
   archiveSubmitSnapshotSchema,
@@ -23,7 +23,9 @@ function ensureHttpUrl(raw: string): string {
  * Creates a public archive record — Cap must declare third_party egress.
  */
 
-type SubmitOptions = { userAgent?: string };
+interface SubmitOptions {
+  userAgent?: string;
+}
 export async function submitWaybackSave(
   url: string,
   signal: AbortSignal,

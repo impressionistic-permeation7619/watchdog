@@ -7,8 +7,8 @@ import {
   rateLimitedToolsError,
   validationToolsError,
 } from "../errors/tools-error";
-import { isRecord } from "../parse/coerce";
 import { watchdogUserAgent } from "../errors/user-agent";
+import { isRecord } from "../parse/coerce";
 
 export const safebrowsingMatchSchema = z.object({
   threatType: z.string(),
@@ -41,7 +41,9 @@ const THREAT_TYPES = [
  * @see https://developers.google.com/safe-browsing/v4/lookup-api
  */
 
-type SafebrowsingOptions = { userAgent?: string };
+interface SafebrowsingOptions {
+  userAgent?: string;
+}
 export async function fetchSafebrowsingLookup(
   urlRaw: string,
   apiKey: string,

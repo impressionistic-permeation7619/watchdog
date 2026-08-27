@@ -1,13 +1,13 @@
 import { z } from "zod";
 
-import { classifyIpOrHost } from "../parse/classify-ip-or-host";
 import {
   httpToolsError,
   missingApiKey,
   parseToolsError,
 } from "../errors/tools-error";
-import { isRecord } from "../parse/coerce";
 import { watchdogUserAgent } from "../errors/user-agent";
+import { classifyIpOrHost } from "../parse/classify-ip-or-host";
+import { isRecord } from "../parse/coerce";
 
 export const virusTotalLookupSnapshotSchema = z.object({
   query: z.string().min(1),
@@ -38,7 +38,9 @@ export type VirusTotalLookupSnapshot = z.infer<
  * @see https://docs.virustotal.com/reference/ip-info
  */
 
-type VirustotalOptions = { userAgent?: string };
+interface VirustotalOptions {
+  userAgent?: string;
+}
 export async function fetchVirusTotalLookup(
   queryRaw: string,
   apiKey: string,

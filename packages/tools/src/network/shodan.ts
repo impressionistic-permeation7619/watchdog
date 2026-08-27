@@ -6,8 +6,8 @@ import {
   missingApiKey,
   parseToolsError,
 } from "../errors/tools-error";
-import { isRecord } from "../parse/coerce";
 import { watchdogUserAgent } from "../errors/user-agent";
+import { isRecord } from "../parse/coerce";
 
 export const shodanLookupSnapshotSchema = z.object({
   ip: z.string().min(1),
@@ -33,7 +33,9 @@ export type ShodanLookupSnapshot = z.infer<typeof shodanLookupSnapshotSchema>;
  * @see https://developer.shodan.io/api
  */
 
-type ShodanOptions = { userAgent?: string };
+interface ShodanOptions {
+  userAgent?: string;
+}
 export async function fetchShodanHost(
   ipRaw: string,
   apiKey: string,
@@ -44,8 +46,7 @@ export async function fetchShodanHost(
   const key = apiKey.trim();
   if (!key) throw missingApiKey("SHODAN_API_KEY");
 
-  const ua =
-    options?.userAgent ?? watchdogUserAgent("network.shodan.lookup");
+  const ua = options?.userAgent ?? watchdogUserAgent("network.shodan.lookup");
   const url = new URL(
     `https://api.shodan.io/shodan/host/${encodeURIComponent(ip)}`
   );

@@ -1,9 +1,9 @@
 import { z } from "zod";
 
 import { httpToolsError, missingApiKey } from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
 import { asBool, isRecord } from "../parse/coerce";
 import { normalizeHost } from "../whois/normalize";
-import { watchdogUserAgent } from "../errors/user-agent";
 
 export const c99SubdomainHitSchema = z.object({
   subdomain: z.string(),
@@ -66,7 +66,11 @@ function parseHit(row: unknown): C99SubdomainHit | null {
  * @see https://api.c99.nl/api_overview
  */
 
-type C99Options = { userAgent?: string; realtime?: boolean; limit?: number };
+interface C99Options {
+  userAgent?: string;
+  realtime?: boolean;
+  limit?: number;
+}
 export async function fetchC99Subdomains(
   hostRaw: string,
   apiKey: string,

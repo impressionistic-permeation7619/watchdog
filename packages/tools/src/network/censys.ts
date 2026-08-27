@@ -6,8 +6,8 @@ import {
   parseToolsError,
   validationToolsError,
 } from "../errors/tools-error";
-import { isRecord, recordRows } from "../parse/coerce";
 import { watchdogUserAgent } from "../errors/user-agent";
+import { isRecord, recordRows } from "../parse/coerce";
 
 export const censysLookupSnapshotSchema = z.object({
   ip: z.string().min(1),
@@ -63,8 +63,7 @@ export async function fetchCensysHost(
   if (!id || !secret)
     throw validationToolsError("CENSYS_API_ID and CENSYS_API_SECRET required");
 
-  const ua =
-    options?.userAgent ?? watchdogUserAgent("network.censys.lookup");
+  const ua = options?.userAgent ?? watchdogUserAgent("network.censys.lookup");
   const auth = Buffer.from(`${id}:${secret}`).toString("base64");
   const url = `https://search.censys.io/api/v2/hosts/${encodeURIComponent(ip)}`;
 

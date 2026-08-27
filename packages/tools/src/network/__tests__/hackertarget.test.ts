@@ -20,9 +20,11 @@ describe("hackertarget", () => {
   it("fetchHackertargetReverseIp parses newline domain lists", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue(
-        new Response("dns.google\none.one.one.one\n", { status: 200 })
-      )
+      vi
+        .fn()
+        .mockResolvedValue(
+          new Response("dns.google\none.one.one.one\n", { status: 200 })
+        )
     );
 
     const snap = await fetchHackertargetReverseIp(

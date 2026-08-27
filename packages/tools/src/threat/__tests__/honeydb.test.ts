@@ -1,9 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import {
-  fetchHoneydbLookup,
-  honeydbLookupSnapshotSchema,
-} from "../honeydb";
+import { fetchHoneydbLookup, honeydbLookupSnapshotSchema } from "../honeydb";
 
 describe("honeydb", () => {
   it("fetchHoneydbLookup maps ip-context payloads", async () => {
@@ -12,7 +9,7 @@ describe("honeydb", () => {
       vi.fn().mockResolvedValue(
         new Response(
           JSON.stringify({
-            network_info: { asn: 15169, country: "US" },
+            network_info: { asn: 15_169, country: "US" },
             threat_info: { is_tor: false, is_threat: true },
             internet_scanner: false,
             ip_history: [{ event_count: 2 }],

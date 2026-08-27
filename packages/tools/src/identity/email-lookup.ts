@@ -1,10 +1,10 @@
 import { z } from "zod";
 
-import { validationToolsError } from "../errors/tools-error";
 import {
   assertNotAborted,
   withAbortableResolver,
 } from "../dns/abortable-resolver";
+import { validationToolsError } from "../errors/tools-error";
 
 export const emailLookupSnapshotSchema = z.object({
   email: z.string().min(1),

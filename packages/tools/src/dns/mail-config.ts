@@ -1,9 +1,6 @@
-import { Resolver } from "node:dns/promises";
+import type { Resolver } from "node:dns/promises";
 
-import {
-  assertNotAborted,
-  withAbortableResolver,
-} from "./abortable-resolver";
+import { assertNotAborted, withAbortableResolver } from "./abortable-resolver";
 import {
   mailConfigSnapshotSchema,
   type MailConfigSnapshot,
@@ -41,7 +38,9 @@ async function resolveTxtFlat(
  * DKIM uses a small fixed selector list — not a full selector hunt.
  */
 
-type MailConfigOptions = { dkimSelectors?: readonly string[] };
+interface MailConfigOptions {
+  dkimSelectors?: readonly string[];
+}
 export async function fetchMailConfig(
   host: string,
   signal: AbortSignal,

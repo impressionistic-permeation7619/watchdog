@@ -2,9 +2,9 @@ import { z } from "zod";
 
 import { createTtlCache } from "../cache/ttl-memory";
 import { httpToolsError, ToolsError } from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
 import { classifyIpOrHost } from "../parse/classify-ip-or-host";
 import { asString, isRecord } from "../parse/coerce";
-import { watchdogUserAgent } from "../errors/user-agent";
 
 export const greedybearLookupSnapshotSchema = z.object({
   query: z.string().min(1),
@@ -71,7 +71,9 @@ async function fetchScannerFeed(
  * @see https://greedybear-docs.readthedocs.io/en/latest/OpenAPI.html
  */
 
-type GreedybearOptions = { userAgent?: string };
+interface GreedybearOptions {
+  userAgent?: string;
+}
 export async function fetchGreedybearLookup(
   queryRaw: string,
   signal: AbortSignal,

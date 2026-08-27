@@ -6,8 +6,8 @@ import {
   rateLimitedToolsError,
   validationToolsError,
 } from "../errors/tools-error";
-import { asString, isRecord, recordRows } from "../parse/coerce";
 import { watchdogUserAgent } from "../errors/user-agent";
+import { asString, isRecord, recordRows } from "../parse/coerce";
 
 export const HASHLOOKUP_ALGOS = ["md5", "sha1", "sha256", "sha512"] as const;
 export type HashlookupAlgo = (typeof HASHLOOKUP_ALGOS)[number];
@@ -74,7 +74,9 @@ function firstProductName(body: Record<string, unknown>): string | null {
  * @see https://hashlookup.circl.lu/
  */
 
-type HashlookupOptions = { userAgent?: string };
+interface HashlookupOptions {
+  userAgent?: string;
+}
 export async function fetchHashlookup(
   hashRaw: string,
   signal: AbortSignal,

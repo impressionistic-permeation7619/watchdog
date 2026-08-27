@@ -14,7 +14,7 @@ describe("bgpranking", () => {
         .mockResolvedValueOnce(
           new Response(
             JSON.stringify({
-              response: { "2026-01-01": { asn: 15169 } },
+              response: { "2026-01-01": { asn: 15_169 } },
             }),
             { status: 200 }
           )
@@ -38,7 +38,7 @@ describe("bgpranking", () => {
     );
 
     expect(bgprankingLookupSnapshotSchema.parse(snap).found).toBe(true);
-    expect(snap.asn).toBe(15169);
+    expect(snap.asn).toBe(15_169);
     vi.unstubAllGlobals();
   });
 });

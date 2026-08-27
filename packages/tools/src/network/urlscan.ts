@@ -1,9 +1,9 @@
 import { z } from "zod";
 
+import { watchdogUserAgent } from "../errors/user-agent";
 import { fetchJsonObject } from "../http/fetch-json";
 import { asString, isRecord } from "../parse/coerce";
 import { normalizeHost } from "../whois/normalize";
-import { watchdogUserAgent } from "../errors/user-agent";
 
 export const urlscanHitSchema = z.object({
   uuid: z.string(),
@@ -38,7 +38,10 @@ export type UrlscanLookupSnapshot = z.infer<typeof urlscanLookupSnapshotSchema>;
  * @see https://urlscan.io/docs/api/
  */
 
-type UrlscanOptions = { userAgent?: string; size?: number };
+interface UrlscanOptions {
+  userAgent?: string;
+  size?: number;
+}
 
 function parseUrlscanHit(row: Record<string, unknown>): UrlscanHit | null {
   const task = isRecord(row.task) ? row.task : {};
@@ -109,8 +112,7 @@ export async function fetchUrlscanSearch(
 ): Promise<UrlscanLookupSnapshot> {
   const host = normalizeHost(hostRaw);
   const size = Math.min(Math.max(options?.size ?? 20, 1), 100);
-  const ua =
-    options?.userAgent ?? watchdogUserAgent("network.urlscan.lookup");
+  const ua = options?.userAgent ?? watchdogUserAgent("network.urlscan.lookup");
 
   const url = new URL("https://urlscan.io/api/v1/search/");
   url.searchParams.set("q", `page.domain:${host}`);

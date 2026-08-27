@@ -1,10 +1,10 @@
 import { z } from "zod";
 
+import { missingApiKey } from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
+import { fetchJsonObject } from "../http/fetch-json";
 import { classifyBreachQuery } from "../parse/classify-breach-query";
 import { asString, isRecord } from "../parse/coerce";
-import { missingApiKey } from "../errors/tools-error";
-import { fetchJsonObject } from "../http/fetch-json";
-import { watchdogUserAgent } from "../errors/user-agent";
 
 const TABLES_CAP = 15;
 const ENTRIES_CAP = 100;
@@ -104,7 +104,9 @@ function flattenSearchResults(results: unknown): {
  * @see https://docs.snusbase.com/
  */
 
-type SnusbaseOptions = { userAgent?: string };
+interface SnusbaseOptions {
+  userAgent?: string;
+}
 export async function fetchSnusbaseLookup(
   queryRaw: string,
   apiKey: string,
@@ -115,8 +117,7 @@ export async function fetchSnusbaseLookup(
   if (!key) throw missingApiKey("SNUSBASE_API_KEY");
 
   const { kind, value, type } = classifySnusbaseQuery(queryRaw);
-  const ua =
-    options?.userAgent ?? watchdogUserAgent("breach.snusbase.lookup");
+  const ua = options?.userAgent ?? watchdogUserAgent("breach.snusbase.lookup");
 
   const body = await fetchJsonObject({
     url: "https://api.snusbase.com/data/search",

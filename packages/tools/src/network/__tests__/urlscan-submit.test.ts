@@ -1,9 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import {
-  submitUrlscan,
-  urlscanSubmitSnapshotSchema,
-} from "../urlscan-submit";
+import { submitUrlscan, urlscanSubmitSnapshotSchema } from "../urlscan-submit";
 
 describe("urlscan-submit", () => {
   it("submitUrlscan maps accepted scan submissions", async () => {

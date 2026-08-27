@@ -20,12 +20,14 @@ describe("pgp-lookup", () => {
   it("fetchPgpLookup returns keys from the first successful keyserver", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue(
-        new Response(
-          "pub:2048:22:ABCDEF0123456789:DEADBEEF:1609459200:0:\nuid:Alice",
-          { status: 200 }
+      vi
+        .fn()
+        .mockResolvedValue(
+          new Response(
+            "pub:2048:22:ABCDEF0123456789:DEADBEEF:1609459200:0:\nuid:Alice",
+            { status: 200 }
+          )
         )
-      )
     );
 
     const snap = await fetchPgpLookup(

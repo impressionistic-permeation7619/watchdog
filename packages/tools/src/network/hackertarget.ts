@@ -1,12 +1,9 @@
 import { z } from "zod";
 
 import { normalizeIp } from "../dns/reverse";
-import {
-  httpToolsError,
-  rateLimitedToolsError,
-} from "../errors/tools-error";
-import { normalizeHost } from "../whois/normalize";
+import { httpToolsError, rateLimitedToolsError } from "../errors/tools-error";
 import { watchdogUserAgent } from "../errors/user-agent";
+import { normalizeHost } from "../whois/normalize";
 
 export const hackertargetLookupSnapshotSchema = z.object({
   ip: z.string().min(1),
@@ -26,7 +23,10 @@ export type HackertargetLookupSnapshot = z.infer<
  * @see https://hackertarget.com/reverse-ip-lookup/
  */
 
-type HackertargetOptions = { userAgent?: string; limit?: number };
+interface HackertargetOptions {
+  userAgent?: string;
+  limit?: number;
+}
 
 function hackertargetResponseError(text: string): string | null {
   if (

@@ -14,12 +14,18 @@ describe("rdap whois", () => {
             entities: [
               {
                 roles: ["registrar"],
-                vcardArray: ["vcard", [["fn", {}, "text", "Example Registrar"]]],
+                vcardArray: [
+                  "vcard",
+                  [["fn", {}, "text", "Example Registrar"]],
+                ],
               },
             ],
             nameservers: [{ ldhName: "ns1.example.com" }],
             events: [
-              { eventAction: "registration", eventDate: "2000-01-01T00:00:00Z" },
+              {
+                eventAction: "registration",
+                eventDate: "2000-01-01T00:00:00Z",
+              },
             ],
           }),
           { status: 200 }

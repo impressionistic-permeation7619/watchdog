@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-import { asBool, asNumber, asString, isRecord } from "../parse/coerce";
 import {
   httpToolsError,
   parseToolsError,
@@ -8,6 +7,7 @@ import {
   validationToolsError,
 } from "../errors/tools-error";
 import { watchdogUserAgent } from "../errors/user-agent";
+import { asBool, asNumber, asString, isRecord } from "../parse/coerce";
 
 export const emailrepLookupSnapshotSchema = z.object({
   email: z.string().min(1),
@@ -91,14 +91,18 @@ async function emailrepFailReason(res: Response): Promise<string> {
  * @see https://docs.sublime.security/reference/emailrep-introduction
  */
 
-type EmailrepOptions = { apiKey?: string; userAgent?: string };
+interface EmailrepOptions {
+  apiKey?: string;
+  userAgent?: string;
+}
 export async function fetchEmailrepLookup(
   emailRaw: string,
   signal: AbortSignal,
   options?: EmailrepOptions
 ): Promise<EmailrepLookupSnapshot> {
   const email = emailRaw.trim().toLowerCase();
-  if (!email.includes("@")) throw validationToolsError(`Invalid email: ${emailRaw}`);
+  if (!email.includes("@"))
+    throw validationToolsError(`Invalid email: ${emailRaw}`);
 
   const ua =
     options?.userAgent ?? watchdogUserAgent("identity.emailrep.lookup");

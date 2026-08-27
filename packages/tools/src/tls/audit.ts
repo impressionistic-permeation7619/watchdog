@@ -1,4 +1,9 @@
-import { connect, type CipherNameAndProtocol, type PeerCertificate, type TLSSocket } from "node:tls";
+import {
+  connect,
+  type CipherNameAndProtocol,
+  type PeerCertificate,
+  type TLSSocket,
+} from "node:tls";
 
 import { z } from "zod";
 
@@ -72,7 +77,9 @@ function certField(
   };
 }
 
-function cipherField(cipher: CipherNameAndProtocol | null): TlsAuditSnapshot["cipher"] {
+function cipherField(
+  cipher: CipherNameAndProtocol | null
+): TlsAuditSnapshot["cipher"] {
   if (!cipher) return null;
   return {
     name: cipher.name,
@@ -102,7 +109,10 @@ function snapshotFromSocket(
   };
 }
 
-type AuditOptions = { port?: number; servername?: string };
+interface AuditOptions {
+  port?: number;
+  servername?: string;
+}
 
 function wireTlsAuditSocket(
   socket: TLSSocket,
@@ -135,7 +145,7 @@ function wireTlsAuditSocket(
 }
 
 /** Active TLS handshake against host:port — invasive. */
-export function fetchTlsAudit(
+export async function fetchTlsAudit(
   host: string,
   signal: AbortSignal,
   options?: AuditOptions

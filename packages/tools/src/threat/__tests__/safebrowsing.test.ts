@@ -9,9 +9,9 @@ describe("safebrowsing", () => {
   it("fetchSafebrowsingLookup maps empty threat matches", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue(
-        new Response(JSON.stringify({}), { status: 200 })
-      )
+      vi
+        .fn()
+        .mockResolvedValue(new Response(JSON.stringify({}), { status: 200 }))
     );
 
     const snap = await fetchSafebrowsingLookup(

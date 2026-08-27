@@ -1,9 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import {
-  fetchHibpBreachedAccount,
-  hibpLookupSnapshotSchema,
-} from "../hibp";
+import { fetchHibpBreachedAccount, hibpLookupSnapshotSchema } from "../hibp";
 
 describe("hibp", () => {
   it("parses empty breach snapshots", () => {

@@ -14,13 +14,13 @@ describe("to-text", () => {
     expect(resolveHref("/wiki/Guide", BASE)).toBe(
       "https://www.example.org/wiki/Guide"
     );
-    expect(
-      resolveHref("https://social.example.org/@admin#x", BASE)
-    ).toBe("https://social.example.org/@admin");
+    expect(resolveHref("https://social.example.org/@admin#x", BASE)).toBe(
+      "https://social.example.org/@admin"
+    );
     expect(resolveHref("#top", BASE)).toBe(null);
-    expect(
-      resolveHref("mailto:ops@example.com?subject=hi", BASE)
-    ).toBe("ops@example.com");
+    expect(resolveHref("mailto:ops@example.com?subject=hi", BASE)).toBe(
+      "ops@example.com"
+    );
   });
 
   it("extractOutboundFromHtml keeps OSINT links, drops assets", () => {

@@ -104,7 +104,10 @@ function resolvedFinalUrl(
  * Capacitively capped (maxHops) to avoid loops.
  */
 
-type UnshortenOptions = { userAgent: string; maxHops?: number };
+interface UnshortenOptions {
+  userAgent: string;
+  maxHops?: number;
+}
 export async function fetchUnshorten(
   url: string,
   signal: AbortSignal,

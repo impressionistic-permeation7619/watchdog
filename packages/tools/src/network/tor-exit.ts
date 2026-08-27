@@ -65,15 +65,16 @@ async function fetchExitAddresses(
  * @see https://check.torproject.org/exit-addresses
  */
 
-type TorExitOptions = { userAgent?: string };
+interface TorExitOptions {
+  userAgent?: string;
+}
 export async function fetchTorExitLookup(
   ipRaw: string,
   signal: AbortSignal,
   options?: TorExitOptions
 ): Promise<TorExitLookupSnapshot> {
   const ip = normalizeIp(ipRaw);
-  const ua =
-    options?.userAgent ?? watchdogUserAgent("network.tor_exit.lookup");
+  const ua = options?.userAgent ?? watchdogUserAgent("network.tor_exit.lookup");
 
   const exits = await fetchExitAddresses(signal, ua);
 

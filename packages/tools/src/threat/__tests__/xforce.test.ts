@@ -1,15 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
 
-import {
-  fetchXforceLookup,
-  xforceLookupSnapshotSchema,
-} from "../xforce";
+import { fetchXforceLookup, xforceLookupSnapshotSchema } from "../xforce";
 
 describe("xforce", () => {
   it("fetchXforceLookup maps IP reputation reports", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockImplementation((url: string) => {
+      vi.fn().mockImplementation(async (url: string) => {
         if (url.includes("/ipr/malware/")) {
           return Promise.resolve(
             new Response(JSON.stringify({ malware: [{ family: "Emotet" }] }), {

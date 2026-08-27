@@ -1,12 +1,12 @@
 import { z } from "zod";
 
-import { asString, isRecord } from "../parse/coerce";
 import {
   httpToolsError,
   parseToolsError,
   validationToolsError,
 } from "../errors/tools-error";
 import { watchdogUserAgent } from "../errors/user-agent";
+import { asString, isRecord } from "../parse/coerce";
 
 export const githubUserSnapshotSchema = z.object({
   handle: z.string().min(1),
@@ -41,7 +41,10 @@ export function normalizeGithubHandle(raw: string): string {
  * Optional token raises rate limits; unauthenticated still works (public).
  */
 
-type GithubUserOptions = { token?: string; userAgent?: string };
+interface GithubUserOptions {
+  token?: string;
+  userAgent?: string;
+}
 
 function notFoundGithubSnapshot(
   handle: string,
@@ -97,8 +100,7 @@ export async function fetchGithubUser(
   options?: GithubUserOptions
 ): Promise<GithubUserSnapshot> {
   const handle = normalizeGithubHandle(handleRaw);
-  const ua =
-    options?.userAgent ?? watchdogUserAgent("identity.github.lookup");
+  const ua = options?.userAgent ?? watchdogUserAgent("identity.github.lookup");
   const headers: Record<string, string> = {
     Accept: "application/vnd.github+json",
     "User-Agent": ua,

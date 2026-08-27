@@ -1,7 +1,4 @@
-import {
-  assertNotAborted,
-  withAbortableResolver,
-} from "./abortable-resolver";
+import { assertNotAborted, withAbortableResolver } from "./abortable-resolver";
 import {
   txtInventorySnapshotSchema,
   type TxtInventorySnapshot,

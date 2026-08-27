@@ -1,9 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import {
-  censysLookupSnapshotSchema,
-  fetchCensysHost,
-} from "../censys";
+import { censysLookupSnapshotSchema, fetchCensysHost } from "../censys";
 
 describe("censys", () => {
   it("parses empty host snapshots", () => {

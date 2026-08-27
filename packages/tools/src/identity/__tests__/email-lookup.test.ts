@@ -35,7 +35,8 @@ describe("email-lookup", () => {
       { exchange: "aspmx.l.google.com", priority: 1 },
     ]);
     mockResolver.resolveTxt.mockImplementation(async (name: string) => {
-      if (name === "gmail.com") return [["v=spf1 include:_spf.google.com ~all"]];
+      if (name === "gmail.com")
+        return [["v=spf1 include:_spf.google.com ~all"]];
       if (name === "_dmarc.gmail.com") return [["v=DMARC1; p=reject"]];
       return [];
     });

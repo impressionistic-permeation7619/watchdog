@@ -2,8 +2,8 @@ import { z } from "zod";
 
 import { normalizeIp } from "../dns/reverse";
 import { httpToolsError, ToolsError } from "../errors/tools-error";
-import { asString, isRecord } from "../parse/coerce";
 import { watchdogUserAgent } from "../errors/user-agent";
+import { asString, isRecord } from "../parse/coerce";
 
 export const bgprankingLookupSnapshotSchema = z.object({
   ip: z.string().min(1),
@@ -69,11 +69,11 @@ async function fetchLatestAsn(
   return toAsnNumber(isRecord(entry) ? entry.asn : undefined);
 }
 
-type AsnRankingResult = {
+interface AsnRankingResult {
   asnDescription: string | null;
   asnRank: number | null;
   asnPosition: number | null;
-};
+}
 
 async function fetchAsnRanking(
   asn: number,
@@ -123,7 +123,9 @@ async function fetchAsnRanking(
  * @see https://github.com/D4-project/bgp-ranking
  */
 
-type BgprankingOptions = { userAgent?: string };
+interface BgprankingOptions {
+  userAgent?: string;
+}
 export async function fetchBgprankingLookup(
   ipRaw: string,
   signal: AbortSignal,

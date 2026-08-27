@@ -2,8 +2,8 @@ import { createHash } from "node:crypto";
 
 import { z } from "zod";
 
-import { fetchBytes } from "../http/fetch-bytes";
 import { errorMessage } from "../errors/tools-error";
+import { fetchBytes } from "../http/fetch-bytes";
 
 const SECURITY_HEADER_NAMES = [
   "strict-transport-security",
@@ -96,7 +96,7 @@ function detectCdnHints(headers: Headers): string[] {
   return [...new Set(hints)];
 }
 
-function fetchHeadOrGet(
+async function fetchHeadOrGet(
   url: string,
   signal: AbortSignal,
   userAgent: string
@@ -107,7 +107,7 @@ function fetchHeadOrGet(
   finalUrl: string;
   error?: string;
 }> {
-  const getFallback = () =>
+  const getFallback = async () =>
     fetch(url, {
       method: "GET",
       redirect: "follow",
@@ -141,7 +141,7 @@ function fetchHeadOrGet(
       }
       return getFallback();
     })
-    .catch(() => getFallback());
+    .catch(async () => getFallback());
 }
 
 function failedProbeSnapshot(
@@ -175,7 +175,7 @@ function failedProbeSnapshot(
   });
 }
 
-function probePrimaryOrigin(
+async function probePrimaryOrigin(
   origins: string[],
   signal: AbortSignal,
   userAgent: string
@@ -209,7 +209,7 @@ function probePrimaryOrigin(
  * One Cap / one origin: security headers + security.txt + favicon hash + CDN hints.
  * Active HTTP — invasive.
  */
-export function fetchHttpProbe(
+export async function fetchHttpProbe(
   host: string,
   signal: AbortSignal,
   options: { userAgent: string; preferHttps?: boolean }

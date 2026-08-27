@@ -19,7 +19,8 @@ describe("wayback schema", () => {
     const fetch = waybackFetchSnapshotSchema.parse({
       url: "https://example.com",
       timestamp: "20240101000000",
-      archiveUrl: "https://web.archive.org/web/20240101000000/https://example.com",
+      archiveUrl:
+        "https://web.archive.org/web/20240101000000/https://example.com",
       queriedAt: "2026-01-01T00:00:00.000Z",
       status: 200,
       ok: true,

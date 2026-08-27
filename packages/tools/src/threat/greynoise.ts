@@ -1,9 +1,9 @@
 import { z } from "zod";
 
 import { normalizeIp } from "../dns/reverse";
+import { watchdogUserAgent } from "../errors/user-agent";
 import { fetchJsonObject } from "../http/fetch-json";
 import { asBool, asString } from "../parse/coerce";
-import { watchdogUserAgent } from "../errors/user-agent";
 
 export const greynoiseLookupSnapshotSchema = z.object({
   ip: z.string().min(1),
@@ -31,7 +31,10 @@ export type GreynoiseLookupSnapshot = z.infer<
  * @see https://docs.greynoise.io/reference/get_v3-community-ip
  */
 
-type GreynoiseOptions = { apiKey?: string; userAgent?: string };
+interface GreynoiseOptions {
+  apiKey?: string;
+  userAgent?: string;
+}
 export async function fetchGreynoiseCommunity(
   ipRaw: string,
   signal: AbortSignal,
@@ -39,8 +42,7 @@ export async function fetchGreynoiseCommunity(
 ): Promise<GreynoiseLookupSnapshot> {
   const ip = normalizeIp(ipRaw);
   const key = options?.apiKey?.trim() ?? "";
-  const ua =
-    options?.userAgent ?? watchdogUserAgent("threat.greynoise.lookup");
+  const ua = options?.userAgent ?? watchdogUserAgent("threat.greynoise.lookup");
 
   const headers: Record<string, string> = {
     Accept: "application/json",

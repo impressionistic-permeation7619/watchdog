@@ -21,7 +21,11 @@ describe("urlscan search", () => {
             url: "https://example.com/",
             time: "2026-01-01T00:00:00.000Z",
           },
-          page: { domain: "example.com", ip: "93.184.216.34", url: "https://example.com/" },
+          page: {
+            domain: "example.com",
+            ip: "93.184.216.34",
+            url: "https://example.com/",
+          },
           result: "https://urlscan.io/result/scan-1/",
         },
       ],

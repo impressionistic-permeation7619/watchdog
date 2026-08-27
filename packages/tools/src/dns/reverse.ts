@@ -3,10 +3,7 @@ import { isIP } from "node:net";
 import { z } from "zod";
 
 import { validationToolsError } from "../errors/tools-error";
-import {
-  assertNotAborted,
-  withAbortableResolver,
-} from "./abortable-resolver";
+import { assertNotAborted, withAbortableResolver } from "./abortable-resolver";
 
 export const dnsReverseSnapshotSchema = z.object({
   ip: z.string().min(1),

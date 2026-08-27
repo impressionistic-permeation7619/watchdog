@@ -1,8 +1,5 @@
+import { assertNotAborted, withAbortableResolver } from "./abortable-resolver";
 import type { DnsRecords } from "./schema";
-import {
-  assertNotAborted,
-  withAbortableResolver,
-} from "./abortable-resolver";
 
 export type { DnsRecords };
 

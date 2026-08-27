@@ -3,14 +3,11 @@ import { isIP } from "node:net";
 import { z } from "zod";
 
 import { normalizeIp } from "../dns/reverse";
-import {
-  httpToolsError,
-  parseToolsError,
-} from "../errors/tools-error";
+import { httpToolsError, parseToolsError } from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
 import { classifyIpOrHost } from "../parse/classify-ip-or-host";
 import { asNumber, asStringEmpty as asString, isRecord } from "../parse/coerce";
 import { normalizeHost } from "../whois/normalize";
-import { watchdogUserAgent } from "../errors/user-agent";
 
 export const mnemonicRecordSchema = z.object({
   query: z.string(),
@@ -166,7 +163,10 @@ export function parseMnemonicPdnsBody(
  * @see https://docs.mnemonic.no/display/public/API/PassiveDNS+Integration+Guide
  */
 
-type MnemonicOptions = { userAgent?: string; limit?: number };
+interface MnemonicOptions {
+  userAgent?: string;
+  limit?: number;
+}
 export async function fetchMnemonicPdns(
   queryRaw: string,
   signal: AbortSignal,
@@ -174,8 +174,7 @@ export async function fetchMnemonicPdns(
 ): Promise<MnemonicLookupSnapshot> {
   const { kind, value } = classifyIpOrHost(queryRaw);
   const limit = Math.min(Math.max(options?.limit ?? 50, 1), 500);
-  const ua =
-    options?.userAgent ?? watchdogUserAgent("network.mnemonic.lookup");
+  const ua = options?.userAgent ?? watchdogUserAgent("network.mnemonic.lookup");
 
   const url = new URL(
     `https://api.mnemonic.no/pdns/v3/${encodeURIComponent(value)}`

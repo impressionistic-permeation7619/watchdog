@@ -8,10 +8,7 @@ vi.mock("../../http/fetch-json", () => ({
   fetchJsonObject,
 }));
 
-import {
-  fetchUrlhausLookup,
-  urlhausLookupSnapshotSchema,
-} from "../urlhaus";
+import { fetchUrlhausLookup, urlhausLookupSnapshotSchema } from "../urlhaus";
 
 describe("urlhaus", () => {
   it("fetchUrlhausLookup maps host threat metadata", async () => {

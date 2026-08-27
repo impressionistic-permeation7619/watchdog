@@ -70,7 +70,10 @@ const TRACKER_PATTERNS: { vendor: string; re: RegExp }[] = [
 
 /** Live HTML → title/meta + tracker hints. */
 
-type PageEnrichOptions = { userAgent: string; maxBytes?: number };
+interface PageEnrichOptions {
+  userAgent: string;
+  maxBytes?: number;
+}
 export async function fetchPageEnrich(
   url: string,
   signal: AbortSignal,

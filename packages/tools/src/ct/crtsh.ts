@@ -103,7 +103,10 @@ function collectCrtShEntries(
     if (entries.length >= limit) break;
   }
 
-  return { entries, domains: [...domainSet].sort((a, b) => a.localeCompare(b)) };
+  return {
+    entries,
+    domains: [...domainSet].sort((a, b) => a.localeCompare(b)),
+  };
 }
 
 export interface FetchCrtShOptions {

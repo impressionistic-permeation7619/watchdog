@@ -87,7 +87,7 @@ function parseOriginFields(rawOrigin: string): {
   };
 }
 
-function lookupAsName(
+async function lookupAsName(
   resolver: ReturnType<typeof withAbortableResolver>["resolver"],
   primaryAsn: string
 ): Promise<{ rawAs: string | null; asName: string | null }> {

@@ -10,9 +10,9 @@ import {
   rateLimitedToolsError,
   validationToolsError,
 } from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
 import { asString, isRecord, recordRows } from "../parse/coerce";
 import { normalizeHost } from "../whois/normalize";
-import { watchdogUserAgent } from "../errors/user-agent";
 
 export const otxLookupSnapshotSchema = z.object({
   query: z.string().min(1),
@@ -108,7 +108,9 @@ function extractPulseInfo(body: Record<string, unknown>): {
  * @see https://otx.alienvault.com/assets/static/external_api.html
  */
 
-type OtxOptions = { userAgent?: string };
+interface OtxOptions {
+  userAgent?: string;
+}
 export async function fetchOtxLookup(
   queryRaw: string,
   apiKey: string,

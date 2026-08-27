@@ -3,10 +3,10 @@ import { isIP } from "node:net";
 import { z } from "zod";
 
 import { parseToolsError, validationToolsError } from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
 import { fetchJsonObject } from "../http/fetch-json";
 import { asString, isRecord } from "../parse/coerce";
 import { normalizeHost } from "../whois/normalize";
-import { watchdogUserAgent } from "../errors/user-agent";
 
 export const keybaseProofSchema = z.object({
   platform: z.string(),
@@ -98,9 +98,7 @@ function proofFromPresentationRow(
   };
 }
 
-function proofsFromByGroup(
-  byGroup: Record<string, unknown>
-): KeybaseProof[] {
+function proofsFromByGroup(byGroup: Record<string, unknown>): KeybaseProof[] {
   const proofs: KeybaseProof[] = [];
   for (const [platform, rows] of Object.entries(byGroup)) {
     if (!Array.isArray(rows)) continue;
@@ -227,15 +225,16 @@ export function parseKeybaseBody(
  * @see https://keybase.io/docs/api/1.0/call/user/lookup
  */
 
-type KeybaseOptions = { userAgent?: string };
+interface KeybaseOptions {
+  userAgent?: string;
+}
 export async function fetchKeybaseLookup(
   queryRaw: string,
   signal: AbortSignal,
   options?: KeybaseOptions
 ): Promise<KeybaseLookupSnapshot> {
   const { kind, value, param } = classifyQuery(queryRaw);
-  const ua =
-    options?.userAgent ?? watchdogUserAgent("identity.keybase.lookup");
+  const ua = options?.userAgent ?? watchdogUserAgent("identity.keybase.lookup");
 
   const url = new URL("https://keybase.io/_/api/1.0/user/lookup.json");
   url.searchParams.set(param, value);

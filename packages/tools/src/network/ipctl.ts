@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { normalizeIp } from "../dns/reverse";
+import { watchdogUserAgent } from "../errors/user-agent";
 import { fetchJsonObject } from "../http/fetch-json";
 import {
   asBool,
@@ -9,7 +10,6 @@ import {
   isRecord,
   recordRows,
 } from "../parse/coerce";
-import { watchdogUserAgent } from "../errors/user-agent";
 
 export const ipctlLookupSnapshotSchema = z.object({
   ip: z.string().min(1),
@@ -49,18 +49,14 @@ function parseIpctlTags(data: Record<string, unknown>): string[] {
   });
 }
 
-function firstString(
-  ...values: Array<string | null | undefined>
-): string | null {
+function firstString(...values: (string | null | undefined)[]): string | null {
   for (const value of values) {
     if (value) return value;
   }
   return null;
 }
 
-function firstNumber(
-  ...values: Array<number | null | undefined>
-): number | null {
+function firstNumber(...values: (number | null | undefined)[]): number | null {
   for (const value of values) {
     if (value !== null && value !== undefined) return value;
   }
@@ -118,15 +114,16 @@ export function parseIpctlBody(
  * @see https://ipctl.io/vs/bgpview
  */
 
-type IpctlOptions = { userAgent?: string };
+interface IpctlOptions {
+  userAgent?: string;
+}
 export async function fetchIpctlLookup(
   ipRaw: string,
   signal: AbortSignal,
   options?: IpctlOptions
 ): Promise<IpctlLookupSnapshot> {
   const ip = normalizeIp(ipRaw);
-  const ua =
-    options?.userAgent ?? watchdogUserAgent("network.ipctl.lookup");
+  const ua = options?.userAgent ?? watchdogUserAgent("network.ipctl.lookup");
 
   const url = `https://api.ipctl.io/v1/ip/${encodeURIComponent(ip)}`;
   const body = await fetchJsonObject({

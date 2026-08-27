@@ -1,12 +1,9 @@
 import { z } from "zod";
 
-import { isRecord } from "../parse/coerce";
-import {
-  httpToolsError,
-  validationToolsError,
-} from "../errors/tools-error";
-import { normalizeHost } from "../whois/normalize";
+import { httpToolsError, validationToolsError } from "../errors/tools-error";
 import { watchdogUserAgent } from "../errors/user-agent";
+import { isRecord } from "../parse/coerce";
+import { normalizeHost } from "../whois/normalize";
 
 export const commoncrawlHitSchema = z.object({
   url: z.string(),
@@ -42,9 +39,7 @@ export function parseCommoncrawlCdxText(
   return parseCommoncrawlCdxLines(trimmed);
 }
 
-function parseCommoncrawlCdxArrayRow(
-  row: unknown
-): Record<string, unknown>[] {
+function parseCommoncrawlCdxArrayRow(row: unknown): Record<string, unknown>[] {
   if (isRecord(row)) return [row];
   if (Array.isArray(row) && typeof row[2] === "string") {
     return [
@@ -84,7 +79,10 @@ function parseCommoncrawlCdxLines(text: string): Record<string, unknown>[] {
   return out;
 }
 
-type CollinfoIndex = { id: string; cdxApi: string };
+interface CollinfoIndex {
+  id: string;
+  cdxApi: string;
+}
 
 function parseCollinfoIndexes(
   coll: unknown,
@@ -145,7 +143,7 @@ function collectCdxHits(
   }
 }
 
-function fetchCdxHitsForIndex(
+async function fetchCdxHitsForIndex(
   index: CollinfoIndex,
   host: string,
   limit: number,
@@ -174,13 +172,13 @@ function fetchCdxHitsForIndex(
   });
 }
 
-type CommoncrawlLookupOptions = {
+interface CommoncrawlLookupOptions {
   userAgent?: string;
   /** How many newest indexes to query (default 2). */
   indexes?: number;
   /** Max hits to keep across indexes (default 40). */
   limit?: number;
-};
+}
 
 /**
  * Common Crawl CDX — recent crawl indexes for URLs under a host.

@@ -62,10 +62,7 @@ function whoisXmlSnapshot(
     host,
     source: "whoisxml",
     registrar: pickWhoisField(rec.registrarName, registry?.registrarName),
-    registrantOrg: pickWhoisField(
-      registrant?.organization,
-      registrant?.name
-    ),
+    registrantOrg: pickWhoisField(registrant?.organization, registrant?.name),
     nameservers: rec.nameServers?.hostNames ?? [],
     status: whoisStatusList(rec.status),
     registeredAt: dates.registeredAt,

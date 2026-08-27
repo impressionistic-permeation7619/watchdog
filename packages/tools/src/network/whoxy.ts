@@ -5,9 +5,9 @@ import {
   missingApiKey,
   parseToolsError,
 } from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
 import { isRecord } from "../parse/coerce";
 import { normalizeHost } from "../whois/normalize";
-import { watchdogUserAgent } from "../errors/user-agent";
 
 export const whoxyLookupSnapshotSchema = z.object({
   host: z.string().min(1),
@@ -41,7 +41,9 @@ function contactField(contact: unknown, key: string): string | null {
  * @see https://www.whoxy.com/
  */
 
-type WhoxyOptions = { userAgent?: string };
+interface WhoxyOptions {
+  userAgent?: string;
+}
 export async function fetchWhoxyWhois(
   hostRaw: string,
   apiKey: string,
@@ -52,8 +54,7 @@ export async function fetchWhoxyWhois(
   const key = apiKey.trim();
   if (!key) throw missingApiKey("WHOXY_API_KEY");
 
-  const ua =
-    options?.userAgent ?? watchdogUserAgent("network.whoxy.lookup");
+  const ua = options?.userAgent ?? watchdogUserAgent("network.whoxy.lookup");
   const url = new URL("https://api.whoxy.com/");
   url.searchParams.set("key", key);
   url.searchParams.set("whois", host);

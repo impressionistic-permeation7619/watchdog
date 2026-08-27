@@ -8,10 +8,7 @@ vi.mock("../../http/fetch-json", () => ({
   fetchJsonObject,
 }));
 
-import {
-  fetchSnusbaseLookup,
-  snusbaseLookupSnapshotSchema,
-} from "../snusbase";
+import { fetchSnusbaseLookup, snusbaseLookupSnapshotSchema } from "../snusbase";
 
 describe("snusbase", () => {
   it("parses lookup snapshot schema", () => {

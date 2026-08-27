@@ -8,9 +8,9 @@ import {
   parseToolsError,
   validationToolsError,
 } from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
 import { isRecord } from "../parse/coerce";
 import { normalizeHost } from "../whois/normalize";
-import { watchdogUserAgent } from "../errors/user-agent";
 
 export const xforceLookupSnapshotSchema = z.object({
   query: z.string().min(1),
@@ -73,12 +73,13 @@ export async function fetchXforceLookup(
   const key = apiKey.trim();
   const password = apiPassword.trim();
   if (!key || !password) {
-    throw validationToolsError("XFORCE_API_KEY and XFORCE_API_PASSWORD required");
+    throw validationToolsError(
+      "XFORCE_API_KEY and XFORCE_API_PASSWORD required"
+    );
   }
 
   const { kind, value } = classifyXforceQuery(queryRaw);
-  const ua =
-    options?.userAgent ?? watchdogUserAgent("threat.xforce.lookup");
+  const ua = options?.userAgent ?? watchdogUserAgent("threat.xforce.lookup");
   const headers: Record<string, string> = {
     Accept: "application/json",
     Authorization: authHeader(key, password),

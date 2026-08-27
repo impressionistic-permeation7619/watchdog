@@ -3,9 +3,9 @@ import { createHash } from "node:crypto";
 import { z } from "zod";
 
 import { httpToolsError } from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
 import { asString, isRecord, recordRows } from "../parse/coerce";
 import { normalizeEmail } from "./email-lookup";
-import { watchdogUserAgent } from "../errors/user-agent";
 
 export const gravatarAccountSchema = z.object({
   shortname: z.string().nullable(),
@@ -116,7 +116,9 @@ export function parseGravatarBody(
  * @see https://docs.gravatar.com/api/profiles/
  */
 
-type GravatarOptions = { userAgent?: string };
+interface GravatarOptions {
+  userAgent?: string;
+}
 export async function fetchGravatarLookup(
   emailRaw: string,
   signal: AbortSignal,

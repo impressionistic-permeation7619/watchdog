@@ -1,12 +1,12 @@
 import { z } from "zod";
 
-import { recordRows } from "../parse/coerce";
 import {
   httpToolsError,
   missingApiKey,
   validationToolsError,
 } from "../errors/tools-error";
 import { watchdogUserAgent } from "../errors/user-agent";
+import { recordRows } from "../parse/coerce";
 
 export const hibpBreachSchema = z.object({
   name: z.string(),
@@ -34,7 +34,10 @@ export type HibpLookupSnapshot = z.infer<typeof hibpLookupSnapshotSchema>;
  * Requires API key. Truncated list (max 40) for Proposal hygiene.
  */
 
-type HibpOptions = { userAgent?: string; truncate?: number };
+interface HibpOptions {
+  userAgent?: string;
+  truncate?: number;
+}
 export async function fetchHibpBreachedAccount(
   email: string,
   apiKey: string,
@@ -42,7 +45,8 @@ export async function fetchHibpBreachedAccount(
   options?: HibpOptions
 ): Promise<HibpLookupSnapshot> {
   const normalized = email.trim().toLowerCase();
-  if (!normalized.includes("@")) throw validationToolsError(`Invalid email: ${email}`);
+  if (!normalized.includes("@"))
+    throw validationToolsError(`Invalid email: ${email}`);
   const key = apiKey.trim();
   if (!key) throw missingApiKey("HIBP_API_KEY");
 

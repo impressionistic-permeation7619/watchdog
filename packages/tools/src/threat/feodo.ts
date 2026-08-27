@@ -2,8 +2,8 @@ import { z } from "zod";
 
 import { normalizeIp } from "../dns/reverse";
 import { httpToolsError } from "../errors/tools-error";
-import { asString, isRecord } from "../parse/coerce";
 import { watchdogUserAgent } from "../errors/user-agent";
+import { asString, isRecord } from "../parse/coerce";
 
 export const feodoLookupSnapshotSchema = z.object({
   ip: z.string().min(1),
@@ -52,7 +52,10 @@ export function parseFeodoEntries(raw: unknown): FeodoEntry[] {
   return out;
 }
 
-type FeodoOptions2 = { userAgent: string; apiKey?: string };
+interface FeodoOptions2 {
+  userAgent: string;
+  apiKey?: string;
+}
 
 async function downloadFeodoBlocklist(
   signal: AbortSignal,
@@ -74,13 +77,13 @@ async function downloadFeodoBlocklist(
   return parseFeodoEntries(body);
 }
 
-function fetchBlocklist(
+async function fetchBlocklist(
   signal: AbortSignal,
   options: FeodoOptions2
 ): Promise<FeodoEntry[]> {
   const now = Date.now();
   if (cachedEntries && now - cachedAt < CACHE_TTL_MS) {
-    return Promise.resolve(cachedEntries);
+    return cachedEntries;
   }
   if (inflight) return inflight;
 
@@ -104,7 +107,10 @@ function fetchBlocklist(
  * @see https://feodotracker.abuse.ch/
  */
 
-type FeodoOptions = { userAgent?: string; apiKey?: string };
+interface FeodoOptions {
+  userAgent?: string;
+  apiKey?: string;
+}
 
 function feodoMatchSnapshot(
   ip: string,
@@ -122,7 +128,7 @@ function feodoMatchSnapshot(
   });
 }
 
-export function fetchFeodoLookup(
+export async function fetchFeodoLookup(
   ipRaw: string,
   signal: AbortSignal,
   options?: FeodoOptions
@@ -133,5 +139,10 @@ export function fetchFeodoLookup(
   return fetchBlocklist(signal, {
     userAgent: ua,
     apiKey: options?.apiKey,
-  }).then((entries) => feodoMatchSnapshot(ip, entries.find((e) => e.ipAddress === ip)));
+  }).then((entries) =>
+    feodoMatchSnapshot(
+      ip,
+      entries.find((e) => e.ipAddress === ip)
+    )
+  );
 }

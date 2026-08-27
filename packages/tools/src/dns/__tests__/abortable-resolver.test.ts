@@ -8,16 +8,18 @@ describe("abortable-resolver", () => {
     const controller = new AbortController();
     controller.abort();
 
-    expect(() => assertNotAborted(controller.signal, "aborted")).toThrow(ToolsError);
+    expect(() => {
+      assertNotAborted(controller.signal, "aborted");
+    }).toThrow(ToolsError);
   });
 
   it("withAbortableResolver throws when signal is already aborted", () => {
     const controller = new AbortController();
     controller.abort();
 
-    expect(() =>
-      withAbortableResolver(controller.signal, "aborted")
-    ).toThrow(ToolsError);
+    expect(() => withAbortableResolver(controller.signal, "aborted")).toThrow(
+      ToolsError
+    );
   });
 
   it("withAbortableResolver returns resolver and cleanup", () => {

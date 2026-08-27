@@ -123,7 +123,9 @@ function snapshotFromJson(
 
 const MAX_OEMBED_BYTES = 64_000;
 
-type OembedOptions = { userAgent: string };
+interface OembedOptions {
+  userAgent: string;
+}
 
 export async function fetchOembed(
   url: string,

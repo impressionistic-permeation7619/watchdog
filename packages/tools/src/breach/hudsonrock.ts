@@ -1,7 +1,5 @@
 import { z } from "zod";
 
-import { classifyIpOrHost } from "../parse/classify-ip-or-host";
-import { asString, isRecord, recordRows } from "../parse/coerce";
 import {
   httpToolsError,
   missingApiKey,
@@ -9,6 +7,8 @@ import {
   validationToolsError,
 } from "../errors/tools-error";
 import { watchdogUserAgent } from "../errors/user-agent";
+import { classifyIpOrHost } from "../parse/classify-ip-or-host";
+import { asString, isRecord, recordRows } from "../parse/coerce";
 
 export const hudsonrockLookupSnapshotSchema = z.object({
   query: z.string().min(1),
@@ -78,7 +78,9 @@ function summarize(raw: unknown): {
  * @see https://docs.hudsonrock.com/reference/search-by-domains
  */
 
-type HudsonrockOptions = { userAgent?: string };
+interface HudsonrockOptions {
+  userAgent?: string;
+}
 export async function fetchHudsonrockLookup(
   queryRaw: string,
   apiKey: string,

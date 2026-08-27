@@ -35,23 +35,23 @@ const PDF_HINT_KEYS = [
   "/CreationDate",
 ] as const;
 
-type MagicSignature = {
+interface MagicSignature {
   magic: string;
   mime: string;
-  match: (bytes: Uint8Array) => boolean;
-};
+  matchesBytes: (bytes: Uint8Array) => boolean;
+}
 
 const MAGIC_SIGNATURES: MagicSignature[] = [
   {
     magic: "JPEG",
     mime: "image/jpeg",
-    match: (b) =>
+    matchesBytes: (b) =>
       b.length >= 3 && b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff,
   },
   {
     magic: "PNG",
     mime: "image/png",
-    match: (b) =>
+    matchesBytes: (b) =>
       b.length >= 8 &&
       b[0] === 0x89 &&
       b[1] === 0x50 &&
@@ -61,7 +61,7 @@ const MAGIC_SIGNATURES: MagicSignature[] = [
   {
     magic: "PDF",
     mime: "application/pdf",
-    match: (b) =>
+    matchesBytes: (b) =>
       b.length >= 4 &&
       b[0] === 0x25 &&
       b[1] === 0x50 &&
@@ -71,7 +71,7 @@ const MAGIC_SIGNATURES: MagicSignature[] = [
   {
     magic: "ZIP",
     mime: "application/zip",
-    match: (b) =>
+    matchesBytes: (b) =>
       b.length >= 4 &&
       b[0] === 0x50 &&
       b[1] === 0x4b &&
@@ -83,7 +83,7 @@ function detectMagic(
   bytes: Uint8Array
 ): { magic: string; mime: string } | null {
   for (const sig of MAGIC_SIGNATURES) {
-    if (sig.match(bytes)) return { magic: sig.magic, mime: sig.mime };
+    if (sig.matchesBytes(bytes)) return { magic: sig.magic, mime: sig.mime };
   }
   return null;
 }

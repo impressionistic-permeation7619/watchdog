@@ -2,8 +2,8 @@ import { z } from "zod";
 
 import { normalizeIp } from "../dns/reverse";
 import { httpToolsError, ToolsError } from "../errors/tools-error";
-import { asString, isRecord } from "../parse/coerce";
 import { watchdogUserAgent } from "../errors/user-agent";
+import { asString, isRecord } from "../parse/coerce";
 
 export const dshieldLookupSnapshotSchema = z.object({
   ip: z.string().min(1),
@@ -81,7 +81,9 @@ export function parseDshieldBody(
  * @see https://isc.sans.edu/api
  */
 
-type DshieldOptions = { userAgent?: string };
+interface DshieldOptions {
+  userAgent?: string;
+}
 export async function fetchDshieldLookup(
   ipRaw: string,
   signal: AbortSignal,

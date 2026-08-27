@@ -1,13 +1,10 @@
 import { z } from "zod";
 
-import { classifyIpOrHost } from "../parse/classify-ip-or-host";
-import {
-  missingApiKey,
-  ToolsError,
-} from "../errors/tools-error";
-import { fetchJsonObject } from "../http/fetch-json";
-import { asString, isRecord } from "../parse/coerce";
+import { missingApiKey, ToolsError } from "../errors/tools-error";
 import { watchdogUserAgent } from "../errors/user-agent";
+import { fetchJsonObject } from "../http/fetch-json";
+import { classifyIpOrHost } from "../parse/classify-ip-or-host";
+import { asString, isRecord } from "../parse/coerce";
 
 export const threatfoxIocSchema = z.object({
   id: z.string().nullable(),
@@ -64,7 +61,9 @@ function classifyQuery(raw: string): {
  * @see https://threatfox.abuse.ch/api/
  */
 
-type ThreatfoxOptions = { userAgent?: string };
+interface ThreatfoxOptions {
+  userAgent?: string;
+}
 export async function fetchThreatfoxLookup(
   queryRaw: string,
   apiKey: string,
@@ -75,8 +74,7 @@ export async function fetchThreatfoxLookup(
   const key = apiKey.trim();
   if (!key) throw missingApiKey("THREATFOX_API_KEY");
 
-  const ua =
-    options?.userAgent ?? watchdogUserAgent("threat.threatfox.lookup");
+  const ua = options?.userAgent ?? watchdogUserAgent("threat.threatfox.lookup");
 
   const body = await fetchJsonObject({
     url: "https://threatfox-api.abuse.ch/api/v1/",

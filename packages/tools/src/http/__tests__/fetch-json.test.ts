@@ -7,9 +7,11 @@ describe("fetchJsonObject", () => {
   it("returns parsed JSON objects on success", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue(
-        new Response(JSON.stringify({ ok: true }), { status: 200 })
-      )
+      vi
+        .fn()
+        .mockResolvedValue(
+          new Response(JSON.stringify({ ok: true }), { status: 200 })
+        )
     );
 
     const body = await fetchJsonObject({

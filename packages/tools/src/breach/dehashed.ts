@@ -1,10 +1,10 @@
 import { z } from "zod";
 
+import { missingApiKey, validationToolsError } from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
+import { fetchJsonObject } from "../http/fetch-json";
 import { classifyBreachQuery } from "../parse/classify-breach-query";
 import { asString, isRecord } from "../parse/coerce";
-import { missingApiKey, validationToolsError } from "../errors/tools-error";
-import { fetchJsonObject } from "../http/fetch-json";
-import { watchdogUserAgent } from "../errors/user-agent";
 
 const DATABASE_NAMES_CAP = 20;
 const ENTRIES_CAP = 100;
@@ -108,7 +108,9 @@ function mapEntry(raw: unknown): DehashedEntry | null {
  * @see https://docs.dehashed.com/
  */
 
-type DehashedOptions = { userAgent?: string };
+interface DehashedOptions {
+  userAgent?: string;
+}
 export async function fetchDehashedLookup(
   queryRaw: string,
   apiKey: string,
@@ -120,8 +122,7 @@ export async function fetchDehashedLookup(
 
   const { kind, value } = classifyDehashedQuery(queryRaw);
   const query = buildDehashedQuery(kind, value);
-  const ua =
-    options?.userAgent ?? watchdogUserAgent("breach.dehashed.lookup");
+  const ua = options?.userAgent ?? watchdogUserAgent("breach.dehashed.lookup");
 
   const body = await fetchJsonObject({
     url: "https://api.dehashed.com/v2/search",

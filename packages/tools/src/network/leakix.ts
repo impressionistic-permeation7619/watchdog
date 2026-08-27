@@ -6,9 +6,9 @@ import {
   parseToolsError,
   rateLimitedToolsError,
 } from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
 import { classifyIpOrHost } from "../parse/classify-ip-or-host";
 import { asString, isRecord } from "../parse/coerce";
-import { watchdogUserAgent } from "../errors/user-agent";
 
 export const leakixLookupSnapshotSchema = z.object({
   query: z.string().min(1),
@@ -40,7 +40,9 @@ function firstArray(body: Record<string, unknown>, keys: string[]): unknown[] {
  * @see https://docs.leakix.net/docs/api/hostdetails/
  */
 
-type LeakixOptions = { userAgent?: string };
+interface LeakixOptions {
+  userAgent?: string;
+}
 export async function fetchLeakixLookup(
   queryRaw: string,
   apiKey: string,
@@ -51,8 +53,7 @@ export async function fetchLeakixLookup(
   if (!key) throw missingApiKey("LEAKIX_API_KEY");
 
   const { kind, value } = classifyIpOrHost(queryRaw);
-  const ua =
-    options?.userAgent ?? watchdogUserAgent("network.leakix.lookup");
+  const ua = options?.userAgent ?? watchdogUserAgent("network.leakix.lookup");
   const path = kind === "ip" ? "host" : "domain";
   const url = `https://leakix.net/${path}/${encodeURIComponent(value)}`;
 

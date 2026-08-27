@@ -15,10 +15,15 @@ function isBlockedHostname(host: string): boolean {
 }
 
 function isBlockedIpv6(host: string): boolean {
-  return host === "::1" || host.startsWith("fe80:") || host.startsWith("fc") || host.startsWith("fd");
+  return (
+    host === "::1" ||
+    host.startsWith("fe80:") ||
+    host.startsWith("fc") ||
+    host.startsWith("fd")
+  );
 }
 
-const PRIVATE_IPV4_RULES: Array<(a: number, b: number) => boolean> = [
+const PRIVATE_IPV4_RULES: ((a: number, b: number) => boolean)[] = [
   (a) => a === 10 || a === 127 || a === 0,
   (a, b) => a === 169 && b === 254,
   (a, b) => a === 192 && b === 168,

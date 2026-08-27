@@ -2,9 +2,9 @@ import { z } from "zod";
 
 import { normalizeIp } from "../dns/reverse";
 import { missingApiKey } from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
 import { fetchJsonObject } from "../http/fetch-json";
 import { asString } from "../parse/coerce";
-import { watchdogUserAgent } from "../errors/user-agent";
 
 export const ipinfoLookupSnapshotSchema = z.object({
   ip: z.string().min(1),
@@ -29,7 +29,9 @@ export type IpinfoLookupSnapshot = z.infer<typeof ipinfoLookupSnapshotSchema>;
  * @see https://ipinfo.io/developers
  */
 
-type IpinfoOptions = { userAgent?: string };
+interface IpinfoOptions {
+  userAgent?: string;
+}
 export async function fetchIpinfoLookup(
   ipRaw: string,
   apiToken: string,
@@ -39,8 +41,7 @@ export async function fetchIpinfoLookup(
   const token = apiToken.trim();
   if (!token) throw missingApiKey("IPINFO_API_TOKEN");
   const ip = normalizeIp(ipRaw);
-  const ua =
-    options?.userAgent ?? watchdogUserAgent("network.ipinfo.lookup");
+  const ua = options?.userAgent ?? watchdogUserAgent("network.ipinfo.lookup");
 
   const url = new URL(`https://ipinfo.io/${ip}/json`);
   url.searchParams.set("token", token);

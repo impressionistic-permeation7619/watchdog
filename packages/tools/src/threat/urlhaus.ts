@@ -1,10 +1,10 @@
 import { z } from "zod";
 
-import { classifyIpOrHost } from "../parse/classify-ip-or-host";
 import { missingApiKey } from "../errors/tools-error";
-import { fetchJsonObject } from "../http/fetch-json";
-import { asString, isRecord } from "../parse/coerce";
 import { watchdogUserAgent } from "../errors/user-agent";
+import { fetchJsonObject } from "../http/fetch-json";
+import { classifyIpOrHost } from "../parse/classify-ip-or-host";
+import { asString, isRecord } from "../parse/coerce";
 
 export const urlhausLookupSnapshotSchema = z.object({
   query: z.string().min(1),
@@ -66,7 +66,9 @@ function emptyResult(
  * @see https://urlhaus-api.abuse.ch/
  */
 
-type UrlhausOptions = { userAgent?: string };
+interface UrlhausOptions {
+  userAgent?: string;
+}
 export async function fetchUrlhausLookup(
   queryRaw: string,
   apiKey: string,
@@ -77,8 +79,7 @@ export async function fetchUrlhausLookup(
   const key = apiKey.trim();
   if (!key) throw missingApiKey("THREATFOX_API_KEY");
 
-  const ua =
-    options?.userAgent ?? watchdogUserAgent("threat.urlhaus.lookup");
+  const ua = options?.userAgent ?? watchdogUserAgent("threat.urlhaus.lookup");
 
   let endpoint: "url" | "payload" | "host";
   if (kind === "url") {

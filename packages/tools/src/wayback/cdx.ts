@@ -36,11 +36,11 @@ export function waybackArchiveUrl(timestamp: string, url: string): string {
   return `https://web.archive.org/web/${timestamp}id_/${url}`;
 }
 
-type WaybackLookupOptions = {
+interface WaybackLookupOptions {
   userAgent: string;
   limit?: number;
   filterStatus200?: boolean;
-};
+}
 
 const CDX_OPTIONAL_FIELDS = [
   [2, "statuscode"],
@@ -142,7 +142,10 @@ export async function closestWaybackTimestamp(
 
 /** Fetch a Wayback raw snapshot body (id_ URL). */
 
-type CdxOptions = { userAgent: string; maxBytes?: number };
+interface CdxOptions {
+  userAgent: string;
+  maxBytes?: number;
+}
 export async function fetchWaybackSnapshot(
   url: string,
   timestamp: string,

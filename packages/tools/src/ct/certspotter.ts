@@ -1,12 +1,9 @@
 import { z } from "zod";
 
-import { asStringEmpty as asString, isRecord } from "../parse/coerce";
-import {
-  httpToolsError,
-  rateLimitedToolsError,
-} from "../errors/tools-error";
-import { normalizeHost } from "../whois/normalize";
+import { httpToolsError, rateLimitedToolsError } from "../errors/tools-error";
 import { watchdogUserAgent } from "../errors/user-agent";
+import { asStringEmpty as asString, isRecord } from "../parse/coerce";
+import { normalizeHost } from "../whois/normalize";
 
 export const certspotterIssuanceSchema = z.object({
   id: z.string(),
@@ -36,7 +33,10 @@ export type CertspotterLookupSnapshot = z.infer<
  * @see https://sslmate.com/certspotter/api/
  */
 
-type CertspotterOptions = { userAgent?: string; limit?: number };
+interface CertspotterOptions {
+  userAgent?: string;
+  limit?: number;
+}
 
 function parseIssuanceId(row: Record<string, unknown>): string | null {
   const idRaw = row.id;
