@@ -224,7 +224,12 @@ for (const f of WD_UI_FILES) {
 
 const onDisk = walk(path.join(src, "shared/ui"))
   .map((abs) => relFromRoot(abs))
-  .filter((r) => !r.includes("/shadcn/") && !r.includes("/__tests__/"));
+  .filter(
+    (r) =>
+      !r.includes("/shadcn/") &&
+      !r.includes("/__tests__/") &&
+      !r.endsWith(".lib.ts")
+  );
 for (const f of onDisk) {
   if (!manifestSet.has(f)) {
     fail(

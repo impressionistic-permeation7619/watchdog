@@ -1,7 +1,7 @@
 /**
  * Hand-owned Watchdog UI atoms under `src/shared/ui/` (not `shadcn/`).
  * Bidirectional with ds-ban-check — every file here must exist; every
- * hand-owned *.ts(x) under shared/ui (except shadcn/ and __tests__/) must be listed.
+ * hand-owned *.ts(x) under shared/ui (except shadcn/, __tests__/, and *.lib.ts) must be listed.
  */
 export const WD_UI_FILES = [
   "src/shared/ui/active-tab-body.tsx",
