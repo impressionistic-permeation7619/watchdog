@@ -10,8 +10,9 @@ import { toast } from "sonner";
 
 import type { CaseRecord } from "@/domains/cases/types";
 import {
-  createEntityColumns,
   entityGlobalFilterFn,
+  entityTableColumns,
+  type EntityTableMeta,
 } from "@/domains/entities/components/entity-table.columns";
 import {
   createEdgeFn,
@@ -208,16 +209,15 @@ export function useEntityTable(active: CaseRecord) {
     [connectionUpdateMutation]
   );
 
-  const columns = useMemo(
-    () =>
-      createEntityColumns({
-        updateKind,
-        updateSummary,
-        peersByEntityId,
-        entityOptions,
-        createConnection,
-        updateConnection,
-      }),
+  const tableMeta = useMemo<EntityTableMeta>(
+    () => ({
+      updateKind,
+      updateSummary,
+      peersByEntityId,
+      entityOptions,
+      createConnection,
+      updateConnection,
+    }),
     [
       updateKind,
       updateSummary,
@@ -230,7 +230,8 @@ export function useEntityTable(active: CaseRecord) {
 
   const { table } = useDataTable({
     data: rows,
-    columns,
+    columns: entityTableColumns,
+    meta: tableMeta,
     getRowId: (row) => row.id,
     globalFilter: search,
     onGlobalFilterChange: setSearch,
@@ -263,7 +264,7 @@ export function useEntityTable(active: CaseRecord) {
   return {
     rows,
     table,
-    columns,
+    columns: entityTableColumns,
     createForm,
     search,
     setSearch,

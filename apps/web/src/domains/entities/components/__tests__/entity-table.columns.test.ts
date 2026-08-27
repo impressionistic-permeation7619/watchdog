@@ -1,10 +1,10 @@
 import type { Row } from "@tanstack/react-table";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { testId } from "@watchdog/test-kit";
 
 import {
-  createEntityColumns,
   entityGlobalFilterFn,
+  entityTableColumns,
 } from "@/domains/entities/components/entity-table.columns";
 import type { EntityRecord } from "@/domains/entities/types";
 
@@ -39,16 +39,9 @@ describe("entity-table.columns", () => {
   });
 
   it("builds expected entity table columns", () => {
-    const columns = createEntityColumns({
-      updateKind: vi.fn(),
-      updateSummary: vi.fn(),
-      peersByEntityId: new Map(),
-      entityOptions: [],
-      createConnection: vi.fn(),
-      updateConnection: vi.fn(),
-    });
-
-    expect(columns).toHaveLength(6);
-    expect(columns.some((column) => column.id === "connections")).toBe(true);
+    expect(entityTableColumns).toHaveLength(6);
+    expect(entityTableColumns.some((column) => column.id === "connections")).toBe(
+      true
+    );
   });
 });

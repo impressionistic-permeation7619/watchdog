@@ -1,5 +1,10 @@
 /* oxlint-disable react/only-export-components -- column factory for EntityTable */
-import type { CellContext, ColumnDef, FilterFn } from "@tanstack/react-table";
+import type {
+  CellContext,
+  ColumnDef,
+  FilterFn,
+  HeaderContext,
+} from "@tanstack/react-table";
 
 import { EntityConnectionsCell } from "@/domains/entities/components/entity-connections-cell";
 import type { EntityConnectionPeer } from "@/domains/entities/lib/connection-peers";
@@ -51,6 +56,51 @@ export interface EntityTableMeta {
   ) => Promise<void>;
 }
 
+function entityMeta(
+  ctx: Pick<CellContext<EntityRecord, unknown>, "table">
+): EntityTableMeta {
+  return ctx.table.options.meta as EntityTableMeta;
+}
+
+function arrayIncludesFilter(value: unknown, cell: string): boolean {
+  if (!Array.isArray(value) || value.length === 0) return true;
+  return value.includes(cell);
+}
+
+function filterByKind(
+  row: { original: EntityRecord },
+  _id: string,
+  value: unknown
+): boolean {
+  return arrayIncludesFilter(value, row.original.kind);
+}
+
+function nameColumnHeader({ column }: HeaderContext<EntityRecord, unknown>) {
+  return <DataTableColumnHeader column={column} title="Name" />;
+}
+
+function kindColumnHeader({ column }: HeaderContext<EntityRecord, unknown>) {
+  return <DataTableColumnHeader column={column} title="Kind" />;
+}
+
+function summaryColumnHeader({ column }: HeaderContext<EntityRecord, unknown>) {
+  return <DataTableColumnHeader column={column} title="Summary" />;
+}
+
+function connectionsColumnHeader({
+  column,
+}: HeaderContext<EntityRecord, unknown>) {
+  return <DataTableColumnHeader column={column} title="Connections" />;
+}
+
+function updatedColumnHeader({ column }: HeaderContext<EntityRecord, unknown>) {
+  return <DataTableColumnHeader column={column} title="Updated" />;
+}
+
+function createdColumnHeader({ column }: HeaderContext<EntityRecord, unknown>) {
+  return <DataTableColumnHeader column={column} title="Created" />;
+}
+
 function renderNameCell(ctx: CellContext<EntityRecord, unknown>) {
   return (
     <span className="block truncate text-sm font-medium">
@@ -59,129 +109,128 @@ function renderNameCell(ctx: CellContext<EntityRecord, unknown>) {
   );
 }
 
+function renderKindCell(ctx: CellContext<EntityRecord, unknown>) {
+  const row = ctx.row.original;
+  const meta = entityMeta(ctx);
+  return (
+    <EditableSelectCell
+      value={row.kind}
+      options={ENTITY_KIND_OPTIONS}
+      aria-label="Entity kind"
+      onCommit={(next) => {
+        const kind = entityKindSchema.parse(next);
+        if (kind === row.kind) return;
+        meta.updateKind(row.id, kind);
+      }}
+    />
+  );
+}
+
+function renderConnectionsCell(ctx: CellContext<EntityRecord, unknown>) {
+  const row = ctx.row.original;
+  const meta = entityMeta(ctx);
+  return (
+    <EntityConnectionsCell
+      entity={row}
+      peers={meta.peersByEntityId.get(row.id) ?? []}
+      entityOptions={meta.entityOptions}
+      onCreate={async (input) => meta.createConnection(row.id, input)}
+      onUpdate={async (input) => meta.updateConnection(row.id, input)}
+    />
+  );
+}
+
+function renderSummaryCell(ctx: CellContext<EntityRecord, unknown>) {
+  const row = ctx.row.original;
+  const meta = entityMeta(ctx);
+  return (
+    <EditableTextCell
+      value={row.summary ?? ""}
+      placeholder="Summary…"
+      aria-label="Summary"
+      onCommit={(next) => {
+        const trimmed = next.trim();
+        if (trimmed === (row.summary ?? "")) return;
+        meta.updateSummary(row.id, trimmed);
+      }}
+    />
+  );
+}
+
+function renderUpdatedAtCell(ctx: CellContext<EntityRecord, unknown>) {
+  return (
+    <RelativeTime
+      value={ctx.row.original.updatedAt}
+      className="text-label-mono-sm whitespace-nowrap"
+    />
+  );
+}
+
+function renderCreatedAtCell(ctx: CellContext<EntityRecord, unknown>) {
+  return (
+    <RelativeTime
+      value={ctx.row.original.createdAt}
+      className="text-label-mono-sm whitespace-nowrap"
+    />
+  );
+}
+
+export const entityTableColumns: ColumnDef<EntityRecord>[] = [
+  {
+    accessorKey: "name",
+    header: nameColumnHeader,
+    cell: renderNameCell,
+    meta: { label: "Name" },
+    enableHiding: false,
+    size: 150,
+    minSize: 100,
+  },
+  {
+    accessorKey: "kind",
+    header: kindColumnHeader,
+    cell: renderKindCell,
+    filterFn: filterByKind,
+    meta: { label: "Kind" },
+    size: 120,
+    minSize: 110,
+  },
+  {
+    accessorKey: "summary",
+    header: summaryColumnHeader,
+    cell: renderSummaryCell,
+    meta: { label: "Summary" },
+    size: 280,
+  },
+  {
+    id: "connections",
+    header: connectionsColumnHeader,
+    cell: renderConnectionsCell,
+    enableSorting: false,
+    meta: { label: "Connections" },
+    size: 260,
+    minSize: 180,
+  },
+  {
+    accessorKey: "updatedAt",
+    header: updatedColumnHeader,
+    cell: renderUpdatedAtCell,
+    meta: { label: "Updated" },
+    size: 110,
+    minSize: 90,
+  },
+  {
+    accessorKey: "createdAt",
+    header: createdColumnHeader,
+    cell: renderCreatedAtCell,
+    meta: { label: "Created" },
+    size: 110,
+    minSize: 90,
+  },
+];
+
+/** @deprecated Pass `entityTableColumns` with table `meta` instead. */
 export function createEntityColumns(
-  meta: EntityTableMeta
+  _meta: EntityTableMeta
 ): ColumnDef<EntityRecord>[] {
-  function renderKindCell(ctx: CellContext<EntityRecord, unknown>) {
-    const row = ctx.row.original;
-    return (
-      <EditableSelectCell
-        value={row.kind}
-        options={ENTITY_KIND_OPTIONS}
-        aria-label="Entity kind"
-        onCommit={(next) => {
-          const kind = entityKindSchema.parse(next);
-          if (kind === row.kind) return;
-          meta.updateKind(row.id, kind);
-        }}
-      />
-    );
-  }
-
-  function renderConnectionsCell(ctx: CellContext<EntityRecord, unknown>) {
-    const row = ctx.row.original;
-    return (
-      <EntityConnectionsCell
-        entity={row}
-        peers={meta.peersByEntityId.get(row.id) ?? []}
-        entityOptions={meta.entityOptions}
-        onCreate={async (input) => meta.createConnection(row.id, input)}
-        onUpdate={async (input) => meta.updateConnection(row.id, input)}
-      />
-    );
-  }
-
-  function renderSummaryCell(ctx: CellContext<EntityRecord, unknown>) {
-    const row = ctx.row.original;
-    return (
-      <EditableTextCell
-        value={row.summary ?? ""}
-        placeholder="Summary…"
-        aria-label="Summary"
-        onCommit={(next) => {
-          const trimmed = next.trim();
-          if (trimmed === (row.summary ?? "")) return;
-          meta.updateSummary(row.id, trimmed);
-        }}
-      />
-    );
-  }
-
-  return [
-    {
-      accessorKey: "name",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Name" />
-      ),
-      cell: renderNameCell,
-      meta: { label: "Name" },
-      enableHiding: false,
-      size: 150,
-      minSize: 100,
-    },
-    {
-      accessorKey: "kind",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Kind" />
-      ),
-      cell: renderKindCell,
-      filterFn: (row, _id, value) => {
-        if (!Array.isArray(value) || value.length === 0) return true;
-        return value.includes(row.original.kind);
-      },
-      meta: { label: "Kind" },
-      size: 120,
-      minSize: 110,
-    },
-    {
-      accessorKey: "summary",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Summary" />
-      ),
-      cell: renderSummaryCell,
-      meta: { label: "Summary" },
-      size: 280,
-    },
-    {
-      id: "connections",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Connections" />
-      ),
-      cell: renderConnectionsCell,
-      enableSorting: false,
-      meta: { label: "Connections" },
-      size: 260,
-      minSize: 180,
-    },
-    {
-      accessorKey: "updatedAt",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Updated" />
-      ),
-      cell: ({ row }) => (
-        <RelativeTime
-          value={row.original.updatedAt}
-          className="text-label-mono-sm whitespace-nowrap"
-        />
-      ),
-      meta: { label: "Updated" },
-      size: 110,
-      minSize: 90,
-    },
-    {
-      accessorKey: "createdAt",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Created" />
-      ),
-      cell: ({ row }) => (
-        <RelativeTime
-          value={row.original.createdAt}
-          className="text-label-mono-sm whitespace-nowrap"
-        />
-      ),
-      meta: { label: "Created" },
-      size: 110,
-      minSize: 90,
-    },
-  ];
+  return entityTableColumns;
 }
