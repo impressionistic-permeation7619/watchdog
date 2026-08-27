@@ -25,8 +25,8 @@ TanStack Start UI for Watchdog. Web UI contracts live in [`docs/`](docs/README.m
 | Dev | `pnpm dev:web` |
 | Typecheck | `pnpm --filter @watchdog/web typecheck` |
 | DS bans | `pnpm --filter @watchdog/web ds:check` |
-| Unit tests | `pnpm test:unit` (packages + worker; web libs are **not** in this project) |
-| Component tests | `pnpm test:component` (`apps/web/src/**/__tests__/**`, including `*.test.ts`) |
+| Unit tests | `pnpm test:unit` (packages + worker + web `*.test.ts`) |
+| Component tests | `pnpm test:component` (`*.component.test.tsx` + hook RTL tests) |
 | E2E | `pnpm test:e2e` |
 | Generate routes | `pnpm generate-routes` |
 | Build | `pnpm build` |
