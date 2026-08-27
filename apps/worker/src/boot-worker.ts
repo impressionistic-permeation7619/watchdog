@@ -26,12 +26,12 @@ import { handleExportEvent } from "./export-events";
 type BossWorker = Awaited<ReturnType<typeof ensureBossWorker>>;
 type EventListener = Awaited<ReturnType<typeof listenForEvents>>;
 
-type WorkerShutdownContext = {
+interface WorkerShutdownContext {
   boss: BossWorker;
   listener: EventListener;
   cancelPollInterval: ReturnType<typeof setInterval>;
   shuttingDown: boolean;
-};
+}
 
 function emitOnce(scope: string, fields: Record<string, unknown>): void {
   const log = createLogger({ scope });
@@ -95,7 +95,7 @@ async function executeCapJobPayload(
   }
 }
 
-function processCapJob(job: {
+async function processCapJob(job: {
   id: string;
   data: unknown;
 }): Promise<void> {
@@ -114,7 +114,7 @@ function processCapJob(job: {
       payloadType: job.data === null ? "null" : typeof job.data,
     });
     finish();
-    return Promise.resolve();
+    return;
   }
 
   return executeCapJobPayload(job.data, log).finally(finish);
@@ -194,7 +194,8 @@ async function workerShutdown(
       timeout: gracefulStopTimeoutMs(),
     });
   } catch (error: unknown) {
-    fields.bossStopError = error instanceof Error ? error.message : String(error);
+    fields.bossStopError =
+      error instanceof Error ? error.message : String(error);
   }
   emitOnce("worker.shutdown", fields);
   process.exit(0);
@@ -215,15 +216,19 @@ function bindWorkerShutdown(
     cancelPollInterval,
     shuttingDown: false,
   };
-  process.on("SIGTERM", () => onWorkerSignal("SIGTERM", ctx));
-  process.on("SIGINT", () => onWorkerSignal("SIGINT", ctx));
+  process.on("SIGTERM", () => {
+    onWorkerSignal("SIGTERM", ctx);
+  });
+  process.on("SIGINT", () => {
+    onWorkerSignal("SIGINT", ctx);
+  });
 }
 
-function processCapJobBatch(
+async function processCapJobBatch(
   jobs: { id: string; data: unknown }[]
 ): Promise<void> {
   const job = jobs[0];
-  if (!job) return Promise.resolve();
+  if (!job) return;
   return processCapJob(job);
 }
 

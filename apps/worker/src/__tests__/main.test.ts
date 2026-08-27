@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 const workerMocks = vi.hoisted(() => {
   const work = vi.fn();
-  const stop = vi.fn(async () => undefined);
+  const stop = vi.fn(async () => {});
   const ensureBossWorker = vi.fn(async () => ({ work, stop }));
 
   return {
@@ -11,7 +11,7 @@ const workerMocks = vi.hoisted(() => {
     ensureBossWorker,
     reconcileStaleJobs: vi.fn(async () => 0),
     reconcileStuckPlaybookRuns: vi.fn(async () => 0),
-    listenForEvents: vi.fn(() => ({ end: vi.fn(async () => undefined) })),
+    listenForEvents: vi.fn(() => ({ end: vi.fn(async () => {}) })),
     listActiveJobIds: vi.fn(() => [] as string[]),
   };
 });
