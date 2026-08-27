@@ -20,17 +20,20 @@ export type EmlAnalyzeSnapshot = z.infer<typeof emlAnalyzeSnapshotSchema>;
 const URL_RE = /https?:\/\/[^\s<>"')]+/gi;
 const EMAIL_RE = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
 
-/** Parse .eml text into headers + IOC previews (no MIME tree deps). */
-export function analyzeEmlText(
-  evidenceId: string,
-  text: string
-): EmlAnalyzeSnapshot {
+function splitHeaderBody(text: string): { headerBlock: string; body: string } {
   const normalized = text.replaceAll("\r\n", "\n");
   const splitIdx = normalized.search(/\n\n/);
-  const headerBlock =
-    splitIdx >= 0 ? normalized.slice(0, splitIdx) : normalized;
-  const body = splitIdx >= 0 ? normalized.slice(splitIdx + 2) : "";
+  if (splitIdx < 0) return { headerBlock: normalized, body: "" };
+  return {
+    headerBlock: normalized.slice(0, splitIdx),
+    body: normalized.slice(splitIdx + 2),
+  };
+}
 
+function parseHeaderBlock(headerBlock: string): {
+  headers: Record<string, string>;
+  receivedChain: string[];
+} {
   const unfolded = headerBlock.replaceAll(/\n[ \t]+/g, " ");
   const headers: Record<string, string> = {};
   const receivedChain: string[] = [];
@@ -45,19 +48,38 @@ export function analyzeEmlText(
     }
     if (!(name in headers)) headers[name] = value.slice(0, 2000);
   }
+  return { headers, receivedChain };
+}
 
-  const urls = [...new Set(body.match(URL_RE))].slice(0, 50);
-  const emails = [
+function collectUrls(body: string): string[] {
+  return [...new Set(body.match(URL_RE))].slice(0, 50);
+}
+
+function collectEmails(
+  headers: Record<string, string>,
+  body: string
+): string[] {
+  const sources = [
+    ...(headers.from ? [headers.from] : []),
+    ...(headers.to ? [headers.to] : []),
+    ...(body.match(EMAIL_RE) ?? []),
+  ];
+  return [
     ...new Set(
-      [
-        ...(headers.from ? [headers.from] : []),
-        ...(headers.to ? [headers.to] : []),
-        ...(body.match(EMAIL_RE) ?? []),
-      ]
+      sources
         .flatMap((s) => s.match(EMAIL_RE) ?? [])
         .map((e) => e.toLowerCase())
     ),
   ].slice(0, 50);
+}
+
+/** Parse .eml text into headers + IOC previews (no MIME tree deps). */
+export function analyzeEmlText(
+  evidenceId: string,
+  text: string
+): EmlAnalyzeSnapshot {
+  const { headerBlock, body } = splitHeaderBody(text);
+  const { headers, receivedChain } = parseHeaderBlock(headerBlock);
 
   return emlAnalyzeSnapshotSchema.parse({
     evidenceId,
@@ -69,8 +91,8 @@ export function analyzeEmlText(
     messageId: headers["message-id"] ?? null,
     date: headers.date ?? null,
     receivedChain: receivedChain.slice(0, 20),
-    urls,
-    emails,
+    urls: collectUrls(body),
+    emails: collectEmails(headers, body),
     bodyPreview: body.slice(0, 4000) || null,
   });
 }

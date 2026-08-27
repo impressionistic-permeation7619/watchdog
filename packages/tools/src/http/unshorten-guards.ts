@@ -18,15 +18,18 @@ function isBlockedIpv6(host: string): boolean {
   return host === "::1" || host.startsWith("fe80:") || host.startsWith("fc") || host.startsWith("fd");
 }
 
+const PRIVATE_IPV4_RULES: Array<(a: number, b: number) => boolean> = [
+  (a) => a === 10 || a === 127 || a === 0,
+  (a, b) => a === 169 && b === 254,
+  (a, b) => a === 192 && b === 168,
+  (a, b) => a === 172 && b >= 16 && b <= 31,
+  (a, b) => a === 100 && b >= 64 && b <= 127,
+];
+
 function isPrivateIpv4(octets: number[]): boolean {
   const a = octets[0] ?? 0;
   const b = octets[1] ?? 0;
-  if (a === 10 || a === 127 || a === 0) return true;
-  if (a === 169 && b === 254) return true;
-  if (a === 192 && b === 168) return true;
-  if (a === 172 && b >= 16 && b <= 31) return true;
-  if (a === 100 && b >= 64 && b <= 127) return true;
-  return false;
+  return PRIVATE_IPV4_RULES.some((rule) => rule(a, b));
 }
 
 function isBlockedIpv4(host: string): boolean {

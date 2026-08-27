@@ -1,5 +1,7 @@
 export function mergeUnique(a: string[], b: string[]): string[] {
-  return [...new Set([...a, ...b])].sort();
+  return [...new Set([...a, ...b])].sort((left, right) =>
+    left.localeCompare(right)
+  );
 }
 
 export function decodeHtml(bytes: Uint8Array): string {

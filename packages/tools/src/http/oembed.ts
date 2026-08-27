@@ -37,6 +37,15 @@ const HOST_SUFFIX: Record<OembedVendor, readonly string[]> = {
   spotify: ["spotify.com"],
 };
 
+const OEMBED_ENDPOINTS: Record<OembedVendor, string> = {
+  youtube: "https://www.youtube.com/oembed?format=json&url=",
+  vimeo: "https://vimeo.com/api/oembed.json?url=",
+  flickr: "https://www.flickr.com/services/oembed?format=json&url=",
+  soundcloud: "https://soundcloud.com/oembed?format=json&url=",
+  tiktok: "https://www.tiktok.com/oembed?url=",
+  spotify: "https://open.spotify.com/oembed?url=",
+};
+
 const oembedJsonSchema = z.object({
   title: z.string().optional(),
   author_name: z.string().optional(),
@@ -70,31 +79,7 @@ export function isOembedUrl(url: string): boolean {
 }
 
 function oembedEndpoint(vendor: OembedVendor, url: string): string {
-  const encoded = encodeURIComponent(url);
-  switch (vendor) {
-    case "youtube": {
-      return `https://www.youtube.com/oembed?format=json&url=${encoded}`;
-    }
-    case "vimeo": {
-      return `https://vimeo.com/api/oembed.json?url=${encoded}`;
-    }
-    case "flickr": {
-      return `https://www.flickr.com/services/oembed?format=json&url=${encoded}`;
-    }
-    case "soundcloud": {
-      return `https://soundcloud.com/oembed?format=json&url=${encoded}`;
-    }
-    case "tiktok": {
-      return `https://www.tiktok.com/oembed?url=${encoded}`;
-    }
-    case "spotify": {
-      return `https://open.spotify.com/oembed?url=${encoded}`;
-    }
-    default: {
-      const _exhaustive: never = vendor;
-      return _exhaustive;
-    }
-  }
+  return `${OEMBED_ENDPOINTS[vendor]}${encodeURIComponent(url)}`;
 }
 
 function emptySnap(
@@ -117,6 +102,25 @@ function emptySnap(
   };
 }
 
+function snapshotFromJson(
+  url: string,
+  queriedAt: string,
+  vendor: OembedVendor,
+  data: z.infer<typeof oembedJsonSchema>
+): OembedSnapshot {
+  return {
+    url,
+    queriedAt,
+    vendor,
+    title: data.title ?? null,
+    authorName: data.author_name ?? null,
+    authorUrl: data.author_url ?? null,
+    providerName: data.provider_name ?? null,
+    thumbnailUrl: data.thumbnail_url ?? null,
+    type: data.type ?? null,
+  };
+}
+
 const MAX_OEMBED_BYTES = 64_000;
 
 type OembedOptions = { userAgent: string };
@@ -131,6 +135,7 @@ export async function fetchOembed(
   if (vendor === null) {
     return emptySnap(url, queriedAt, "Unsupported oEmbed host");
   }
+
   const endpoint = oembedEndpoint(vendor, url);
   const res = await fetchBytes(endpoint, signal, {
     userAgent: options.userAgent,
@@ -140,25 +145,18 @@ export async function fetchOembed(
   if (!res.ok) {
     return emptySnap(url, queriedAt, res.error ?? `HTTP ${res.status}`, vendor);
   }
+
   let parsed: unknown;
   try {
     parsed = JSON.parse(new TextDecoder().decode(res.bytes));
   } catch {
     return emptySnap(url, queriedAt, "Invalid oEmbed JSON", vendor);
   }
+
   const json = oembedJsonSchema.safeParse(parsed);
   if (!json.success) {
     return emptySnap(url, queriedAt, "Unexpected oEmbed JSON shape", vendor);
   }
-  return {
-    url,
-    queriedAt,
-    vendor,
-    title: json.data.title ?? null,
-    authorName: json.data.author_name ?? null,
-    authorUrl: json.data.author_url ?? null,
-    providerName: json.data.provider_name ?? null,
-    thumbnailUrl: json.data.thumbnail_url ?? null,
-    type: json.data.type ?? null,
-  };
+
+  return snapshotFromJson(url, queriedAt, vendor, json.data);
 }

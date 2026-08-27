@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { isRecord } from "../parse/coerce";
+import { asString, isRecord } from "../parse/coerce";
 import {
   httpToolsError,
   parseToolsError,
@@ -42,6 +42,55 @@ export function normalizeGithubHandle(raw: string): string {
  */
 
 type GithubUserOptions = { token?: string; userAgent?: string };
+
+function notFoundGithubSnapshot(
+  handle: string,
+  authenticated: boolean
+): GithubUserSnapshot {
+  return githubUserSnapshotSchema.parse({
+    handle,
+    queriedAt: new Date().toISOString(),
+    found: false,
+    url: null,
+    name: null,
+    bio: null,
+    blog: null,
+    location: null,
+    company: null,
+    publicRepos: null,
+    followers: null,
+    createdAt: null,
+    status: 404,
+    authenticated,
+  });
+}
+
+function githubUserFromBody(
+  handle: string,
+  body: Record<string, unknown>,
+  status: number,
+  authenticated: boolean
+): GithubUserSnapshot {
+  const blog = asString(body.blog);
+  return githubUserSnapshotSchema.parse({
+    handle,
+    queriedAt: new Date().toISOString(),
+    found: true,
+    url: asString(body.html_url) ?? `https://github.com/${handle}`,
+    name: asString(body.name),
+    bio: asString(body.bio),
+    blog: blog ?? null,
+    location: asString(body.location),
+    company: asString(body.company),
+    publicRepos:
+      typeof body.public_repos === "number" ? body.public_repos : null,
+    followers: typeof body.followers === "number" ? body.followers : null,
+    createdAt: asString(body.created_at),
+    status,
+    authenticated,
+  });
+}
+
 export async function fetchGithubUser(
   handleRaw: string,
   signal: AbortSignal,
@@ -57,6 +106,7 @@ export async function fetchGithubUser(
   };
   const token = options?.token?.trim();
   if (token) headers.Authorization = `Bearer ${token}`;
+  const authenticated = Boolean(token);
 
   const res = await fetch(`https://api.github.com/users/${handle}`, {
     method: "GET",
@@ -65,22 +115,7 @@ export async function fetchGithubUser(
   });
 
   if (res.status === 404) {
-    return githubUserSnapshotSchema.parse({
-      handle,
-      queriedAt: new Date().toISOString(),
-      found: false,
-      url: null,
-      name: null,
-      bio: null,
-      blog: null,
-      location: null,
-      company: null,
-      publicRepos: null,
-      followers: null,
-      createdAt: null,
-      status: 404,
-      authenticated: Boolean(token),
-    });
+    return notFoundGithubSnapshot(handle, authenticated);
   }
 
   if (!res.ok) {
@@ -95,24 +130,5 @@ export async function fetchGithubUser(
   if (!isRecord(body)) {
     throw parseToolsError("GitHub", handle);
   }
-  return githubUserSnapshotSchema.parse({
-    handle,
-    queriedAt: new Date().toISOString(),
-    found: true,
-    url:
-      typeof body.html_url === "string"
-        ? body.html_url
-        : `https://github.com/${handle}`,
-    name: typeof body.name === "string" ? body.name : null,
-    bio: typeof body.bio === "string" ? body.bio : null,
-    blog: typeof body.blog === "string" && body.blog !== "" ? body.blog : null,
-    location: typeof body.location === "string" ? body.location : null,
-    company: typeof body.company === "string" ? body.company : null,
-    publicRepos:
-      typeof body.public_repos === "number" ? body.public_repos : null,
-    followers: typeof body.followers === "number" ? body.followers : null,
-    createdAt: typeof body.created_at === "string" ? body.created_at : null,
-    status: res.status,
-    authenticated: Boolean(token),
-  });
+  return githubUserFromBody(handle, body, res.status, authenticated);
 }

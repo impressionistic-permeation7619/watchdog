@@ -87,28 +87,33 @@ function emptySnap(
   });
 }
 
-function proofsFromUser(user: Record<string, unknown>): KeybaseProof[] {
+function proofFromPresentationRow(
+  platform: string,
+  row: Record<string, unknown>
+): KeybaseProof {
+  return {
+    platform,
+    username: asString(row.nametag) ?? asString(row.username),
+    url: asString(row.proof_url) ?? asString(row.human_url),
+  };
+}
+
+function proofsFromByGroup(
+  byGroup: Record<string, unknown>
+): KeybaseProof[] {
   const proofs: KeybaseProof[] = [];
-  const proofsSummary = isRecord(user.proofs_summary)
-    ? user.proofs_summary
-    : {};
-  const byGroup = proofsSummary.by_presentation_group;
-  if (isRecord(byGroup)) {
-    for (const [platform, rows] of Object.entries(byGroup)) {
-      if (!Array.isArray(rows)) continue;
-      for (const row of rows) {
-        if (!isRecord(row)) continue;
-        proofs.push({
-          platform,
-          username: asString(row.nametag) ?? asString(row.username),
-          url: asString(row.proof_url) ?? asString(row.human_url),
-        });
-      }
+  for (const [platform, rows] of Object.entries(byGroup)) {
+    if (!Array.isArray(rows)) continue;
+    for (const row of rows) {
+      if (!isRecord(row)) continue;
+      proofs.push(proofFromPresentationRow(platform, row));
     }
   }
-  if (proofs.length > 0) return proofs;
-  const all = proofsSummary.all;
-  if (!Array.isArray(all)) return proofs;
+  return proofs;
+}
+
+function proofsFromAll(all: unknown[]): KeybaseProof[] {
+  const proofs: KeybaseProof[] = [];
   for (const row of all) {
     if (!isRecord(row)) continue;
     const platform = asString(row.proof_type);
@@ -120,6 +125,20 @@ function proofsFromUser(user: Record<string, unknown>): KeybaseProof[] {
     });
   }
   return proofs;
+}
+
+function proofsFromUser(user: Record<string, unknown>): KeybaseProof[] {
+  const proofsSummary = isRecord(user.proofs_summary)
+    ? user.proofs_summary
+    : {};
+  const byGroup = proofsSummary.by_presentation_group;
+  if (isRecord(byGroup)) {
+    const fromGroup = proofsFromByGroup(byGroup);
+    if (fromGroup.length > 0) return fromGroup;
+  }
+  const all = proofsSummary.all;
+  if (!Array.isArray(all)) return [];
+  return proofsFromAll(all);
 }
 
 function pgpFromUser(user: Record<string, unknown>): string[] {
