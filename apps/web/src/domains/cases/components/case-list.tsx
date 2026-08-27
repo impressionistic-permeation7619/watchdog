@@ -324,6 +324,108 @@ function CreateCaseDialog({
   );
 }
 
+function exportActiveCaseZip(activeId: string): void {
+  const a = document.createElement("a");
+  a.href = `/api/v1/cases/${activeId}/export.zip`;
+  a.click();
+}
+
+function CaseListHeaderActions({
+  activeId,
+  onCreate,
+}: {
+  activeId: string;
+  onCreate: () => void;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      {activeId ? (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            exportActiveCaseZip(activeId);
+          }}
+        >
+          <DownloadIcon className="size-3.5" />
+          Export
+        </Button>
+      ) : null}
+      <Button type="button" size="sm" onClick={onCreate}>
+        <PlusIcon className="size-3.5" />
+        New Case
+      </Button>
+    </div>
+  );
+}
+
+function CaseListGrid({
+  casesLength,
+  filtered,
+  activeId,
+  selecting,
+  ghostCount,
+  search,
+  onClearSearch,
+  onSelectCase,
+  onOpenCase,
+  onDeleteCase,
+  onCreate,
+}: {
+  casesLength: number;
+  filtered: CaseRecord[];
+  activeId: string;
+  selecting: boolean;
+  ghostCount: number;
+  search: string;
+  onClearSearch: () => void;
+  onSelectCase: (id: string) => void;
+  onOpenCase: (caseRow: CaseRecord) => void;
+  onDeleteCase: (caseRow: CaseRecord) => void;
+  onCreate: () => void;
+}) {
+  if (casesLength > 0 && filtered.length === 0) {
+    return (
+      <EmptyState
+        intent="no-results"
+        items="cases"
+        query={search}
+        onClearFilters={onClearSearch}
+        className="min-h-0 flex-1"
+      />
+    );
+  }
+
+  return (
+    <div className="min-h-0 flex-1 overflow-y-auto">
+      <div className="grid h-full min-h-full auto-rows-[minmax(9rem,1fr)] grid-cols-1 gap-3 p-px sm:grid-cols-2 xl:grid-cols-3">
+        {filtered.map((caseRow) => (
+          <CaseCard
+            key={caseRow.id}
+            caseRow={caseRow}
+            isActive={caseRow.id === activeId}
+            selecting={selecting}
+            onSelect={() => {
+              onSelectCase(caseRow.id);
+            }}
+            onOpen={() => {
+              onOpenCase(caseRow);
+            }}
+            onDelete={() => {
+              onDeleteCase(caseRow);
+            }}
+          />
+        ))}
+        <NewCaseCard onClick={onCreate} />
+        {Array.from({ length: ghostCount }, (_, i) => (
+          <CaseSlotGhost key={`ghost-${i}`} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function CaseList() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -391,27 +493,7 @@ export function CaseList() {
     <Page className="min-h-0 gap-4 overflow-hidden">
       <PageHeader
         actions={
-          <div className="flex items-center gap-2">
-            {activeId ? (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  const a = document.createElement("a");
-                  a.href = `/api/v1/cases/${activeId}/export.zip`;
-                  a.click();
-                }}
-              >
-                <DownloadIcon className="size-3.5" />
-                Export
-              </Button>
-            ) : null}
-            <Button type="button" size="sm" onClick={openCreate}>
-              <PlusIcon className="size-3.5" />
-              New Case
-            </Button>
-          </div>
+          <CaseListHeaderActions activeId={activeId} onCreate={openCreate} />
         }
       />
 
@@ -429,44 +511,26 @@ export function CaseList() {
         }
       />
 
-      {cases.length > 0 && filtered.length === 0 ? (
-        <EmptyState
-          intent="no-results"
-          items="cases"
-          query={search}
-          onClearFilters={() => {
-            setSearch("");
-          }}
-          className="min-h-0 flex-1"
-        />
-      ) : (
-        <div className="min-h-0 flex-1 overflow-y-auto">
-          <div className="grid h-full min-h-full auto-rows-[minmax(9rem,1fr)] grid-cols-1 gap-3 p-px sm:grid-cols-2 xl:grid-cols-3">
-            {filtered.map((caseRow) => (
-              <CaseCard
-                key={caseRow.id}
-                caseRow={caseRow}
-                isActive={caseRow.id === activeId}
-                selecting={selectMutation.isPending}
-                onSelect={() => {
-                  selectCase(caseRow.id);
-                }}
-                onOpen={() => {
-                  void openCase(caseRow);
-                }}
-                onDelete={() => {
-                  setSubmitError(null);
-                  setDeleteTarget(caseRow);
-                }}
-              />
-            ))}
-            <NewCaseCard onClick={openCreate} />
-            {Array.from({ length: ghostCount }, (_, i) => (
-              <CaseSlotGhost key={`ghost-${i}`} />
-            ))}
-          </div>
-        </div>
-      )}
+      <CaseListGrid
+        casesLength={cases.length}
+        filtered={filtered}
+        activeId={activeId}
+        selecting={selectMutation.isPending}
+        ghostCount={ghostCount}
+        search={search}
+        onClearSearch={() => {
+          setSearch("");
+        }}
+        onSelectCase={selectCase}
+        onOpenCase={(caseRow) => {
+          void openCase(caseRow);
+        }}
+        onDeleteCase={(caseRow) => {
+          setSubmitError(null);
+          setDeleteTarget(caseRow);
+        }}
+        onCreate={openCreate}
+      />
 
       <CreateCaseDialog
         open={createOpen}
