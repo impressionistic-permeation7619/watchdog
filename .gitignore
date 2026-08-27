@@ -54,3 +54,4 @@ Thumbs.db
 # Local
 CLAUDE.local.md
 *.local
+lefthook-local.yml

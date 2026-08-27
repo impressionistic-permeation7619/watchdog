@@ -16,7 +16,7 @@ On product nouns, **[`docs/PRODUCT.md`](docs/PRODUCT.md)** wins. On platform/UI 
 | Install / migrate | `pnpm install` · `pnpm db:migrate` |
 | Dev | `pnpm dev:web` · `pnpm dev:worker` |
 | Lint / fix | `pnpm check` · `pnpm fix` |
-| Git hooks | `lefthook install` (auto in `nix develop`) · pre-commit: check + agents · pre-push: typecheck + web DS |
+| Git hooks | `lefthook install` (auto in `nix develop`) · `lefthook-local.yml` overrides · pre-commit: fix + agents · pre-push: typecheck + web DS |
 | Typecheck / test | `pnpm typecheck` · `pnpm test` · `pnpm test:component` · `pnpm test:integration` · `pnpm test:e2e` |
 | Web DS | `pnpm --filter @watchdog/web ds:check` |
 | Caps / client regen | `pnpm generate:caps` · `pnpm generate:client` |
