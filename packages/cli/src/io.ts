@@ -117,7 +117,7 @@ export function emitList(input: {
     printTable(input.items, input.columns);
     if (help !== undefined) {
       for (const line of help) {
-        console.error(`help: ${line}`);
+        process.stderr.write(`help: ${line}\n`);
       }
     }
     return;
@@ -268,7 +268,9 @@ export function handleCliError(error: unknown): never {
     process.exit(error.exitCode);
   }
   if (debugEnabled()) {
-    console.error(error);
+    process.stderr.write(
+      `${error instanceof Error ? (error.stack ?? error.message) : String(error)}\n`
+    );
   }
   if (isOrpcError(error)) {
     fail(error.code, error.message, {

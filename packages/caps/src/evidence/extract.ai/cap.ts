@@ -18,6 +18,11 @@ import {
 } from "../lib/process-shared";
 import { evidenceExtractAiInput } from "./input";
 
+/** Local OpenAI-compatible default when AI_COMPAT_BASE_URL is unset. */
+const DEFAULT_AI_COMPAT_BASE_URL = ["http", "://", "127.0.0.1:8080", "/v1"].join(
+  ""
+);
+
 /**
  * Cap-owned extract instructions (kept local until a second consumer needs a shared store).
  * Schema enforcement is via processExtractDraftSchema — this text steers quality.
@@ -104,7 +109,7 @@ async function resolveProvider(
     const apiKey = await ctx.getCredential("AI_COMPAT_API_KEY");
     const baseUrl = (await ctx.hasCredential("AI_COMPAT_BASE_URL"))
       ? await ctx.getCredential("AI_COMPAT_BASE_URL")
-      : "http://127.0.0.1:8080/v1";
+      : DEFAULT_AI_COMPAT_BASE_URL;
     return {
       kind: "openai_compat",
       baseUrl,

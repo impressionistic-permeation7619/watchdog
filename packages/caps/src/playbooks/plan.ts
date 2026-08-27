@@ -235,6 +235,55 @@ function validateStepRefs(
   return undefined;
 }
 
+function findUnknownCap(defs: PlaybookStepDef[]): PlanError | undefined {
+  for (const def of defs) {
+    if (!CAPABILITIES.some((c) => c.id === def.capabilityId)) {
+      return { kind: "unknown_cap", capabilityId: def.capabilityId };
+    }
+  }
+  return undefined;
+}
+
+function buildSeedAvailability(
+  playbook: PlaybookDef,
+  present: Set<PlaybookSeedKind>
+): Set<string> {
+  const available = new Set(
+    playbook.seedKinds.map((k) => ioKey(seedKindToCapIo(k)))
+  );
+  for (const k of present) available.add(ioKey(seedKindToCapIo(k)));
+  return available;
+}
+
+function unsatisfiedConsumeError(
+  def: PlaybookStepDef,
+  available: Set<string>
+): PlanError | undefined {
+  const cap = requireCapability(def.capabilityId);
+  const consumes = cap.consumes ?? [];
+  const deferInput = def.bind !== undefined || def.fanOut !== undefined;
+  if (consumes.length === 0 || deferInput) return undefined;
+  const covered = consumes.some((c) => available.has(ioKey(c)));
+  if (covered) return undefined;
+  return {
+    kind: "unsatisfied_step",
+    capabilityId: def.capabilityId,
+    needs: consumes[0],
+  };
+}
+
+function resolveStepInput(
+  def: PlaybookStepDef,
+  candidate: Record<string, unknown>
+): JsonObject | PlanError | "deferred" {
+  const deferInput = def.bind !== undefined || def.fanOut !== undefined;
+  if (deferInput) return "deferred";
+  return parseCapInput(
+    def.capabilityId,
+    mergeJson(candidate, def.input)
+  );
+}
+
 /** Pure — no DB / pg-boss. Validates the whole recipe; emits step 0 only. */
 export function planPlaybook(
   playbook: PlaybookDef,
@@ -248,61 +297,45 @@ export function planPlaybook(
   }
 
   const defs = playbook.steps.map(normalizePlaybookStep);
-  for (const def of defs) {
-    if (!CAPABILITIES.some((c) => c.id === def.capabilityId)) {
-      return { kind: "unknown_cap", capabilityId: def.capabilityId };
-    }
-  }
+  const unknownCap = findUnknownCap(defs);
+  if (unknownCap) return unknownCap;
 
   for (let i = 0; i < defs.length; i += 1) {
     const refErr = validateStepRefs(defs[i], i);
     if (refErr) return refErr;
   }
 
-  const seedCovered = new Set(
-    playbook.seedKinds.map((k) => ioKey(seedKindToCapIo(k)))
-  );
-  for (const k of present) seedCovered.add(ioKey(seedKindToCapIo(k)));
-
-  const available = new Set(seedCovered);
+  const available = buildSeedAvailability(playbook, present);
   const candidate = seedValuesToCandidateInput(seed);
   let firstStep: PlannedStep | undefined;
 
   for (let i = 0; i < defs.length; i += 1) {
     const def = defs[i];
-    const cap = requireCapability(def.capabilityId);
-    const consumes = cap.consumes ?? [];
-    const deferInput = def.bind !== undefined || def.fanOut !== undefined;
-    if (consumes.length > 0 && !deferInput) {
-      const covered = consumes.some((c) => available.has(ioKey(c)));
-      if (!covered) {
-        return {
-          kind: "unsatisfied_step",
-          capabilityId: def.capabilityId,
-          needs: consumes[0],
-        };
-      }
-    }
+    const consumeErr = unsatisfiedConsumeError(def, available);
+    if (consumeErr) return consumeErr;
 
     if (def.fanOut === undefined) {
-      let input: JsonObject = {};
-      if (!deferInput) {
-        const parsed = parseCapInput(
-          def.capabilityId,
-          mergeJson(candidate, def.input)
-        );
-        if (isPlanError(parsed)) return parsed;
-        input = parsed;
-      }
-      if (i === 0) {
+      const parsed = resolveStepInput(def, candidate);
+      if (parsed === "deferred") {
+        if (i === 0) {
+          firstStep = {
+            capabilityId: def.capabilityId,
+            input: {},
+            playbookStep: 0,
+          };
+        }
+      } else if (isPlanError(parsed)) {
+        return parsed;
+      } else if (i === 0) {
         firstStep = {
           capabilityId: def.capabilityId,
-          input,
+          input: parsed,
           playbookStep: 0,
         };
       }
     }
 
+    const cap = requireCapability(def.capabilityId);
     for (const p of cap.produces ?? []) available.add(ioKey(p));
   }
 

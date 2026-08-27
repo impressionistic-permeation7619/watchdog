@@ -61,7 +61,7 @@ export function capInfoRows(cap: CapListItem): CapInfoRow[] {
     pushInfoRow(rows, field.label, field.read(cap), field.mono);
   }
   pushUseCaseRow(rows, cap.useCases ?? []);
-  pushFlagRow(rows, cap.flags);
+  pushFlagRow(rows, cap.flags ?? []);
   pushEgressRow(rows, cap);
 
   return rows;

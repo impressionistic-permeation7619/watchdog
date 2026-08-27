@@ -6,7 +6,10 @@ import { MAX_UPLOAD_BYTES, sha256HexSchema } from "@watchdog/schemas";
 
 import { api } from "./client";
 
-const PUT_TIMEOUT_MS = 5 * 60 * 1000;
+const PUT_TIMEOUT_MINUTES = 5;
+const SECONDS_PER_MINUTE = 60;
+const MS_PER_SECOND = 1000;
+const PUT_TIMEOUT_MS = PUT_TIMEOUT_MINUTES * SECONDS_PER_MINUTE * MS_PER_SECOND;
 
 const MIME_BY_EXT: Record<string, string> = {
   ".csv": "text/csv",
@@ -137,13 +140,12 @@ export async function uploadEvidenceFile(input: UploadEvidenceFileInput) {
         : {}),
     });
   } catch (error) {
-    console.error(
+    const hint =
       `Confirm failed — object may be orphaned in MinIO. Retry with matching metadata:\n` +
-        `  uri=${put.uri}\n` +
-        `  sha256=${put.sha256}\n` +
-        `  mime=${put.mime}\n` +
-        `  byteLength=${put.byteLength}`
-    );
-    throw error;
+      `  uri=${put.uri}\n` +
+      `  sha256=${put.sha256}\n` +
+      `  mime=${put.mime}\n` +
+      `  byteLength=${put.byteLength}`;
+    throw new Error(hint, { cause: error });
   }
 }

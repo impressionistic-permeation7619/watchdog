@@ -94,23 +94,31 @@ export interface CreateAttestationInput {
   tx?: DbTx;
 }
 
+function optionalIso(value: Date | null | undefined): string | null {
+  return value?.toISOString() ?? null;
+}
+
+function nullToUndefined<T>(value: T | null | undefined): T | null {
+  return value ?? null;
+}
+
 function toRecord(row: EvidenceRow): EvidenceRecord {
   return {
     id: row.id,
     caseId: row.caseId,
-    entityId: row.entityId ?? null,
+    entityId: nullToUndefined(row.entityId),
     kind: row.kind,
-    label: row.label ?? null,
-    notes: row.notes ?? null,
-    mime: row.mime ?? null,
-    uri: row.uri ?? null,
-    sha256: row.sha256 ?? null,
-    text: row.text ?? null,
-    sourceUrl: row.sourceUrl ?? null,
+    label: nullToUndefined(row.label),
+    notes: nullToUndefined(row.notes),
+    mime: nullToUndefined(row.mime),
+    uri: nullToUndefined(row.uri),
+    sha256: nullToUndefined(row.sha256),
+    text: nullToUndefined(row.text),
+    sourceUrl: nullToUndefined(row.sourceUrl),
     actorId: row.actorId,
     capturedAt: row.capturedAt.toISOString(),
-    processedAt: row.processedAt?.toISOString() ?? null,
-    deletedAt: row.deletedAt?.toISOString() ?? null,
+    processedAt: optionalIso(row.processedAt),
+    deletedAt: optionalIso(row.deletedAt),
   };
 }
 
