@@ -72,6 +72,48 @@ function blockedReason({
     : "Fill required seed fields before Run Playbook";
 }
 
+function seedFieldOk(
+  required: boolean,
+  value: string
+): boolean {
+  return !required || Boolean(value.trim());
+}
+
+function playbookSeedOk(input: {
+  needsHost: boolean;
+  needsIp: boolean;
+  needsEmail: boolean;
+  needsHash: boolean;
+  needsHandle: boolean;
+  pickUrlDump: boolean;
+  needsUrl: boolean;
+  needsEvidence: boolean;
+  host: string;
+  ip: string;
+  email: string;
+  hash: string;
+  handle: string;
+  url: string;
+  evidenceId: string;
+}): boolean {
+  const baseOk =
+    seedFieldOk(input.needsHost, input.host) &&
+    seedFieldOk(input.needsIp, input.ip) &&
+    seedFieldOk(input.needsEmail, input.email) &&
+    seedFieldOk(input.needsHash, input.hash) &&
+    seedFieldOk(input.needsHandle, input.handle);
+
+  if (input.pickUrlDump) {
+    return baseOk && Boolean(input.evidenceId.trim() && input.url.trim());
+  }
+
+  return (
+    baseOk &&
+    seedFieldOk(input.needsUrl, input.url) &&
+    seedFieldOk(input.needsEvidence, input.evidenceId)
+  );
+}
+
 /** Seed requirements + run gate for the Jobs playbook run form. */
 export function buildPlaybookSeedView(
   input: PlaybookSeedInput
@@ -110,16 +152,23 @@ export function buildPlaybookSeedView(
   const needsHandle = needsKind("handle");
   const pickUrlDump = needsUrl && needsEvidence;
 
-  const seedOk =
-    (!needsHost || Boolean(host.trim())) &&
-    (!needsIp || Boolean(ip.trim())) &&
-    (!needsEmail || Boolean(email.trim())) &&
-    (!needsHash || Boolean(hash.trim())) &&
-    (!needsHandle || Boolean(handle.trim())) &&
-    (pickUrlDump
-      ? Boolean(evidenceId.trim() && url.trim())
-      : (!needsUrl || Boolean(url.trim())) &&
-        (!needsEvidence || Boolean(evidenceId.trim())));
+  const seedOk = playbookSeedOk({
+    needsHost,
+    needsIp,
+    needsEmail,
+    needsHash,
+    needsHandle,
+    pickUrlDump,
+    needsUrl,
+    needsEvidence,
+    host,
+    ip,
+    email,
+    hash,
+    handle,
+    url,
+    evidenceId,
+  });
 
   return {
     selected,

@@ -184,30 +184,46 @@ export function playbookRecipeDone(steps: readonly JobListRecord[]): number {
   return done;
 }
 
-export function playbookRunStatus(
-  steps: readonly JobListRecord[],
-  recipeTotal?: number,
-  runStatus?: PlaybookRunStatus | null
+function finishedPlaybookRunStatus(
+  steps: readonly JobListRecord[]
 ): JobStatus {
-  if (runStatus === "finished") {
-    if (steps.some((s) => s.status === "failed")) return "failed";
-    if (steps.some((s) => s.status === "cancelled")) return "cancelled";
-    return "succeeded";
-  }
-  if (runStatus === "cancelled") return "cancelled";
+  if (steps.some((s) => s.status === "failed")) return "failed";
+  if (steps.some((s) => s.status === "cancelled")) return "cancelled";
+  return "succeeded";
+}
 
+const LIVE_STEP_STATUS_PRIORITY: JobStatus[] = [
+  "running",
+  "queued",
+  "blocked",
+  "failed",
+  "cancelled",
+];
+
+function livePlaybookRunStatus(
+  steps: readonly JobListRecord[],
+  recipeTotal?: number
+): JobStatus {
   const statuses = steps.map((s) => s.status);
-  if (statuses.some((s) => s === "running")) return "running";
-  if (statuses.some((s) => s === "queued")) return "queued";
-  if (statuses.some((s) => s === "blocked")) return "blocked";
-  if (statuses.some((s) => s === "failed")) return "failed";
-  if (statuses.some((s) => s === "cancelled")) return "cancelled";
+  for (const status of LIVE_STEP_STATUS_PRIORITY) {
+    if (statuses.some((s) => s === status)) return status;
+  }
   const total = recipeTotal ?? steps.length;
   if (playbookRecipeDone(steps) < total) return "queued";
   if (statuses.length > 0 && statuses.every((s) => s === "succeeded")) {
     return "succeeded";
   }
   return statuses[0] ?? "queued";
+}
+
+export function playbookRunStatus(
+  steps: readonly JobListRecord[],
+  recipeTotal?: number,
+  runStatus?: PlaybookRunStatus | null
+): JobStatus {
+  if (runStatus === "finished") return finishedPlaybookRunStatus(steps);
+  if (runStatus === "cancelled") return "cancelled";
+  return livePlaybookRunStatus(steps, recipeTotal);
 }
 
 export function playbookRunProgress(

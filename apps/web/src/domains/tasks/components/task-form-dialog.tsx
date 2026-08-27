@@ -1,17 +1,8 @@
 /* oxlint-disable react/only-export-components -- dialog + form helpers re-export */
-import { useForm } from "@tanstack/react-form";
-import { useEffect, type SubmitEvent } from "react";
-
-import {
-  EMPTY_TASK_FORM,
-  defaultsFromTask,
-  normalizeTaskForm,
-  taskFormIssues,
-  type TaskFormValues,
-} from "@/domains/tasks/lib/task-form";
 import { TaskFormDialogFooter } from "@/domains/tasks/components/task-form-dialog-footer";
 import { TaskFormFields } from "@/domains/tasks/components/task-form-dialog-fields";
-import type { TaskDialogForm } from "@/domains/tasks/components/task-form-dialog-form";
+import { useTaskFormDialog } from "@/domains/tasks/components/use-task-form-dialog";
+import type { TaskFormValues } from "@/domains/tasks/lib/task-form";
 import type { TaskRecord } from "@/domains/tasks/types";
 import { FormInlineError } from "@/shared/ui/form-inline-message";
 import {
@@ -57,17 +48,6 @@ type EditProps = BaseProps & {
 
 type Props = CreateProps | EditProps;
 
-function createDefaults(
-  defaultStatus: TaskStatus,
-  defaultEntityId: string | null | undefined
-): TaskFormValues {
-  return {
-    ...EMPTY_TASK_FORM,
-    status: defaultStatus,
-    entityId: defaultEntityId ?? "",
-  };
-}
-
 export function TaskFormDialog(props: Props) {
   const {
     open,
@@ -85,32 +65,14 @@ export function TaskFormDialog(props: Props) {
   const task = mode === "edit" ? props.task : null;
   const onDelete = mode === "edit" ? props.onDelete : undefined;
 
-  const form = useForm({
-    defaultValues:
-      mode === "edit" && task
-        ? defaultsFromTask(task)
-        : createDefaults(defaultStatus, defaultEntityId),
-    onSubmit: async ({ value }) => {
-      if (taskFormIssues(value).length > 0) return;
-      await onSubmit(normalizeTaskForm(value));
-    },
+  const { form, handleSubmit } = useTaskFormDialog({
+    open,
+    mode,
+    task,
+    defaultStatus,
+    defaultEntityId,
+    onSubmit,
   });
-
-  useEffect(() => {
-    if (!open) return;
-    if (mode === "edit") {
-      if (!task) return;
-      form.reset(defaultsFromTask(task));
-      return;
-    }
-    form.reset(createDefaults(defaultStatus, defaultEntityId));
-  }, [open, mode, task, defaultEntityId, defaultStatus, form]);
-
-  function handleSubmit(e: SubmitEvent) {
-    e.preventDefault();
-    e.stopPropagation();
-    void form.handleSubmit();
-  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -122,16 +84,12 @@ export function TaskFormDialog(props: Props) {
             </DialogTitle>
           </DialogHeader>
 
-          <TaskFormFields
-            form={form as TaskDialogForm}
-            entities={entities}
-            busy={busy}
-          />
+          <TaskFormFields form={form} entities={entities} busy={busy} />
 
           {error ? <FormInlineError>{error}</FormInlineError> : null}
 
           <TaskFormDialogFooter
-            form={form as TaskDialogForm}
+            form={form}
             mode={mode}
             busy={busy}
             onOpenChange={onOpenChange}

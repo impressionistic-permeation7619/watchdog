@@ -60,18 +60,23 @@ function blockedReason({
   return hasInput ? undefined : "Enter Cap input before Run";
 }
 
+function pushInfoRow(
+  rows: CapInfoRow[],
+  label: string,
+  value: string,
+  mono = false
+): void {
+  if (value === "") return;
+  rows.push({ label, value, mono });
+}
+
 /** Cap detail rows for hover card / picker preview panel. */
 export function capInfoRows(cap: CapListItem): CapInfoRow[] {
   const rows: CapInfoRow[] = [];
-  const kind = cap.kind ?? "";
-  const dataSource = cap.dataSource ?? "";
   const flags = new Set(cap.flags);
-  const consumes = formatCapIo(cap.consumes) ?? "";
-  const produces = formatCapIo(cap.produces) ?? "";
-  const credentials = formatCapCredentials(cap.credentials) ?? "";
 
-  if (kind !== "") rows.push({ label: "Kind", value: kind });
-  if (dataSource !== "") rows.push({ label: "Source", value: dataSource });
+  pushInfoRow(rows, "Kind", cap.kind ?? "");
+  pushInfoRow(rows, "Source", cap.dataSource ?? "");
   const useCases = cap.useCases ?? [];
   if (useCases.length > 0) {
     rows.push({ label: "Intent", value: useCases.join(", ") });
@@ -83,16 +88,11 @@ export function capInfoRows(cap: CapListItem): CapInfoRow[] {
     });
   }
   if ((cap.egress ?? "none") === "third_party") {
-    rows.push({
-      label: "Egress",
-      value: "third_party",
-    });
+    rows.push({ label: "Egress", value: "third_party" });
   }
-  if (consumes !== "") rows.push({ label: "Consumes", value: consumes });
-  if (produces !== "") rows.push({ label: "Produces", value: produces });
-  if (credentials !== "") {
-    rows.push({ label: "Secrets", value: credentials, mono: true });
-  }
+  pushInfoRow(rows, "Consumes", formatCapIo(cap.consumes) ?? "");
+  pushInfoRow(rows, "Produces", formatCapIo(cap.produces) ?? "");
+  pushInfoRow(rows, "Secrets", formatCapCredentials(cap.credentials) ?? "", true);
   return rows;
 }
 
