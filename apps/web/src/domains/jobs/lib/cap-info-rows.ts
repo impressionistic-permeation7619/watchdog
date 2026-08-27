@@ -7,6 +7,24 @@ export interface CapInfoRow {
   mono?: boolean;
 }
 
+type CapInfoField = {
+  label: string;
+  read: (cap: CapListItem) => string;
+  mono?: boolean;
+};
+
+const CAP_INFO_FIELDS: CapInfoField[] = [
+  { label: "Kind", read: (cap) => cap.kind ?? "" },
+  { label: "Source", read: (cap) => cap.dataSource ?? "" },
+  { label: "Consumes", read: (cap) => formatCapIo(cap.consumes) ?? "" },
+  { label: "Produces", read: (cap) => formatCapIo(cap.produces) ?? "" },
+  {
+    label: "Secrets",
+    read: (cap) => formatCapCredentials(cap.credentials) ?? "",
+    mono: true,
+  },
+];
+
 function pushInfoRow(
   rows: CapInfoRow[],
   label: string,
@@ -17,33 +35,34 @@ function pushInfoRow(
   rows.push({ label, value, mono });
 }
 
-function pushFlagRows(rows: CapInfoRow[], flags: Set<string>): void {
-  if (flags.size === 0) return;
-  rows.push({
-    label: "Flags",
-    value: [...flags].map((flag) => flag.replaceAll("_", " ")).join(", "),
-  });
-}
-
 function pushUseCaseRow(rows: CapInfoRow[], useCases: readonly string[]): void {
   if (useCases.length === 0) return;
   rows.push({ label: "Intent", value: useCases.join(", ") });
 }
 
+function pushFlagRow(rows: CapInfoRow[], flags: readonly string[]): void {
+  if (flags.length === 0) return;
+  rows.push({
+    label: "Flags",
+    value: flags.map((flag) => flag.replaceAll("_", " ")).join(", "),
+  });
+}
+
+function pushEgressRow(rows: CapInfoRow[], cap: CapListItem): void {
+  if ((cap.egress ?? "none") !== "third_party") return;
+  rows.push({ label: "Egress", value: "third_party" });
+}
+
 /** Cap detail rows for hover card / picker preview panel. */
 export function capInfoRows(cap: CapListItem): CapInfoRow[] {
   const rows: CapInfoRow[] = [];
-  const flags = new Set(cap.flags);
 
-  pushInfoRow(rows, "Kind", cap.kind ?? "");
-  pushInfoRow(rows, "Source", cap.dataSource ?? "");
-  pushUseCaseRow(rows, cap.useCases ?? []);
-  pushFlagRows(rows, flags);
-  if ((cap.egress ?? "none") === "third_party") {
-    rows.push({ label: "Egress", value: "third_party" });
+  for (const field of CAP_INFO_FIELDS) {
+    pushInfoRow(rows, field.label, field.read(cap), field.mono);
   }
-  pushInfoRow(rows, "Consumes", formatCapIo(cap.consumes) ?? "");
-  pushInfoRow(rows, "Produces", formatCapIo(cap.produces) ?? "");
-  pushInfoRow(rows, "Secrets", formatCapCredentials(cap.credentials) ?? "", true);
+  pushUseCaseRow(rows, cap.useCases ?? []);
+  pushFlagRow(rows, cap.flags);
+  pushEgressRow(rows, cap);
+
   return rows;
 }
