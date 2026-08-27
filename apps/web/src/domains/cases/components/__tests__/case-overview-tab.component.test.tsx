@@ -10,13 +10,9 @@ vi.mock("@/auth/server", () => ({
 
 vi.mock("@tanstack/react-router", () => ({
   useNavigate: () => vi.fn(),
-  Link: ({
-    children,
-    to,
-  }: {
-    children: React.ReactNode;
-    to: string;
-  }) => <a href={to}>{children}</a>,
+  Link: ({ children, to }: { children: React.ReactNode; to: string }) => (
+    <a href={to}>{children}</a>
+  ),
 }));
 
 vi.mock("@/shared/hooks/use-live-events", () => ({
@@ -89,7 +85,9 @@ describe("CaseOverviewTab", () => {
       []
     );
 
-    expect(screen.getByRole("region", { name: "Case stats" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("region", { name: "Case stats" })
+    ).toBeInTheDocument();
     expect(screen.getByText("1")).toBeInTheDocument();
     expect(screen.getByText("Entities")).toBeInTheDocument();
     expect(screen.getByText("Identifiers")).toBeInTheDocument();

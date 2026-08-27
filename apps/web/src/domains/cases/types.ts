@@ -1,14 +1,13 @@
 import { z } from "zod";
 
 import { slugifyName } from "@/lib/utils";
+import type { CaseRecord as CoreCaseRecord } from "@watchdog/core";
 import {
   nonEmptyTrimmed,
   optionalTrimmedSchema,
   trimmedOrUndefined,
   uuidSchema,
 } from "@watchdog/schemas";
-
-import type { CaseRecord as CoreCaseRecord } from "@watchdog/core";
 
 export type CaseRecord = CoreCaseRecord;
 

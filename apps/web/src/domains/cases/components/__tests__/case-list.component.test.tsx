@@ -97,7 +97,9 @@ describe("CaseList", () => {
     expect(screen.getByText("First case")).toBeInTheDocument();
     expect(screen.getByText("Active")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Select" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Active" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Active" })
+    ).not.toBeInTheDocument();
   });
 
   it("shows a no-results empty state when search matches nothing", async () => {

@@ -5,8 +5,8 @@ vi.mock("@/auth/server", () => ({
   auth: {},
 }));
 
-import { CASE_GRAPH_ENTITY_CAP } from "@/domains/cases/components/case-graph/case-graph-layout";
 import { CaseGraphCanvas } from "@/domains/cases/components/case-graph/case-graph-canvas";
+import { CASE_GRAPH_ENTITY_CAP } from "@/domains/cases/components/case-graph/case-graph-layout";
 import type { EntityRecord } from "@/domains/entities/types";
 
 vi.mock("@tanstack/react-router", () => ({
@@ -40,15 +40,20 @@ describe("CaseGraphCanvas", () => {
   });
 
   it("shows a cap message when the entity count exceeds the preview limit", () => {
-    const entities = Array.from({ length: CASE_GRAPH_ENTITY_CAP + 1 }, (_, i) => ({
-      ...ENTITY,
-      id: `ent-${i}`,
-      slug: `entity-${i}`,
-      name: `Entity ${i}`,
-    }));
+    const entities = Array.from(
+      { length: CASE_GRAPH_ENTITY_CAP + 1 },
+      (_, i) => ({
+        ...ENTITY,
+        id: `ent-${i}`,
+        slug: `entity-${i}`,
+        name: `Entity ${i}`,
+      })
+    );
     render(<CaseGraphCanvas caseId="case-1" entities={entities} />);
     expect(
-      screen.getByText(`Graph preview caps at ${CASE_GRAPH_ENTITY_CAP} entities`)
+      screen.getByText(
+        `Graph preview caps at ${CASE_GRAPH_ENTITY_CAP} entities`
+      )
     ).toBeInTheDocument();
   });
 });

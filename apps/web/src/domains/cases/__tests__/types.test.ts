@@ -19,7 +19,9 @@ describe("case input schemas", () => {
 
   it("normalizes empty active case ids to null", () => {
     expect(setActiveCaseIdInputSchema.parse({ caseId: "" }).caseId).toBeNull();
-    expect(setActiveCaseIdInputSchema.parse({ caseId: null }).caseId).toBeNull();
+    expect(
+      setActiveCaseIdInputSchema.parse({ caseId: null }).caseId
+    ).toBeNull();
     expect(setActiveCaseIdInputSchema.parse({ caseId: CASE_ID }).caseId).toBe(
       CASE_ID
     );

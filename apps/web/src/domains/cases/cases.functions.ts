@@ -76,15 +76,18 @@ export const createCaseFn = createServerFn({ method: "POST" })
 
 export const updateCaseFn = createServerFn({ method: "POST" })
   .validator(updateCaseInputSchema)
-  .handler(async ({ data, context }): Promise<CaseRecord> =>
-    orpcFromContext(context).cases.update({
-      caseId: data.id,
-      ...(data.name === undefined ? {} : { name: data.name }),
-      ...(data.description === undefined
-        ? {} : { description: data.description }),
-      ...(data.allowThirdPartyEgress === undefined
-        ? {} : { allowThirdPartyEgress: data.allowThirdPartyEgress }),
-    })
+  .handler(
+    async ({ data, context }): Promise<CaseRecord> =>
+      orpcFromContext(context).cases.update({
+        caseId: data.id,
+        ...(data.name === undefined ? {} : { name: data.name }),
+        ...(data.description === undefined
+          ? {}
+          : { description: data.description }),
+        ...(data.allowThirdPartyEgress === undefined
+          ? {}
+          : { allowThirdPartyEgress: data.allowThirdPartyEgress }),
+      })
   );
 
 export const deleteCaseFn = createServerFn({ method: "POST" })

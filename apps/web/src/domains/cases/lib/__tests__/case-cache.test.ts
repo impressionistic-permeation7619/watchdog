@@ -5,8 +5,12 @@ vi.mock("@/auth/server", () => ({
   auth: {},
 }));
 
-import { caseByIdQuery, caseBySlugQuery, casesKeys } from "@/domains/cases/queries";
 import { writeCaseRecordCache } from "@/domains/cases/lib/case-cache";
+import {
+  caseByIdQuery,
+  caseBySlugQuery,
+  casesKeys,
+} from "@/domains/cases/queries";
 import type { CaseRecord, CasesContext } from "@/domains/cases/types";
 
 const CASE: CaseRecord = {
@@ -63,13 +67,14 @@ describe("writeCaseRecordCache", () => {
     const contextCall = vi
       .mocked(client.setQueryData)
       .mock.calls.find(
-        ([key]) =>
-          JSON.stringify(key) === JSON.stringify(casesKeys.context())
+        ([key]) => JSON.stringify(key) === JSON.stringify(casesKeys.context())
       );
     const updater = contextCall?.[1];
     expect(typeof updater).toBe("function");
     const next =
-      typeof updater === "function" ? (updater as (p: CasesContext) => CasesContext)(context) : null;
+      typeof updater === "function"
+        ? (updater as (p: CasesContext) => CasesContext)(context)
+        : null;
     expect(next?.cases[0]?.name).toBe("Alpha renamed");
     expect(next?.active?.name).toBe("Alpha renamed");
   });

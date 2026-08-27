@@ -51,10 +51,7 @@ export function useCaseList() {
   const [deleteTarget, setDeleteTarget] = useState<CaseRecord | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const filtered = useMemo(
-    () => filterCases(cases, search),
-    [cases, search]
-  );
+  const filtered = useMemo(() => filterCases(cases, search), [cases, search]);
 
   const actions = useCaseListActions(
     activeId,

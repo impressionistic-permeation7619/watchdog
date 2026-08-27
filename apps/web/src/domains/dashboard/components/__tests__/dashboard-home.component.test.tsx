@@ -84,7 +84,9 @@ describe("DashboardHome", () => {
       screen.getByText(/Select a Case in the sidebar to see pending proposals/)
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/Overdue and near-due tasks show up once a Case is active/)
+      screen.getByText(
+        /Overdue and near-due tasks show up once a Case is active/
+      )
     ).toBeInTheDocument();
     expect(screen.getByText("Recent activity panel")).toBeInTheDocument();
     expect(

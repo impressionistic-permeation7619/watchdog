@@ -9,7 +9,7 @@ import type { CaseRecord } from "@/domains/cases/types";
 import { errMessage } from "@/lib/utils";
 import { invalidateAfterCaseSwitch } from "@/shared/lib/query-invalidation";
 
-function selectActiveCase(caseId: string) {
+async function selectActiveCase(caseId: string) {
   return setActiveCaseIdFn({ data: { caseId } });
 }
 
@@ -59,11 +59,11 @@ function buildCaseListActionHandlers(
   }
 ) {
   return {
-    selectCase(id: string) {
+    selectCase: (id: string) => {
       setSubmitError(null);
       selectMutation.mutate(id);
     },
-    async openCase(caseRow: CaseRecord) {
+    openCase: async (caseRow: CaseRecord) => {
       setSubmitError(null);
       try {
         if (caseRow.id !== activeId) {
@@ -74,27 +74,27 @@ function buildCaseListActionHandlers(
         setSubmitError(errMessage(error, "Failed to open case"));
       }
     },
-    openCreate() {
+    openCreate: () => {
       setSubmitError(null);
       setCreateOpen(true);
     },
-    clearSearch() {
+    clearSearch: () => {
       setSearch("");
     },
-    beginDeleteCase(caseRow: CaseRecord) {
+    beginDeleteCase: (caseRow: CaseRecord) => {
       setSubmitError(null);
       setDeleteTarget(caseRow);
     },
-    handleCreateSuccess() {
+    handleCreateSuccess: () => {
       void handleCreateSuccessAsync(queryClient, setSubmitError);
     },
-    handleCreateError(message: string) {
+    handleCreateError: (message: string) => {
       setSubmitError(message);
     },
-    closeDeleteDialog(open: boolean) {
+    closeDeleteDialog: (open: boolean) => {
       if (!open) setDeleteTarget(null);
     },
-    handleCaseDeleted() {
+    handleCaseDeleted: () => {
       toast.success("Case deleted");
     },
   };
@@ -112,8 +112,10 @@ export function useCaseListActions(
 
   const selectMutation = useMutation({
     mutationFn: selectActiveCase,
-    onSuccess: () => onCaseSelected(queryClient),
-    onError: (err) => onCaseSelectError(setSubmitError, err),
+    onSuccess: async () => onCaseSelected(queryClient),
+    onError: (err) => {
+      onCaseSelectError(setSubmitError, err);
+    },
   });
 
   return {

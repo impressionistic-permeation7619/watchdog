@@ -14,13 +14,7 @@ vi.mock("@tanstack/react-router", () => ({
     children: React.ReactNode;
     search?: Record<string, string>;
   }) => (
-    <a
-      href={
-        search
-          ? `${to}?${new URLSearchParams(search).toString()}`
-          : to
-      }
-    >
+    <a href={search ? `${to}?${new URLSearchParams(search).toString()}` : to}>
       {children}
     </a>
   ),
@@ -63,10 +57,9 @@ describe("DashboardInboxSection", () => {
   it("lists recent proposals when a case is active", () => {
     render(<DashboardInboxSection hasCase proposals={[PROPOSAL]} />);
     expect(screen.getByText("Link entity A to B")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Link entity A to B/ })).toHaveAttribute(
-      "href",
-      "/inbox?proposalId=prop-1"
-    );
+    expect(
+      screen.getByRole("link", { name: /Link entity A to B/ })
+    ).toHaveAttribute("href", "/inbox?proposalId=prop-1");
   });
 });
 
@@ -74,7 +67,9 @@ describe("DashboardDueTasksSection", () => {
   it("explains due tasks require an active case", () => {
     render(<DashboardDueTasksSection hasCase={false} tasks={[]} />);
     expect(
-      screen.getByText(/Overdue and near-due tasks show up once a Case is active/)
+      screen.getByText(
+        /Overdue and near-due tasks show up once a Case is active/
+      )
     ).toBeInTheDocument();
   });
 

@@ -70,11 +70,9 @@ const CASE: CaseRecord = {
 };
 
 function renderOverview(activeId: string | null) {
-  useSuspenseQueryMock
-    .mockReturnValueOnce({ data: CASE })
-    .mockReturnValueOnce({
-      data: { cases: [CASE], active: activeId ? CASE : null },
-    });
+  useSuspenseQueryMock.mockReturnValueOnce({ data: CASE }).mockReturnValueOnce({
+    data: { cases: [CASE], active: activeId ? CASE : null },
+  });
   useQueryMock
     .mockReturnValueOnce({ data: [], isPending: false })
     .mockReturnValueOnce({ data: [], isPending: false });

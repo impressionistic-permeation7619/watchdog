@@ -28,20 +28,24 @@ vi.mock("@/domains/cases/lib/active-case.server", () => ({
 }));
 
 import {
-  readActiveCaseId,
-  writeActiveCaseId,
-} from "@/domains/cases/lib/active-case.server";
-
-import {
   deleteCaseFn,
   getCaseBySlugFn,
   getCasesContextFn,
   setActiveCaseIdFn,
 } from "@/domains/cases/cases.functions";
+import {
+  readActiveCaseId,
+  writeActiveCaseId,
+} from "@/domains/cases/lib/active-case.server";
 import type { CaseRecord } from "@/domains/cases/types";
 
-type ServerContext = { context: Record<string, never> };
-type ServerDataContext<T> = { data: T; context: Record<string, never> };
+interface ServerContext {
+  context: Record<string, never>;
+}
+interface ServerDataContext<T> {
+  data: T;
+  context: Record<string, never>;
+}
 
 const CASE_A: CaseRecord = {
   id: "550e8400-e29b-41d4-a716-446655440000",
@@ -64,9 +68,11 @@ describe("cases.functions", () => {
     casesApi.list.mockResolvedValue([CASE_A, CASE_B]);
     vi.mocked(readActiveCaseId).mockReturnValue("missing-id");
 
-    const ctx = await (getCasesContextFn as unknown as (
-      input: ServerContext
-    ) => Promise<{ cases: CaseRecord[]; active: CaseRecord | null }>)({
+    const ctx = await (
+      getCasesContextFn as unknown as (
+        input: ServerContext
+      ) => Promise<{ cases: CaseRecord[]; active: CaseRecord | null }>
+    )({
       context: {},
     });
 
@@ -77,9 +83,11 @@ describe("cases.functions", () => {
   it("resolves a case by slug from the cases list", async () => {
     casesApi.list.mockResolvedValue([CASE_A, CASE_B]);
 
-    const row = await (getCaseBySlugFn as unknown as (
-      input: ServerDataContext<{ caseSlug: string }>
-    ) => Promise<CaseRecord | null>)({
+    const row = await (
+      getCaseBySlugFn as unknown as (
+        input: ServerDataContext<{ caseSlug: string }>
+      ) => Promise<CaseRecord | null>
+    )({
       data: { caseSlug: "beta" },
       context: {},
     });
@@ -91,9 +99,11 @@ describe("cases.functions", () => {
     casesApi.get.mockResolvedValue(null);
 
     await expect(
-      (setActiveCaseIdFn as unknown as (
-        input: ServerDataContext<{ caseId: string }>
-      ) => Promise<string | null>)({
+      (
+        setActiveCaseIdFn as unknown as (
+          input: ServerDataContext<{ caseId: string }>
+        ) => Promise<string | null>
+      )({
         data: { caseId: CASE_A.id },
         context: {},
       })
@@ -105,9 +115,11 @@ describe("cases.functions", () => {
     casesApi.delete.mockResolvedValue(undefined);
     casesApi.list.mockResolvedValue([CASE_B]);
 
-    await (deleteCaseFn as unknown as (
-      input: ServerDataContext<{ id: string }>
-    ) => Promise<void>)({ data: { id: CASE_A.id }, context: {} });
+    await (
+      deleteCaseFn as unknown as (
+        input: ServerDataContext<{ id: string }>
+      ) => Promise<void>
+    )({ data: { id: CASE_A.id }, context: {} });
 
     expect(casesApi.delete).toHaveBeenCalledWith({ caseId: CASE_A.id });
     expect(writeActiveCaseId).toHaveBeenCalledWith(CASE_B.id);

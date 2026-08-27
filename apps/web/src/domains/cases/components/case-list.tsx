@@ -450,7 +450,9 @@ export function CaseList() {
         search={search}
         onClearSearch={clearSearch}
         onSelectCase={selectCase}
-        onOpenCase={openCase}
+        onOpenCase={(caseRow) => {
+          void openCase(caseRow);
+        }}
         onDeleteCase={beginDeleteCase}
         onCreate={openCreate}
       />

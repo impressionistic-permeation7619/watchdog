@@ -14,13 +14,9 @@ vi.mock("@/shared/ui/shadcn/sidebar", () => ({
 }));
 
 vi.mock("@tanstack/react-router", () => ({
-  Link: ({
-    to,
-    children,
-  }: {
-    to: string;
-    children: React.ReactNode;
-  }) => <a href={to}>{children}</a>,
+  Link: ({ to, children }: { to: string; children: React.ReactNode }) => (
+    <a href={to}>{children}</a>
+  ),
 }));
 
 vi.mock("@tanstack/react-query", async (importOriginal) => {
@@ -74,7 +70,9 @@ describe("GraphPage", () => {
 
     render(<GraphPage />);
     expect(screen.getByText("Graph canvas")).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "Go to Cases" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: "Go to Cases" })
+    ).not.toBeInTheDocument();
     expect(vi.mocked(useSuspenseQuery)).toHaveBeenCalled();
   });
 });

@@ -26,11 +26,7 @@ function renderDialog(open = true) {
   const client = new QueryClient();
   return render(
     <QueryClientProvider client={client}>
-      <DeleteCaseDialog
-        caseRow={CASE}
-        open={open}
-        onOpenChange={vi.fn()}
-      />
+      <DeleteCaseDialog caseRow={CASE} open={open} onOpenChange={vi.fn()} />
     </QueryClientProvider>
   );
 }
