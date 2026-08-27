@@ -85,7 +85,7 @@ export interface PresignedPut {
   headers: Record<string, string>;
 }
 
-export async function uploadArtifact(input: {
+export function uploadArtifact(input: {
   caseId: string;
   bytes: Uint8Array;
   mime: string;
@@ -103,17 +103,15 @@ export async function uploadArtifact(input: {
     ContentLength: input.bytes.byteLength,
     Metadata: { sha256 },
   });
-  await client.send(command);
-
-  return {
+  return client.send(command).then(() => ({
     uri,
     sha256,
     mime: input.mime,
     byteLength: input.bytes.byteLength,
-  };
+  }));
 }
 
-export async function createPresignedPut(input: {
+export function createPresignedPut(input: {
   caseId: string;
   sha256: string;
   mime: string;
@@ -134,7 +132,6 @@ export async function createPresignedPut(input: {
 
   const cfg = s3Config();
   const uri = artifactUri(input.caseId, sha256, input.name);
-  // Metadata is query-signed; do not also send x-amz-meta-* as headers.
   const headers = { "Content-Type": mime };
 
   const command = new PutObjectCommand({
@@ -145,12 +142,10 @@ export async function createPresignedPut(input: {
   });
 
   const client = getClient();
-  const url = await getSignedUrl(client, command, {
+  return getSignedUrl(client, command, {
     expiresIn: PRESIGN_EXPIRES_IN,
     signableHeaders: new Set(["content-type"]),
-  });
-
-  return {
+  }).then((url) => ({
     url,
     uri,
     sha256,
@@ -158,10 +153,10 @@ export async function createPresignedPut(input: {
     byteLength: input.byteLength,
     expiresIn: PRESIGN_EXPIRES_IN,
     headers,
-  };
+  }));
 }
 
-export async function assertUploadedObject(input: {
+export function assertUploadedObject(input: {
   uri: string;
   sha256: string;
   mime: string;
@@ -170,28 +165,31 @@ export async function assertUploadedObject(input: {
   const sha256 = assertSha256Hex(input.sha256);
   const cfg = s3Config();
   const client = getClient();
-  const head = await client.send(
-    new HeadObjectCommand({ Bucket: cfg.bucket, Key: input.uri })
-  );
-
-  const metaSha = head.Metadata?.sha256?.toLowerCase();
-  if (metaSha !== sha256) {
-    throw new DomainError("invalid", "Uploaded object sha256 metadata mismatch");
-  }
-  if (head.ContentLength !== input.byteLength) {
-    throw new DomainError("invalid", "Uploaded object size mismatch");
-  }
-  const contentType = head.ContentType?.split(";")[0]?.trim().toLowerCase();
-  const expected = input.mime.split(";")[0]?.trim().toLowerCase();
-  if (
-    contentType !== undefined &&
-    contentType !== "" &&
-    expected !== undefined &&
-    expected !== "" &&
-    contentType !== expected
-  ) {
-    throw new DomainError("invalid", "Uploaded object Content-Type mismatch");
-  }
+  return client
+    .send(new HeadObjectCommand({ Bucket: cfg.bucket, Key: input.uri }))
+    .then((head) => {
+      const metaSha = head.Metadata?.sha256?.toLowerCase();
+      if (metaSha !== sha256) {
+        throw new DomainError(
+          "invalid",
+          "Uploaded object sha256 metadata mismatch"
+        );
+      }
+      if (head.ContentLength !== input.byteLength) {
+        throw new DomainError("invalid", "Uploaded object size mismatch");
+      }
+      const contentType = head.ContentType?.split(";")[0]?.trim().toLowerCase();
+      const expected = input.mime.split(";")[0]?.trim().toLowerCase();
+      if (
+        contentType !== undefined &&
+        contentType !== "" &&
+        expected !== undefined &&
+        expected !== "" &&
+        contentType !== expected
+      ) {
+        throw new DomainError("invalid", "Uploaded object Content-Type mismatch");
+      }
+    });
 }
 
 export async function readArtifactBytes(uri: string): Promise<Uint8Array> {

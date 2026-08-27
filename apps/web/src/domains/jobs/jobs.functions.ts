@@ -92,37 +92,44 @@ function caseScopedArtifactUri(caseId: string, uri: string): string | null {
   return uri.startsWith(prefix) ? uri : null;
 }
 
-async function resolveJobArtifactUri(
+function resolveJobArtifactUri(
   data: GetArtifactContentInput & { source: "job" },
   context: { session: Parameters<typeof orpcFromContext>[0]["session"] }
 ): Promise<string | null> {
-  const job = await orpcFromContext(context).jobs.get({
-    caseId: data.caseId,
-    jobId: data.jobId,
-  });
-  const artifact = job.output?.find((row) => row.sha256 === data.sha256);
-  if (artifact?.uri === undefined || artifact.uri === "") {
-    return await Promise.resolve(null);
-  }
-  return await Promise.resolve(caseScopedArtifactUri(data.caseId, artifact.uri));
+  return orpcFromContext(context)
+    .jobs.get({
+      caseId: data.caseId,
+      jobId: data.jobId,
+    })
+    .then((job) => {
+      const artifact = job.output?.find((row) => row.sha256 === data.sha256);
+      if (artifact?.uri === undefined || artifact.uri === "") return null;
+      return caseScopedArtifactUri(data.caseId, artifact.uri);
+    });
 }
 
-async function fetchEvidenceBlobText(
+function fetchEvidenceBlobText(
   data: GetArtifactContentInput & { source: "evidence" },
   context: { session: Parameters<typeof orpcFromContext>[0]["session"] }
 ): Promise<string | null> {
-  const { url } = await orpcFromContext(context).evidence.downloadUrl({
-    caseId: data.caseId,
-    evidenceId: data.evidenceId,
-  });
-  if (url === null || url === "") return await Promise.resolve(null);
-
-  const res = await fetch(url);
-  if (!res.ok) return await Promise.resolve(null);
-  const bytes = new Uint8Array(await res.arrayBuffer());
-  return await Promise.resolve(
-    truncateArtifactText(new TextDecoder().decode(bytes))
-  );
+  return orpcFromContext(context)
+    .evidence.downloadUrl({
+      caseId: data.caseId,
+      evidenceId: data.evidenceId,
+    })
+    .then(({ url }) => {
+      if (url === null || url === "") return null;
+      return fetch(url);
+    })
+    .then((res) => {
+      if (res === null || !res.ok) return null;
+      return res.arrayBuffer();
+    })
+    .then((buf) => {
+      if (buf === null) return null;
+      const bytes = new Uint8Array(buf);
+      return truncateArtifactText(new TextDecoder().decode(bytes));
+    });
 }
 
 /**

@@ -85,18 +85,16 @@ export async function evaluateCapAvailability(input: {
 }
 
 /** Fail closed before enqueue — same predicate as playbooks / worker preflight. */
-export async function assertCapAvailability(input: {
+export function assertCapAvailability(input: {
   actorId: string;
   caseId: string;
   cap: CapabilityDef<z.ZodType>;
 }): Promise<void> {
-  const { result } = await evaluateCapAvailability(input);
-  if (result.ok) {
-    await Promise.resolve();
-    return;
-  }
-  throw new DomainError(
-    "forbidden",
-    formatCapAvailabilityError(result, input.cap.id)
-  );
+  return evaluateCapAvailability(input).then(({ result }) => {
+    if (result.ok) return;
+    throw new DomainError(
+      "forbidden",
+      formatCapAvailabilityError(result, input.cap.id)
+    );
+  });
 }
