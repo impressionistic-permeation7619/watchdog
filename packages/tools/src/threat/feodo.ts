@@ -105,20 +105,11 @@ function fetchBlocklist(
  */
 
 type FeodoOptions = { userAgent?: string; apiKey?: string };
-export async function fetchFeodoLookup(
-  ipRaw: string,
-  signal: AbortSignal,
-  options?: FeodoOptions
-): Promise<FeodoLookupSnapshot> {
-  const ip = normalizeIp(ipRaw);
-  const ua = options?.userAgent ?? watchdogUserAgent("threat.feodo.lookup");
 
-  const entries = await fetchBlocklist(signal, {
-    userAgent: ua,
-    apiKey: options?.apiKey,
-  });
-  const match = entries.find((e) => e.ipAddress === ip);
-
+function feodoMatchSnapshot(
+  ip: string,
+  match: FeodoEntry | undefined
+): FeodoLookupSnapshot {
   return feodoLookupSnapshotSchema.parse({
     ip,
     queriedAt: new Date().toISOString(),
@@ -129,4 +120,18 @@ export async function fetchFeodoLookup(
     firstSeen: match?.firstSeen ?? null,
     lastOnline: match?.lastOnline ?? null,
   });
+}
+
+export function fetchFeodoLookup(
+  ipRaw: string,
+  signal: AbortSignal,
+  options?: FeodoOptions
+): Promise<FeodoLookupSnapshot> {
+  const ip = normalizeIp(ipRaw);
+  const ua = options?.userAgent ?? watchdogUserAgent("threat.feodo.lookup");
+
+  return fetchBlocklist(signal, {
+    userAgent: ua,
+    apiKey: options?.apiKey,
+  }).then((entries) => feodoMatchSnapshot(ip, entries.find((e) => e.ipAddress === ip)));
 }

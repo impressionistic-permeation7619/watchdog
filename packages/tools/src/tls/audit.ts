@@ -41,6 +41,16 @@ function dnField(value: string | string[] | undefined): string | null {
   return Array.isArray(value) ? (value[0] ?? null) : value;
 }
 
+function certSubjectFields(cert: PeerCertificate): {
+  subject: string | null;
+  issuer: string | null;
+} {
+  return {
+    subject: dnField(cert.subject?.CN) ?? dnField(cert.subject?.O),
+    issuer: dnField(cert.issuer?.CN) ?? dnField(cert.issuer?.O),
+  };
+}
+
 function certField(
   cert: PeerCertificate | null
 ): TlsAuditSnapshot["certificate"] {
@@ -50,9 +60,10 @@ function certField(
       ?.split(",")
       .map((s) => s.trim())
       .filter(Boolean) ?? [];
+  const { subject, issuer } = certSubjectFields(cert);
   return {
-    subject: dnField(cert.subject?.CN) ?? dnField(cert.subject?.O),
-    issuer: dnField(cert.issuer?.CN) ?? dnField(cert.issuer?.O),
+    subject,
+    issuer,
     validFrom: cert.valid_from ?? null,
     validTo: cert.valid_to ?? null,
     fingerprint256: cert.fingerprint256 ?? null,

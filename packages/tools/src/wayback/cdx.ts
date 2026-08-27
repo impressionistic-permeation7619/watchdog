@@ -42,20 +42,25 @@ type WaybackLookupOptions = {
   filterStatus200?: boolean;
 };
 
+function cdxRowFromArray(row: unknown, url: string): WaybackCdxRow | null {
+  if (!isUnknownArray(row) || !row[0]) return null;
+  return {
+    timestamp: cdxField(row[0]) ?? "",
+    original: cdxField(row[1]) ?? url,
+    ...(row[2] === undefined ? {} : { statuscode: cdxField(row[2]) ?? "" }),
+    ...(row[3] === undefined ? {} : { mimetype: cdxField(row[3]) ?? "" }),
+    ...(row[4] === undefined ? {} : { digest: cdxField(row[4]) ?? "" }),
+  };
+}
+
 function parseCdxRows(payload: unknown[], url: string): WaybackCdxRow[] {
   const hasHeader =
     isUnknownArray(payload[0]) && String(payload[0][0]) === "timestamp";
   const dataRows = hasHeader ? payload.slice(1) : payload;
   const rows: WaybackCdxRow[] = [];
   for (const row of dataRows) {
-    if (!isUnknownArray(row) || !row[0]) continue;
-    rows.push({
-      timestamp: cdxField(row[0]) ?? "",
-      original: cdxField(row[1]) ?? url,
-      ...(row[2] === undefined ? {} : { statuscode: cdxField(row[2]) ?? "" }),
-      ...(row[3] === undefined ? {} : { mimetype: cdxField(row[3]) ?? "" }),
-      ...(row[4] === undefined ? {} : { digest: cdxField(row[4]) ?? "" }),
-    });
+    const parsed = cdxRowFromArray(row, url);
+    if (parsed) rows.push(parsed);
   }
   return rows;
 }

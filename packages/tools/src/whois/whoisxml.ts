@@ -31,12 +31,25 @@ const whoisXmlResponseSchema = z.object({
     .optional(),
 });
 
+function whoisXmlDates(
+  rec: NonNullable<z.infer<typeof whoisXmlResponseSchema>["WhoisRecord"]>
+): { registeredAt: string | null; expiresAt: string | null } {
+  const registry = rec.registryData;
+  return {
+    registeredAt:
+      parseWhoisDate(rec.createdDate) ?? parseWhoisDate(registry?.createdDate),
+    expiresAt:
+      parseWhoisDate(rec.expiresDate) ?? parseWhoisDate(registry?.expiresDate),
+  };
+}
+
 function whoisXmlSnapshot(
   host: string,
   raw: z.infer<typeof whoisXmlResponseSchema>
 ): WhoisSnapshot {
   const rec = raw.WhoisRecord ?? {};
   const registry = rec.registryData;
+  const dates = whoisXmlDates(rec);
   return {
     host,
     source: "whoisxml",
@@ -45,11 +58,8 @@ function whoisXmlSnapshot(
       rec.registrant?.organization ?? rec.registrant?.name ?? null,
     nameservers: rec.nameServers?.hostNames ?? [],
     status: whoisStatusList(rec.status),
-    registeredAt:
-      parseWhoisDate(rec.createdDate) ??
-      parseWhoisDate(registry?.createdDate),
-    expiresAt:
-      parseWhoisDate(rec.expiresDate) ?? parseWhoisDate(registry?.expiresDate),
+    registeredAt: dates.registeredAt,
+    expiresAt: dates.expiresAt,
     raw,
   };
 }

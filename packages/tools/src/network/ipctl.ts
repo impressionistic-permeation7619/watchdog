@@ -49,6 +49,24 @@ function parseIpctlTags(data: Record<string, unknown>): string[] {
   });
 }
 
+function firstString(
+  ...values: Array<string | null | undefined>
+): string | null {
+  for (const value of values) {
+    if (value) return value;
+  }
+  return null;
+}
+
+function firstNumber(
+  ...values: Array<number | null | undefined>
+): number | null {
+  for (const value of values) {
+    if (value !== null && value !== undefined) return value;
+  }
+  return null;
+}
+
 export function parseIpctlBody(
   ip: string,
   queriedAt: string,
@@ -58,7 +76,6 @@ export function parseIpctlBody(
   const asnObj = isRecord(data.asn) ? data.asn : {};
   const geo = isRecord(data.geo) ? data.geo : {};
   const tags = parseIpctlTags(data);
-  const bgpPrefixFromPrefix = asString(prefix.prefix);
   const bgpPrefixFromData =
     asString(data.bgp_prefix) ??
     (typeof data.prefix === "string" ? asString(data.prefix) : null);
@@ -67,19 +84,28 @@ export function parseIpctlBody(
     ip,
     queriedAt,
     source: "api.ipctl.io",
-    asn: asNumber(asnObj.asn) ?? asNumber(prefix.asn) ?? asNumber(data.asn),
+    asn: firstNumber(
+      asNumber(asnObj.asn),
+      asNumber(prefix.asn),
+      asNumber(data.asn)
+    ),
     asName: asString(asnObj.name),
-    bgpPrefix: bgpPrefixFromPrefix ?? bgpPrefixFromData,
-    rirCountryCode:
-      asString(prefix.country_code) ?? asString(asnObj.country_code),
-    rir: asString(prefix.rir) ?? asString(asnObj.rir),
-    rpkiStatus: asString(prefix.rpki_status) ?? asString(data.rpki_status),
+    bgpPrefix: firstString(asString(prefix.prefix), bgpPrefixFromData),
+    rirCountryCode: firstString(
+      asString(prefix.country_code),
+      asString(asnObj.country_code)
+    ),
+    rir: firstString(asString(prefix.rir), asString(asnObj.rir)),
+    rpkiStatus: firstString(
+      asString(prefix.rpki_status),
+      asString(data.rpki_status)
+    ),
     reverseDns: asString(data.reverse_dns),
     isAnycast: asBool(data.is_anycast),
     isBogon: asBool(data.is_bogon),
     geoCountryCode: asString(geo.country_code),
     geoCity: asString(geo.city),
-    geoRegion: asString(geo.region_name) ?? asString(geo.region),
+    geoRegion: firstString(asString(geo.region_name), asString(geo.region)),
     geoCountryName: asString(geo.country_name),
     threatScore: asNumber(data.threat_score),
     tags,

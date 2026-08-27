@@ -87,19 +87,21 @@ function parseOriginFields(rawOrigin: string): {
   };
 }
 
-async function lookupAsName(
+function lookupAsName(
   resolver: ReturnType<typeof withAbortableResolver>["resolver"],
   primaryAsn: string
 ): Promise<{ rawAs: string | null; asName: string | null }> {
-  const asChunks = await resolver
+  return resolver
     .resolveTxt(`AS${primaryAsn}.asn.cymru.com`)
-    .catch(() => [] as string[][]);
-  if (asChunks.length === 0) {
-    return { rawAs: null, asName: null };
-  }
-  const rawAs = stripTxtQuotes(asChunks[0]?.join("") ?? "");
-  const asParts = rawAs.split("|").map((p) => p.trim());
-  return { rawAs, asName: asParts[4] || null };
+    .catch(() => [] as string[][])
+    .then((asChunks) => {
+      if (asChunks.length === 0) {
+        return { rawAs: null, asName: null };
+      }
+      const rawAs = stripTxtQuotes(asChunks[0]?.join("") ?? "");
+      const asParts = rawAs.split("|").map((p) => p.trim());
+      return { rawAs, asName: asParts[4] || null };
+    });
 }
 
 /**
