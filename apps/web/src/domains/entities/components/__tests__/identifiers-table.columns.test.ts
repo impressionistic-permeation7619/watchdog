@@ -1,9 +1,9 @@
 import type { Row } from "@tanstack/react-table";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { testId } from "@watchdog/test-kit";
 
 import {
-  createIdentifiersTableColumns,
+  identifiersTableColumns,
   identifiersGlobalFilterFn,
 } from "@/domains/entities/components/identifiers-table.columns";
 import type { CaseIdentifierRecord } from "@/domains/entities/identifiers/types";
@@ -41,13 +41,9 @@ describe("identifiers-table.columns", () => {
   });
 
   it("builds expected identifier table columns", () => {
-    const columns = createIdentifiersTableColumns({
-      evidenceOptions: [],
-      updateField: vi.fn(),
-      saveEvidence: vi.fn(),
-    });
-
-    expect(columns).toHaveLength(8);
-    expect(columns.some((column) => column.id === "evidence")).toBe(true);
+    expect(identifiersTableColumns).toHaveLength(8);
+    expect(identifiersTableColumns.some((column) => column.id === "evidence")).toBe(
+      true
+    );
   });
 });

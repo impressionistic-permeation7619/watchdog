@@ -19,8 +19,9 @@ import {
 } from "@/shared/ui/identifiers/identifier-composer";
 import type { EvidenceOption } from "@/shared/ui/intake/evidence-option";
 import {
-  createIdentifiersTableColumns,
+  identifiersTableColumns,
   identifiersGlobalFilterFn,
+  type IdentifiersTableMeta,
 } from "@/domains/entities/components/identifiers-table.columns";
 import {
   createIdentifierFn,
@@ -193,19 +194,19 @@ export function useIdentifiersTable(active: CaseRecord) {
     [mutateAsync]
   );
 
-  const columns = useMemo(
-    () =>
-      createIdentifiersTableColumns({
-        evidenceOptions,
-        updateField,
-        saveEvidence,
-      }),
+  const tableMeta = useMemo<IdentifiersTableMeta>(
+    () => ({
+      evidenceOptions,
+      updateField,
+      saveEvidence,
+    }),
     [evidenceOptions, updateField, saveEvidence]
   );
 
   const { table } = useDataTable({
     data: rows,
-    columns,
+    columns: identifiersTableColumns,
+    meta: tableMeta,
     getRowId: (row) => row.id,
     globalFilter: search,
     onGlobalFilterChange: setSearch,
@@ -255,7 +256,7 @@ export function useIdentifiersTable(active: CaseRecord) {
   return {
     rows,
     table,
-    columns,
+    columns: identifiersTableColumns,
     createForm,
     search,
     setSearch,
