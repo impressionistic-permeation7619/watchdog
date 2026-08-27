@@ -14,6 +14,7 @@ env:
   BETTER_AUTH_SECRET: test-secret-must-be-at-least-32-chars
   BETTER_AUTH_URL: http://127.0.0.1:3000
   BETTER_AUTH_ALLOW_SIGNUP: "1"
+  DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/watchdog
   S3_ENDPOINT: http://127.0.0.1:9100
   S3_ACCESS_KEY: minioadmin
   S3_SECRET_KEY: minioadmin
