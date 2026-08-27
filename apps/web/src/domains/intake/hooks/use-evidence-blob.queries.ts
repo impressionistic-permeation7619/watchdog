@@ -34,8 +34,7 @@ export function buildEvidenceBlobState(input: {
     downloadUrl: input.downloadUrl,
     loadingUrl: input.loadingUrl,
     resolvedText:
-      input.evidence?.text ??
-      (input.needsBlobText ? input.blobText : null),
+      input.evidence?.text ?? (input.needsBlobText ? input.blobText : null),
     loadingBlob: input.loadingBlob,
     hasUri: Boolean(input.evidence?.uri),
   };

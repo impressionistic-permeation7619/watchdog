@@ -2,10 +2,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook } from "@testing-library/react";
 import { createElement, type ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { testId } from "@watchdog/test-kit";
 
 import type { JobListRecord, JobRecord } from "@/domains/jobs/jobs.functions";
 import type { CapListItem } from "@/domains/jobs/types";
+import { testId } from "@watchdog/test-kit";
 
 vi.mock("@/domains/jobs/jobs.functions", () => ({
   startJobFn: vi.fn(),
@@ -21,7 +21,12 @@ vi.mock("@/domains/jobs/queries", () => ({
   }),
   jobsKeys: {
     all: (caseId: string) => ["jobs", caseId],
-    detail: (caseId: string, jobId: string) => ["jobs", caseId, "detail", jobId],
+    detail: (caseId: string, jobId: string) => [
+      "jobs",
+      caseId,
+      "detail",
+      jobId,
+    ],
   },
 }));
 
@@ -133,16 +138,18 @@ function renderWorkspace({
   jobs?: JobListRecord[];
   queue?: JobListRecord[];
 } = {}) {
-  useQueryMock.mockImplementation((options: { queryKey?: unknown[]; enabled?: boolean }) => {
-    if (options.enabled === false) {
+  useQueryMock.mockImplementation(
+    (options: { queryKey?: unknown[]; enabled?: boolean }) => {
+      if (options.enabled === false) {
+        return { data: undefined, isPending: false };
+      }
+      const key = options.queryKey ?? [];
+      if (key[2] === "detail") {
+        return { data: detailJob({ id: String(key[3]) }) };
+      }
       return { data: undefined, isPending: false };
     }
-    const key = options.queryKey ?? [];
-    if (key[2] === "detail") {
-      return { data: detailJob({ id: String(key[3]) }) };
-    }
-    return { data: undefined, isPending: false };
-  });
+  );
 
   startMutation.mutateAsync.mockResolvedValue(detailJob());
   startPlaybookMutation.mutateAsync.mockResolvedValue({ jobs: [detailJob()] });
@@ -188,7 +195,10 @@ describe("useJobsWorkspace", () => {
   });
 
   it("flags selection drift against the URL job id", () => {
-    const { result } = renderWorkspace({ jobId: testId(99), queue: [listJob()] });
+    const { result } = renderWorkspace({
+      jobId: testId(99),
+      queue: [listJob()],
+    });
 
     expect(result.current.selectedId).toBe(JOB_ID);
     expect(result.current.selectionOutOfSync).toBe(true);

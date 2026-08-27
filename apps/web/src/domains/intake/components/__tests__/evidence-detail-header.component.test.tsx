@@ -1,6 +1,5 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { testId } from "@watchdog/test-kit";
 
 import {
   EvidenceDetailHeader,
@@ -9,6 +8,7 @@ import {
 import type { IntakeEvidenceActions } from "@/domains/intake/hooks/use-intake-actions";
 import type { EvidenceRecord } from "@/domains/intake/types";
 import { Tabs } from "@/shared/ui/shadcn/tabs";
+import { testId } from "@watchdog/test-kit";
 
 vi.mock("@tanstack/react-router", () => ({
   Link: ({

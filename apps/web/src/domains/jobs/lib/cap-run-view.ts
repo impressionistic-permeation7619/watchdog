@@ -1,8 +1,5 @@
 import type { CapListItem } from "../types";
-import {
-  capPrimaryField,
-  type CapPrimaryField,
-} from "./cap-run-input";
+import { capPrimaryField, type CapPrimaryField } from "./cap-run-input";
 import {
   missingCredentialNames,
   missingCredentialReason,

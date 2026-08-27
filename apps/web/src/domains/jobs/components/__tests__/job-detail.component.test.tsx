@@ -1,10 +1,10 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { testId } from "@watchdog/test-kit";
 
 import { JobDetail } from "@/domains/jobs/components/job-detail";
 import type { JobRecord } from "@/domains/jobs/jobs.functions";
+import { testId } from "@watchdog/test-kit";
 
 vi.mock("@tanstack/react-router", () => ({
   Link: ({ children, ...props }: { children: React.ReactNode }) => (
@@ -48,21 +48,13 @@ function jobRecord(overrides: Partial<JobRecord> = {}): JobRecord {
 
 describe("JobDetail", () => {
   it("shows empty detail copy when nothing is selected", () => {
-    render(
-      <JobDetail job={null} busy={false} onCancel={vi.fn()} />
-    );
+    render(<JobDetail job={null} busy={false} onCancel={vi.fn()} />);
 
     expect(screen.getByText("Select a job")).toBeInTheDocument();
   });
 
   it("renders queued job header, logs, and cancel action", () => {
-    render(
-      <JobDetail
-        job={jobRecord()}
-        busy={false}
-        onCancel={vi.fn()}
-      />
-    );
+    render(<JobDetail job={jobRecord()} busy={false} onCancel={vi.fn()} />);
 
     expect(
       screen.getByRole("navigation", { name: "Job path" })
@@ -75,13 +67,7 @@ describe("JobDetail", () => {
   it("shows input JSON on the input tab", async () => {
     const user = userEvent.setup();
 
-    render(
-      <JobDetail
-        job={jobRecord()}
-        busy={false}
-        onCancel={vi.fn()}
-      />
-    );
+    render(<JobDetail job={jobRecord()} busy={false} onCancel={vi.fn()} />);
 
     await user.click(screen.getByRole("tab", { name: "Input" }));
 

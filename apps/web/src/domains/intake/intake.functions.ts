@@ -87,9 +87,7 @@ export const attachEvidenceEntityFn = createServerFn({ method: "POST" })
   .validator(attachEvidenceEntityInputSchema)
   .handler(
     async ({ data, context }): Promise<EvidenceRecord> =>
-      orpcFromContext(context).evidence.attachEntity(
-        data
-      )
+      orpcFromContext(context).evidence.attachEntity(data)
   );
 
 export const presignUploadFn = createServerFn({ method: "POST" })

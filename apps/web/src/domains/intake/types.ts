@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import type { EvidenceRecord as CoreEvidenceRecord } from "@watchdog/core";
 import {
   httpUrlSchema,
   nonEmptyTrimmed,
@@ -8,8 +9,6 @@ import {
   trimmedOrUndefined,
   uuidSchema,
 } from "@watchdog/schemas";
-
-import type { EvidenceRecord as CoreEvidenceRecord } from "@watchdog/core";
 
 export type EvidenceRecord = CoreEvidenceRecord;
 

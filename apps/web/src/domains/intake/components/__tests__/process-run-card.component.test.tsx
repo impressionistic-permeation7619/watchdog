@@ -1,9 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { testId } from "@watchdog/test-kit";
 
 import { ProcessRunCard } from "@/domains/intake/components/process-run-card";
 import type { JobListRecord } from "@/domains/jobs/jobs.functions";
+import { testId } from "@watchdog/test-kit";
 
 vi.mock("@tanstack/react-router", () => ({
   Link: ({ children, ...props }: { children: React.ReactNode }) => (
@@ -37,7 +37,14 @@ function job(overrides: Partial<JobListRecord> = {}): JobListRecord {
     playbookRunStatus: null,
     playbookStep: null,
     evidenceIds: [],
-    output: [{ name: "report.json", sha256: "abc", mime: "application/json", uri: "s3://bucket/report.json" }],
+    output: [
+      {
+        name: "report.json",
+        sha256: "abc",
+        mime: "application/json",
+        uri: "s3://bucket/report.json",
+      },
+    ],
     actorId: "test-actor",
     playbookFanIndex: 0,
     ...overrides,

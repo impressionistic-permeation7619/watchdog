@@ -7,11 +7,11 @@ export interface CapInfoRow {
   mono?: boolean;
 }
 
-type CapInfoField = {
+interface CapInfoField {
   label: string;
   read: (cap: CapListItem) => string;
   mono?: boolean;
-};
+}
 
 const CAP_INFO_FIELDS: CapInfoField[] = [
   { label: "Kind", read: (cap) => cap.kind ?? "" },

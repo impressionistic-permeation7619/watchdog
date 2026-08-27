@@ -22,8 +22,6 @@ vi.mock("@/shared/lib/query-invalidation", () => ({
   invalidateAfterJobMutation: vi.fn(),
 }));
 
-import { invalidateAfterJobMutation } from "@/shared/lib/query-invalidation";
-
 import {
   artifactContentQuery,
   capabilitiesListQuery,
@@ -33,6 +31,7 @@ import {
   playbooksListQuery,
   refreshJobsAfterMutation,
 } from "@/domains/jobs/queries";
+import { invalidateAfterJobMutation } from "@/shared/lib/query-invalidation";
 
 describe("jobs queries", () => {
   it("builds case-scoped job and artifact keys", () => {

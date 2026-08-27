@@ -1,8 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { testId } from "@watchdog/test-kit";
 
 import { DumpDialogs } from "@/domains/intake/components/dump-dialogs";
+import { testId } from "@watchdog/test-kit";
 
 vi.mock("@/domains/intake/components/file-drop-zone", () => ({
   FileDropZone: () => <div>File drop zone</div>,
@@ -17,11 +17,9 @@ vi.mock("@/domains/intake/components/url-form", () => ({
 }));
 
 vi.mock("@/shared/ui/entity-combobox", () => ({
-  EntityCombobox: ({
-    "aria-label": ariaLabel,
-  }: {
-    "aria-label"?: string;
-  }) => <select aria-label={ariaLabel} />,
+  EntityCombobox: ({ "aria-label": ariaLabel }: { "aria-label"?: string }) => (
+    <select aria-label={ariaLabel} />
+  ),
 }));
 
 const defaults = {
@@ -50,20 +48,28 @@ describe("DumpDialogs", () => {
       />
     );
 
-    expect(screen.getByRole("heading", { name: "Upload files" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Upload files" })
+    ).toBeInTheDocument();
     expect(screen.getByLabelText("Target entity")).toBeInTheDocument();
     expect(screen.getByText("File drop zone")).toBeInTheDocument();
   });
 
   it("renders paste and url dialogs with submit actions", () => {
-    const { rerender } = render(
-      <DumpDialogs {...defaults} open="paste" />
-    );
-    expect(screen.getByRole("heading", { name: "Paste evidence" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Add Evidence" })).toBeInTheDocument();
+    const { rerender } = render(<DumpDialogs {...defaults} open="paste" />);
+    expect(
+      screen.getByRole("heading", { name: "Paste evidence" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Add Evidence" })
+    ).toBeInTheDocument();
 
     rerender(<DumpDialogs {...defaults} open="url" />);
-    expect(screen.getByRole("heading", { name: "Add URL" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Add link" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Add URL" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Add link" })
+    ).toBeInTheDocument();
   });
 });

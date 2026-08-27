@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import {testId, testHttpUrl} from "@watchdog/test-kit";
+
+import { testId, testHttpUrl } from "@watchdog/test-kit";
 
 const presignUploadFn = vi.hoisted(() => vi.fn());
 const confirmFileUploadFn = vi.hoisted(() => vi.fn());

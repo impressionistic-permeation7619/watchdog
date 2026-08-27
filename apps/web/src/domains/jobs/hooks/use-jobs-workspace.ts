@@ -14,7 +14,11 @@ import {
   startPlaybookFn,
 } from "@/domains/jobs/jobs.functions";
 import { buildCapRunInput } from "@/domains/jobs/lib/cap-run-input";
-import { jobDetailQuery, jobsKeys, refreshJobsAfterMutation } from "@/domains/jobs/queries";
+import {
+  jobDetailQuery,
+  jobsKeys,
+  refreshJobsAfterMutation,
+} from "@/domains/jobs/queries";
 import type { CapListItem } from "@/domains/jobs/types";
 import { errMessage } from "@/lib/utils";
 import { useLiveEvents } from "@/shared/hooks/use-live-events";

@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+
 import { testId } from "@watchdog/test-kit";
 
 vi.mock("@/auth/server", () => ({
@@ -78,7 +79,13 @@ describe("ArtifactContent", () => {
     expect(screen.getByText("inline evidence")).toBeInTheDocument();
     expect(useQueryMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        queryKey: ["artifact", "evidence", testId(10), testId(40), "text/plain"],
+        queryKey: [
+          "artifact",
+          "evidence",
+          testId(10),
+          testId(40),
+          "text/plain",
+        ],
       })
     );
   });

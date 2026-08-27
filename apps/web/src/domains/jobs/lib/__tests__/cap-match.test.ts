@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import {testHttpUrl} from "@watchdog/test-kit";
+import { testHttpUrl } from "@watchdog/test-kit";
 
 import type { CapListItem } from "../../types.ts";
 import {

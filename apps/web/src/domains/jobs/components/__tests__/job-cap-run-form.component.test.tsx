@@ -98,10 +98,7 @@ describe("JobCapRunForm", () => {
       screen.getByRole("combobox", { name: "Capability" }),
       "network.dns.lookup"
     );
-    await user.type(
-      screen.getByLabelText("Capability host"),
-      "mailhost.test"
-    );
+    await user.type(screen.getByLabelText("Capability host"), "mailhost.test");
     await user.click(screen.getByRole("button", { name: "Run" }));
 
     expect(onRunCap).toHaveBeenCalledWith({

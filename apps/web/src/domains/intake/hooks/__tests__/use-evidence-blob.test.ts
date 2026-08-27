@@ -1,8 +1,8 @@
 import { renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import {testId, testHttpUrl} from "@watchdog/test-kit";
 
 import type { EvidenceRecord } from "@/domains/intake/types";
+import { testId, testHttpUrl } from "@watchdog/test-kit";
 
 vi.mock("@/auth/server", () => ({
   auth: {},
@@ -61,7 +61,10 @@ describe("useEvidenceBlob", () => {
         return { data: { text: "fetched body" }, isPending: false };
       }
       if (key[0] === "evidence" && key[2] === "download") {
-        return { data: { url: testHttpUrl("download.test/blob") }, isPending: false };
+        return {
+          data: { url: testHttpUrl("download.test/blob") },
+          isPending: false,
+        };
       }
       return { data: undefined, isPending: false };
     });

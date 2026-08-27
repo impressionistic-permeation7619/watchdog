@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook } from "@testing-library/react";
 import { createElement, type ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
+
 import { testId } from "@watchdog/test-kit";
 
 vi.mock("sonner", () => ({
@@ -34,8 +35,10 @@ vi.mock("@tanstack/react-query", async (importOriginal) => {
 import { useDumpEvidence } from "@/domains/intake/hooks/use-dump-evidence";
 
 function renderDumpHook() {
-  const mutations: Array<{ mutate: ReturnType<typeof vi.fn>; isPending: boolean }> =
-    [];
+  const mutations: {
+    mutate: ReturnType<typeof vi.fn>;
+    isPending: boolean;
+  }[] = [];
   useMutationMock.mockImplementation(() => {
     const mutation = { mutate: vi.fn(), isPending: false };
     mutations.push(mutation);

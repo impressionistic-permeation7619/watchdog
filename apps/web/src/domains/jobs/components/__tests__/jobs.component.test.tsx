@@ -1,9 +1,9 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { testId } from "@watchdog/test-kit";
 
 import type { CaseRecord } from "@/domains/cases/types";
+import { testId } from "@watchdog/test-kit";
 
 vi.mock("@/auth/server", () => ({
   auth: {},
@@ -42,11 +42,7 @@ vi.mock("@/domains/jobs/components/job-queue-list", () => ({
 }));
 
 vi.mock("@/domains/jobs/components/job-queue-toolbar", () => ({
-  JobQueueToolbar: ({
-    runSlot,
-  }: {
-    runSlot?: React.ReactNode;
-  }) => (
+  JobQueueToolbar: ({ runSlot }: { runSlot?: React.ReactNode }) => (
     <div>
       <div>Job queue toolbar</div>
       {runSlot}
@@ -103,60 +99,62 @@ const ACTIVE: CaseRecord = {
 };
 
 function mockQueries() {
-  useSuspenseQueryMock.mockImplementation((options: { queryKey?: unknown[] }) => {
-    const key = options.queryKey?.[0];
-    if (key === "cases") {
-      return { data: { active: ACTIVE, cases: [ACTIVE] } };
-    }
-    if (key === "capabilities") {
+  useSuspenseQueryMock.mockImplementation(
+    (options: { queryKey?: unknown[] }) => {
+      const key = options.queryKey?.[0];
+      if (key === "cases") {
+        return { data: { active: ACTIVE, cases: [ACTIVE] } };
+      }
+      if (key === "capabilities") {
+        return { data: [] };
+      }
+      if (key === "playbooks") {
+        return { data: [] };
+      }
+      if (key === "entities") {
+        return { data: [] };
+      }
+      if (key === "evidence") {
+        return { data: [] };
+      }
+      if (key === "credentials") {
+        return { data: [] };
+      }
+      if (key === "jobs") {
+        return {
+          data: [
+            {
+              id: testId(11),
+              caseId: ACTIVE.id,
+              capabilityId: "network.dns.lookup",
+              status: "queued",
+              input: { host: "mailhost.test" },
+              createdAt: "2026-01-01T00:00:00.000Z",
+              updatedAt: "2026-01-01T00:00:00.000Z",
+              startedAt: null,
+              finishedAt: null,
+              error: null,
+              interpretError: null,
+              proposalId: null,
+              resultSummary: null,
+              fromCache: false,
+              suppressedCount: 0,
+              playbookRunId: null,
+              playbookId: null,
+              playbookRunStatus: null,
+              playbookStep: null,
+              evidenceIds: [],
+              output: [],
+              actorId: "test-actor",
+              playbookFanIndex: 0,
+            },
+          ],
+          isFetching: false,
+        };
+      }
       return { data: [] };
     }
-    if (key === "playbooks") {
-      return { data: [] };
-    }
-    if (key === "entities") {
-      return { data: [] };
-    }
-    if (key === "evidence") {
-      return { data: [] };
-    }
-    if (key === "credentials") {
-      return { data: [] };
-    }
-    if (key === "jobs") {
-      return {
-        data: [
-          {
-            id: testId(11),
-            caseId: ACTIVE.id,
-            capabilityId: "network.dns.lookup",
-            status: "queued",
-            input: { host: "mailhost.test" },
-            createdAt: "2026-01-01T00:00:00.000Z",
-            updatedAt: "2026-01-01T00:00:00.000Z",
-            startedAt: null,
-            finishedAt: null,
-            error: null,
-            interpretError: null,
-            proposalId: null,
-            resultSummary: null,
-            fromCache: false,
-            suppressedCount: 0,
-            playbookRunId: null,
-            playbookId: null,
-            playbookRunStatus: null,
-            playbookStep: null,
-            evidenceIds: [],
-            output: [],
-            actorId: "test-actor",
-            playbookFanIndex: 0,
-          },
-        ],
-        isFetching: false,
-      };
-    }
-    return { data: [] };
-  });
+  );
 }
 
 function mockWorkspace() {

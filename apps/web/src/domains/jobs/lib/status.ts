@@ -184,9 +184,7 @@ export function playbookRecipeDone(steps: readonly JobListRecord[]): number {
   return done;
 }
 
-function finishedPlaybookRunStatus(
-  steps: readonly JobListRecord[]
-): JobStatus {
+function finishedPlaybookRunStatus(steps: readonly JobListRecord[]): JobStatus {
   if (steps.some((s) => s.status === "failed")) return "failed";
   if (steps.some((s) => s.status === "cancelled")) return "cancelled";
   return "succeeded";

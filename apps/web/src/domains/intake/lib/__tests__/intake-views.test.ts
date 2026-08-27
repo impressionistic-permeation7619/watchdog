@@ -95,9 +95,7 @@ describe("intake evidence helpers", () => {
   it("titles from label and detects enrichable URLs", () => {
     expect(evidenceTitle(evidence())).toBe("note");
     expect(
-      evidenceHasEnrichableUrl(
-        evidence({ sourceUrl: ENRICHABLE_SOURCE })
-      )
+      evidenceHasEnrichableUrl(evidence({ sourceUrl: ENRICHABLE_SOURCE }))
     ).toBe(true);
     expect(producingCapJob([], testId(40))).toBeNull();
   });

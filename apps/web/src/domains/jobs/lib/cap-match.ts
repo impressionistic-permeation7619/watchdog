@@ -87,9 +87,7 @@ function detectUrlOrHost(value: string): PasteDetectResult | null {
     if (u.protocol !== "http:" && u.protocol !== "https:") return null;
 
     const looksLikeUrl =
-      /^https?:\/\//i.test(value) ||
-      value.includes("/") ||
-      value.includes("?");
+      /^https?:\/\//i.test(value) || value.includes("/") || value.includes("?");
     if (looksLikeUrl) {
       return { kind: "url", value, hostHint: u.hostname };
     }
@@ -232,7 +230,10 @@ function capMatchesFilters(
   compatible: Set<PasteSeedKind> | null
 ): boolean {
   if (filters.kindFilter && cap.kind !== filters.kindFilter) return false;
-  if (filters.categoryFilter && capCategory(cap.id) !== filters.categoryFilter) {
+  if (
+    filters.categoryFilter &&
+    capCategory(cap.id) !== filters.categoryFilter
+  ) {
     return false;
   }
   if (filters.useCaseFilter) {

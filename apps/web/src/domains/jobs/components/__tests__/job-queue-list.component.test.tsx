@@ -1,9 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { testId } from "@watchdog/test-kit";
 
 import { JobQueueList } from "@/domains/jobs/components/job-queue-list";
 import type { JobListRecord } from "@/domains/jobs/jobs.functions";
+import { testId } from "@watchdog/test-kit";
 
 function job(overrides: Partial<JobListRecord> = {}): JobListRecord {
   return {
@@ -39,14 +39,12 @@ describe("JobQueueList", () => {
     const row = job();
 
     render(
-      <JobQueueList
-        jobs={[row]}
-        selectedId={row.id}
-        onSelect={vi.fn()}
-      />
+      <JobQueueList jobs={[row]} selectedId={row.id} onSelect={vi.fn()} />
     );
 
-    expect(screen.getByRole("listbox", { name: "Job runs" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("listbox", { name: "Job runs" })
+    ).toBeInTheDocument();
     expect(screen.getByRole("option", { selected: true })).toBeInTheDocument();
     expect(screen.getByText("mailhost.test")).toBeInTheDocument();
   });

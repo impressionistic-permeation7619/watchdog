@@ -1,9 +1,9 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { testId } from "@watchdog/test-kit";
 
 import type { CaseRecord } from "@/domains/cases/types";
+import { testId } from "@watchdog/test-kit";
 
 vi.mock("@/auth/server", () => ({
   auth: {},
@@ -115,22 +115,24 @@ function evidence(id: string) {
 }
 
 function mockQueries() {
-  useSuspenseQueryMock.mockImplementation((options: { queryKey?: unknown[] }) => {
-    const key = options.queryKey?.[0];
-    if (key === "cases") {
-      return { data: { active: ACTIVE, cases: [ACTIVE] } };
-    }
-    if (key === "entities") {
+  useSuspenseQueryMock.mockImplementation(
+    (options: { queryKey?: unknown[] }) => {
+      const key = options.queryKey?.[0];
+      if (key === "cases") {
+        return { data: { active: ACTIVE, cases: [ACTIVE] } };
+      }
+      if (key === "entities") {
+        return { data: [] };
+      }
+      if (key === "jobs") {
+        return { data: [] };
+      }
+      if (key === "evidence") {
+        return { data: [evidence(testId(40))] };
+      }
       return { data: [] };
     }
-    if (key === "jobs") {
-      return { data: [] };
-    }
-    if (key === "evidence") {
-      return { data: [evidence(testId(40))] };
-    }
-    return { data: [] };
-  });
+  );
 }
 
 function mockIntakeActions() {

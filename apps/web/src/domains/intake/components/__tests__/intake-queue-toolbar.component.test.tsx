@@ -5,11 +5,9 @@ import { IntakeQueueToolbar } from "@/domains/intake/components/intake-queue-too
 import { EMPTY_INTAKE_FILTERS } from "@/domains/intake/lib/filters";
 
 vi.mock("@/shared/ui/entity-combobox", () => ({
-  EntityCombobox: ({
-    "aria-label": ariaLabel,
-  }: {
-    "aria-label"?: string;
-  }) => <select aria-label={ariaLabel} />,
+  EntityCombobox: ({ "aria-label": ariaLabel }: { "aria-label"?: string }) => (
+    <select aria-label={ariaLabel} />
+  ),
 }));
 
 describe("IntakeQueueToolbar", () => {

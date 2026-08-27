@@ -1,9 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { testId } from "@watchdog/test-kit";
 
 import { EvidenceQueueList } from "@/domains/intake/components/evidence-queue-list";
 import type { EvidenceRecord } from "@/domains/intake/types";
+import { testId } from "@watchdog/test-kit";
 
 function evidence(overrides: Partial<EvidenceRecord> = {}): EvidenceRecord {
   return {

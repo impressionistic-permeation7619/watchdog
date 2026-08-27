@@ -1,6 +1,7 @@
 import { queryOptions } from "@tanstack/react-query";
 import type { QueryClient } from "@tanstack/react-query";
 
+import { jobsKeys } from "@/domains/jobs/jobs-keys";
 import {
   getArtifactContentFn,
   getJobFn,
@@ -9,7 +10,6 @@ import {
   listPlaybooksFn,
 } from "@/domains/jobs/jobs.functions";
 import type { GetArtifactContentInput } from "@/domains/jobs/types";
-import { jobsKeys } from "@/domains/jobs/jobs-keys";
 import { invalidateAfterJobMutation } from "@/shared/lib/query-invalidation";
 import {
   GC_DEFAULT,
@@ -71,11 +71,7 @@ export function artifactContentQuery(input: GetArtifactContentInput) {
           input.sha256,
           input.mime
         )
-      : jobsKeys.evidenceArtifact(
-          input.caseId,
-          input.evidenceId,
-          input.mime
-        );
+      : jobsKeys.evidenceArtifact(input.caseId, input.evidenceId, input.mime);
 
   const enabled =
     input.source === "job"
