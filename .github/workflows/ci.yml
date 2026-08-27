@@ -1,4 +1,5 @@
-# Watchdog greenfield CI
+# Watchdog CI — single job, fail-fast gates, no duplicate runners.
+# Advisory scans (React Doctor, Desloppify on main) use continue-on-error.
 name: ci
 
 on:
@@ -7,8 +8,13 @@ on:
   pull_request:
 
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
+  group: ci-${{ github.ref }}
   cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
 
 env:
   BETTER_AUTH_SECRET: test-secret-must-be-at-least-32-chars
@@ -23,7 +29,7 @@ env:
   WD_MASTER_VAULT_KEY: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 
 jobs:
-  platform:
+  check:
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -38,6 +44,8 @@ jobs:
           --health-cmd "pg_isready -U postgres -d watchdog" --health-interval 5s --health-timeout 5s --health-retries 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: pnpm/action-setup@v4
         with:
@@ -51,6 +59,7 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
+      # ── Fast gates (fail before Postgres / MinIO / Playwright setup) ─────────
       - name: Ultracite (Oxlint + Oxfmt)
         run: pnpm check
 
@@ -66,15 +75,6 @@ jobs:
       - name: Web DS bans
         run: pnpm --filter @watchdog/web ds:check
 
-      - name: Unit + property tests
-        run: pnpm test:unit && pnpm test:property
-
-      - name: Component tests
-        run: pnpm test:component
-
-      - name: Repo layer contract
-        run: pnpm --filter @watchdog/db check:repos
-
       - name: CapDescriptor drift
         run: |
           pnpm generate:caps
@@ -87,8 +87,15 @@ jobs:
           git diff --exit-code -- packages/client/src/generated/ \
             || (echo "client contract out of date — run pnpm generate:client" && exit 1)
 
+      - name: Unit + property + component tests
+        run: pnpm test:unit && pnpm test:property && pnpm test:component
+
+      - name: Repo layer contract
+        run: pnpm --filter @watchdog/db check:repos
+
+      # ── Postgres + MinIO (shared by integration + e2e) ───────────────────────
       - name: Install psql
-        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client
 
       - name: Test databases + migrate
         env:
@@ -123,81 +130,16 @@ jobs:
           DATABASE_URL_MIGRATE: postgresql://postgres:postgres@127.0.0.1:5432/watchdog_test
         run: pnpm test:integration
 
-      - name: Coverage (artifact, not a gate)
-        continue-on-error: true
-        run: pnpm test:coverage
-
-      - name: Upload coverage
-        if: always()
-        continue-on-error: true
-        uses: actions/upload-artifact@v4
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
         with:
-          name: coverage
-          path: coverage
-          if-no-files-found: ignore
-
-  e2e:
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_DB: watchdog
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres -d watchdog" --health-interval 5s --health-timeout 5s --health-retries 10
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 11.9.0
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-
-      - name: Install
-        run: pnpm install --frozen-lockfile
-
-      - name: Install psql
-        run: sudo apt-get update && sudo apt-get install -y postgresql-client
-
-      - name: Test databases + migrate
-        env:
-          DATABASE_URL_MIGRATE: postgresql://postgres:postgres@127.0.0.1:5432/watchdog
-        run: pnpm test-db
-
-      - name: Start MinIO
-        run: |
-          docker run -d --name minio \
-            -p 9100:9000 \
-            -e MINIO_ROOT_USER=minioadmin \
-            -e MINIO_ROOT_PASSWORD=minioadmin \
-            minio/minio server /data
-          for i in $(seq 1 30); do
-            curl -sf http://127.0.0.1:9100/minio/health/live && exit 0
-            sleep 2
-          done
-          echo "MinIO failed to become healthy" >&2
-          docker logs minio
-          exit 1
-
-      - name: Create evidence bucket
-        run: |
-          curl -fsSL https://dl.min.io/client/mc/release/linux-amd64/mc -o /tmp/mc
-          chmod +x /tmp/mc
-          /tmp/mc alias set local http://127.0.0.1:9100 minioadmin minioadmin
-          /tmp/mc mb --ignore-existing local/watchdog-evidence
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
 
       - name: Install Playwright Chromium
         run: pnpm exec playwright install --with-deps chromium
 
-      - name: Playwright
+      - name: Playwright e2e
         env:
           DATABASE_URL: postgresql://watchdog_app:watchdog@127.0.0.1:5432/watchdog_e2e
           DATABASE_URL_MIGRATE: postgresql://postgres:postgres@127.0.0.1:5432/watchdog_e2e
@@ -212,4 +154,37 @@ jobs:
           path: |
             playwright-report
             test-results
+          if-no-files-found: ignore
+
+      # ── Advisory (never fail the workflow) ───────────────────────────────────
+      - name: React Doctor (advisory)
+        if: always()
+        continue-on-error: true
+        uses: millionco/react-doctor@v2
+        with:
+          blocking: none
+          directory: apps/web
+
+      - uses: actions/setup-python@v5
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        continue-on-error: true
+        with:
+          python-version: "3.11"
+
+      - name: Desloppify scan (advisory, main only)
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        continue-on-error: true
+        run: |
+          pip install --quiet --upgrade "desloppify[full]"
+          bash scripts/desloppify-bootstrap.sh
+          desloppify --lang typescript scan --path . --profile ci --no-badge
+          desloppify status --json | tee desloppify-status.json
+
+      - name: Upload Desloppify status
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: desloppify-status
+          path: desloppify-status.json
           if-no-files-found: ignore
