@@ -100,34 +100,49 @@ function outcomeFromStopStatus(
   }
 }
 
-/**
- * Cap Job orchestrator — preflight → collect → land-evidence → interpret →
- * suppress → propose → finish → cache.
- */
-export async function executeJob(jobId: string): Promise<JobRunOutcome> {
-  const started = Date.now();
-  const ready = await preflight(jobId);
-  if (ready.kind === "stop") {
-    const row = await jobsRepo.get(db, jobId);
-    if (row?.status === "failed" && row.playbookRunId !== null) {
-      await advancePlaybookRun({
-        playbookRunId: row.playbookRunId,
-        caseId: row.caseId,
-      }).catch((abandonError: unknown) => {
-        logSwallowed("playbook.abandon", abandonError, { jobId });
-      });
-    }
-    return {
-      outcome: outcomeFromStopStatus(row?.status),
-      stopReason: ready.reason,
-      durationMs: Date.now() - started,
-      caseId: row?.caseId,
-      capabilityId: row?.capabilityId,
-      playbookRunId: row?.playbookRunId ?? null,
-    };
+async function handlePreflightStop(
+  jobId: string,
+  reason: PreflightStopReason,
+  started: number
+): Promise<JobRunOutcome> {
+  const row = await jobsRepo.get(db, jobId);
+  if (row?.status === "failed" && row.playbookRunId !== null) {
+    await advancePlaybookRun({
+      playbookRunId: row.playbookRunId,
+      caseId: row.caseId,
+    }).catch((abandonError: unknown) => {
+      logSwallowed("playbook.abandon", abandonError, { jobId });
+    });
   }
-  const state = ready.state;
+  return {
+    outcome: outcomeFromStopStatus(row?.status),
+    stopReason: reason,
+    durationMs: Date.now() - started,
+    caseId: row?.caseId,
+    capabilityId: row?.capabilityId,
+    playbookRunId: row?.playbookRunId ?? null,
+  };
+}
 
+async function cleanupCollectedRun(
+  jobId: string,
+  collected: CollectResult | undefined
+): Promise<void> {
+  if (!collected) return;
+  clearTimeout(collected.runtime.timer);
+  await rm(collected.runtime.scratchDir, {
+    recursive: true,
+    force: true,
+  }).catch((cleanupError: unknown) => {
+    logSwallowed("job.scratch_cleanup", cleanupError, { jobId });
+  });
+}
+
+async function runReadyJob(
+  jobId: string,
+  state: Extract<Awaited<ReturnType<typeof preflight>>, { kind: "ready" }>["state"],
+  started: number
+): Promise<JobRunOutcome> {
   const jobLog = createJobLog(state.job.logs ?? []);
   let collected: CollectResult | undefined;
   let runOutcome: JobRunOutcomeName = "succeeded";
@@ -140,8 +155,6 @@ export async function executeJob(jobId: string): Promise<JobRunOutcome> {
     fromCache = collected.fromCache;
     reclaim = collected.reclaim;
 
-    // landEvidence already unions linkedSource for fresh runs;
-    // reclaim/cache paths already include it in evidenceIds.
     const attachEvidenceIds = await landEvidence(state, collected);
 
     let proposalId: string | null = state.job.proposalId ?? null;
@@ -229,8 +242,7 @@ export async function executeJob(jobId: string): Promise<JobRunOutcome> {
     }
   } catch (error: unknown) {
     const signal =
-      collected?.runtime.controller.signal ??
-      getActiveJobAbortSignal(jobId);
+      collected?.runtime.controller.signal ?? getActiveJobAbortSignal(jobId);
     const classified = classifyRun({ signal, threw: true });
     abortReason = classified.abortReason;
     runOutcome = classified.outcome;
@@ -243,15 +255,7 @@ export async function executeJob(jobId: string): Promise<JobRunOutcome> {
       caseId: state.job.caseId,
     });
   } finally {
-    if (collected) {
-      clearTimeout(collected.runtime.timer);
-      await rm(collected.runtime.scratchDir, {
-        recursive: true,
-        force: true,
-      }).catch((cleanupError: unknown) => {
-        logSwallowed("job.scratch_cleanup", cleanupError, { jobId });
-      });
-    }
+    await cleanupCollectedRun(jobId, collected);
     unregisterActiveJobController(jobId);
   }
 
@@ -265,4 +269,17 @@ export async function executeJob(jobId: string): Promise<JobRunOutcome> {
     capabilityId: state.job.capabilityId,
     playbookRunId: state.job.playbookRunId ?? null,
   };
+}
+
+/**
+ * Cap Job orchestrator — preflight → collect → land-evidence → interpret →
+ * suppress → propose → finish → cache.
+ */
+export async function executeJob(jobId: string): Promise<JobRunOutcome> {
+  const started = Date.now();
+  const ready = await preflight(jobId);
+  if (ready.kind === "stop") {
+    return handlePreflightStop(jobId, ready.reason, started);
+  }
+  return runReadyJob(jobId, ready.state, started);
 }

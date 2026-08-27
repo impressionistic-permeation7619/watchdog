@@ -19,6 +19,17 @@ export interface FetchBytesResult {
   error?: string;
 }
 
+function fetchBytesFailure(url: string, error: unknown): FetchBytesResult {
+  return {
+    ok: false,
+    status: 0,
+    bytes: new Uint8Array(),
+    contentType: null,
+    finalUrl: url,
+    error: errorMessage(error),
+  };
+}
+
 /** Dumb fetch + truncate — Cap supplies UA / limits / Accept. */
 export async function fetchBytes(
   url: string,
@@ -53,13 +64,6 @@ export async function fetchBytes(
       ...(res.ok ? {} : { error: `HTTP ${res.status}` }),
     };
   } catch (error) {
-    return {
-      ok: false,
-      status: 0,
-      bytes: new Uint8Array(),
-      contentType: null,
-      finalUrl: url,
-      error: errorMessage(error),
-    };
+    return fetchBytesFailure(url, error);
   }
 }

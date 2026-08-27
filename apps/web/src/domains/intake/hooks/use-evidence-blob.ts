@@ -16,17 +16,18 @@ function isTextMime(mime: string | null | undefined): boolean {
   );
 }
 
+function evidenceNeedsBlobText(evidence: EvidenceRecord | null): boolean {
+  if (!evidence) return false;
+  if (evidence.text !== null && evidence.text !== "") return false;
+  if (evidence.uri === null || evidence.uri === "") return false;
+  return isTextMime(evidence.mime);
+}
+
 export function useEvidenceBlob(
   caseId: string,
   evidence: EvidenceRecord | null
 ) {
-  const needsBlobText = Boolean(
-    evidence &&
-    (evidence.text === null || evidence.text === "") &&
-    evidence.uri !== null &&
-    evidence.uri !== "" &&
-    isTextMime(evidence.mime)
-  );
+  const needsBlobText = evidenceNeedsBlobText(evidence);
 
   const downloadQuery = useQuery({
     ...evidenceDownloadUrlQuery(caseId, evidence?.id ?? ""),

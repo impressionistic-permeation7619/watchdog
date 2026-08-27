@@ -1,18 +1,10 @@
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
-import { useCallback, useMemo, useState } from "react";
-import { toast } from "sonner";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
 
-import { setActiveCaseIdFn } from "@/domains/cases/cases.functions";
-import { notifyCasesChanged } from "@/domains/cases/lib/active-case";
 import { casesContextQuery } from "@/domains/cases/queries";
 import type { CaseRecord } from "@/domains/cases/types";
-import { errMessage } from "@/lib/utils";
-import { invalidateAfterCaseSwitch } from "@/shared/lib/query-invalidation";
+
+import { useCaseListActions } from "./use-case-list-actions";
 
 function caseMatchesSearch(c: CaseRecord, query: string): boolean {
   const q = query.toLowerCase().trim();
@@ -33,9 +25,23 @@ function caseGridGhostCount(occupied: number, minRows = 4, cols = 3): number {
   return minSlots - occupied;
 }
 
+function filterCases(cases: CaseRecord[], search: string): CaseRecord[] {
+  return [...cases]
+    .filter((c) => caseMatchesSearch(c, search))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function caseListGhostCount(
+  cases: CaseRecord[],
+  filtered: CaseRecord[]
+): number {
+  const occupiedSlots = filtered.length + 1;
+  return cases.length > 0 && filtered.length === 0
+    ? 0
+    : caseGridGhostCount(occupiedSlots);
+}
+
 export function useCaseList() {
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const { data: casesCtx } = useSuspenseQuery(casesContextQuery());
   const cases = casesCtx.cases;
   const activeId = casesCtx.active?.id ?? "";
@@ -46,88 +52,19 @@ export function useCaseList() {
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const filtered = useMemo(
-    () =>
-      [...cases]
-        .filter((c) => caseMatchesSearch(c, search))
-        .sort((a, b) => a.name.localeCompare(b.name)),
+    () => filterCases(cases, search),
     [cases, search]
   );
 
-  const selectMutation = useMutation({
-    mutationFn: async (id: string) =>
-      setActiveCaseIdFn({ data: { caseId: id } }),
-    onSuccess: async () => {
-      await invalidateAfterCaseSwitch(queryClient);
-      notifyCasesChanged();
-    },
-    onError: (err) => {
-      setSubmitError(errMessage(err, "Failed to switch case"));
-    },
-  });
-
-  const selectCase = useCallback((id: string) => {
-    setSubmitError(null);
-    selectMutation.mutate(id);
-  }, [selectMutation]);
-
-  const openCase = useCallback(
-    async (caseRow: CaseRecord) => {
-      setSubmitError(null);
-      try {
-        if (caseRow.id !== activeId) {
-          await selectMutation.mutateAsync(caseRow.id);
-        }
-        await navigate({
-          to: "/cases/$caseSlug",
-          params: { caseSlug: caseRow.slug },
-        });
-      } catch (error) {
-        setSubmitError(errMessage(error, "Failed to open case"));
-      }
-    },
-    [activeId, navigate, selectMutation]
+  const actions = useCaseListActions(
+    activeId,
+    setSubmitError,
+    setCreateOpen,
+    setDeleteTarget,
+    setSearch
   );
 
-  const openCreate = useCallback(() => {
-    setSubmitError(null);
-    setCreateOpen(true);
-  }, []);
-
-  const clearSearch = useCallback(() => {
-    setSearch("");
-  }, []);
-
-  const beginDeleteCase = useCallback((caseRow: CaseRecord) => {
-    setSubmitError(null);
-    setDeleteTarget(caseRow);
-  }, []);
-
-  const handleCreateSuccess = useCallback(() => {
-    void (async () => {
-      setSubmitError(null);
-      toast.success("Case created");
-      await invalidateAfterCaseSwitch(queryClient);
-      notifyCasesChanged();
-    })();
-  }, [queryClient]);
-
-  const handleCreateError = useCallback((message: string) => {
-    setSubmitError(message);
-  }, []);
-
-  const closeDeleteDialog = useCallback((open: boolean) => {
-    if (!open) setDeleteTarget(null);
-  }, []);
-
-  const handleCaseDeleted = useCallback(() => {
-    toast.success("Case deleted");
-  }, []);
-
-  const occupiedSlots = filtered.length + 1;
-  const ghostCount =
-    cases.length > 0 && filtered.length === 0
-      ? 0
-      : caseGridGhostCount(occupiedSlots);
+  const ghostCount = caseListGhostCount(cases, filtered);
 
   return {
     activeId,
@@ -140,15 +77,6 @@ export function useCaseList() {
     createOpen,
     setCreateOpen,
     deleteTarget,
-    selecting: selectMutation.isPending,
-    selectCase,
-    openCase,
-    openCreate,
-    clearSearch,
-    beginDeleteCase,
-    handleCreateSuccess,
-    handleCreateError,
-    closeDeleteDialog,
-    handleCaseDeleted,
+    ...actions,
   };
 }

@@ -1,5 +1,5 @@
 /* oxlint-disable react/only-export-components, react-doctor/only-export-components -- column factory + shared options for IdentifiersSection */
-import type { CellContext, ColumnDef } from "@tanstack/react-table";
+import type { CellContext, ColumnDef, HeaderContext } from "@tanstack/react-table";
 import { toast } from "sonner";
 
 import { IdentifierEvidenceCell } from "@/shared/ui/identifiers/identifier-evidence-cell";
@@ -119,234 +119,260 @@ export interface IdentifierTableMeta {
   ) => void | Promise<void>;
 }
 
-export function createIdentifierColumns(
-  meta: IdentifierTableMeta
-): ColumnDef<IdentifierRecord>[] {
-  const { updateField } = meta;
+function identifierMeta(
+  ctx: Pick<CellContext<IdentifierRecord, unknown>, "table">
+): IdentifierTableMeta {
+  return ctx.table.options.meta as IdentifierTableMeta;
+}
 
-  function renderIdentifierValueCell(
-    ctx: CellContext<IdentifierRecord, unknown>
-  ) {
-    const row = ctx.row.original;
-    const href = buildHref(row.type, row.value, row.platform);
-    return (
-      <EditableTextCell
-        value={row.value}
-        placeholder="Value…"
-        aria-label="Identifier value"
-        suffix={
-          href !== null && href !== "" ? (
-            <a
-              href={href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-muted-foreground hover:text-foreground ml-1"
-              onClick={(e) => {
-                e.stopPropagation();
-              }}
-              title="Open"
-            >
-              ↗
-            </a>
-          ) : undefined
+function valueColumnHeader({
+  column,
+}: HeaderContext<IdentifierRecord, unknown>) {
+  return <DataTableColumnHeader column={column} title="Value" />;
+}
+
+function typeColumnHeader({
+  column,
+}: HeaderContext<IdentifierRecord, unknown>) {
+  return <DataTableColumnHeader column={column} title="Type" />;
+}
+
+function platformColumnHeader({
+  column,
+}: HeaderContext<IdentifierRecord, unknown>) {
+  return <DataTableColumnHeader column={column} title="Platform" />;
+}
+
+function statusColumnHeader({
+  column,
+}: HeaderContext<IdentifierRecord, unknown>) {
+  return <DataTableColumnHeader column={column} title="Status" />;
+}
+
+function confidenceColumnHeader({
+  column,
+}: HeaderContext<IdentifierRecord, unknown>) {
+  return <DataTableColumnHeader column={column} title="Confidence" />;
+}
+
+function evidenceColumnHeader({
+  column,
+}: HeaderContext<IdentifierRecord, unknown>) {
+  return <DataTableColumnHeader column={column} title="Evidence" />;
+}
+
+function notesColumnHeader({
+  column,
+}: HeaderContext<IdentifierRecord, unknown>) {
+  return <DataTableColumnHeader column={column} title="Notes" />;
+}
+
+function renderIdentifierValueCell(
+  ctx: CellContext<IdentifierRecord, unknown>
+) {
+  const row = ctx.row.original;
+  const meta = identifierMeta(ctx);
+  const href = buildHref(row.type, row.value, row.platform);
+  return (
+    <EditableTextCell
+      value={row.value}
+      placeholder="Value…"
+      aria-label="Identifier value"
+      suffix={
+        href !== null && href !== "" ? (
+          <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-muted-foreground hover:text-foreground ml-1"
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
+            title="Open"
+          >
+            ↗
+          </a>
+        ) : undefined
+      }
+      onCommit={(next) => {
+        const value = tryCommitIdentifierValue(row.type, next, row.platform);
+        if (value === false) return false;
+        meta.updateField(row.id, { value });
+        // oxlint-disable-next-line unicorn/no-useless-undefined -- consistent-return requires an explicit value alongside the `false` return above
+        return undefined;
+      }}
+    />
+  );
+}
+
+function renderIdentifierTypeCell(ctx: CellContext<IdentifierRecord, unknown>) {
+  const row = ctx.row.original;
+  const meta = identifierMeta(ctx);
+  return (
+    <EditableSelectCell
+      value={row.type}
+      options={TYPE_OPTIONS}
+      aria-label="Type"
+      onCommit={(next) => {
+        const type = identifierTypeSchema.parse(next);
+        const committed = tryCommitIdentifierType(type, row.value, row.platform);
+        if (committed === false) return;
+        meta.updateField(row.id, committed);
+      }}
+    />
+  );
+}
+
+function renderIdentifierPlatformCell(
+  ctx: CellContext<IdentifierRecord, unknown>
+) {
+  const row = ctx.row.original;
+  const meta = identifierMeta(ctx);
+  return (
+    <EditableSuggestCell
+      value={row.platform}
+      options={PLATFORM_OPTIONS}
+      placeholder="Platform"
+      aria-label="Platform"
+      onCommit={(next) => {
+        const platform = tryCommitIdentifierPlatform(row.type, row.value, next);
+        if (platform === false) return;
+        meta.updateField(row.id, { platform });
+      }}
+    />
+  );
+}
+
+function renderIdentifierStatusCell(
+  ctx: CellContext<IdentifierRecord, unknown>
+) {
+  const row = ctx.row.original;
+  const meta = identifierMeta(ctx);
+  return (
+    <EditableSelectCell
+      value={row.status}
+      options={STATUS_OPTIONS}
+      aria-label="Status"
+      onCommit={(next) => {
+        meta.updateField(row.id, { status: identifierStatusSchema.parse(next) });
+      }}
+    />
+  );
+}
+
+function renderIdentifierConfidenceCell(
+  ctx: CellContext<IdentifierRecord, unknown>
+) {
+  const row = ctx.row.original;
+  const meta = identifierMeta(ctx);
+  return (
+    <EditableSelectCell
+      value={row.confidence}
+      options={CONFIDENCE_OPTIONS}
+      aria-label="Confidence"
+      onCommit={(next) => {
+        const confidence = confidenceTierSchema.parse(next);
+        if (isConfirmedBlocked(confidence, row.evidenceIds)) {
+          toast.error(CONFIRMED_REQUIRES_EVIDENCE_HINT);
+          return;
         }
-        onCommit={(next) => {
-          const value = tryCommitIdentifierValue(row.type, next, row.platform);
-          if (value === false) return false;
-          updateField(row.id, { value });
-          // oxlint-disable-next-line unicorn/no-useless-undefined -- consistent-return requires an explicit value alongside the `false` return above
-          return undefined;
-        }}
-      />
-    );
-  }
+        meta.updateField(row.id, { confidence });
+      }}
+    />
+  );
+}
 
-  function renderIdentifierTypeCell(
-    ctx: CellContext<IdentifierRecord, unknown>
-  ) {
-    const row = ctx.row.original;
-    return (
-      <EditableSelectCell
-        value={row.type}
-        options={TYPE_OPTIONS}
-        aria-label="Type"
-        onCommit={(next) => {
-          const type = identifierTypeSchema.parse(next);
-          const committed = tryCommitIdentifierType(
-            type,
-            row.value,
-            row.platform
-          );
-          if (committed === false) return;
-          updateField(row.id, committed);
-        }}
-      />
-    );
-  }
+function renderIdentifierEvidenceCell(
+  ctx: CellContext<IdentifierRecord, unknown>
+) {
+  const row = ctx.row.original;
+  const meta = identifierMeta(ctx);
+  return (
+    <IdentifierEvidenceCell
+      row={row}
+      evidenceOptions={meta.evidenceOptions}
+      onEvidenceClick={meta.onEvidenceClick}
+      saveEvidence={meta.saveEvidence}
+    />
+  );
+}
 
-  function renderIdentifierPlatformCell(
-    ctx: CellContext<IdentifierRecord, unknown>
-  ) {
-    const row = ctx.row.original;
-    return (
-      <EditableSuggestCell
-        value={row.platform}
-        options={PLATFORM_OPTIONS}
-        placeholder="Platform"
-        aria-label="Platform"
-        onCommit={(next) => {
-          const platform = tryCommitIdentifierPlatform(
-            row.type,
-            row.value,
-            next
-          );
-          if (platform === false) return;
-          updateField(row.id, { platform });
-        }}
-      />
-    );
-  }
+function renderIdentifierNotesCell(ctx: CellContext<IdentifierRecord, unknown>) {
+  const row = ctx.row.original;
+  const meta = identifierMeta(ctx);
+  return (
+    <EditableTextCell
+      value={row.notes ?? ""}
+      placeholder="Notes…"
+      aria-label="Notes"
+      onCommit={(next) => {
+        meta.updateField(row.id, { notes: next });
+      }}
+    />
+  );
+}
 
-  function renderIdentifierStatusCell(
-    ctx: CellContext<IdentifierRecord, unknown>
-  ) {
-    const row = ctx.row.original;
-    return (
-      <EditableSelectCell
-        value={row.status}
-        options={STATUS_OPTIONS}
-        aria-label="Status"
-        onCommit={(next) => {
-          updateField(row.id, { status: identifierStatusSchema.parse(next) });
-        }}
-      />
-    );
-  }
+export const dossierIdentifierColumns: ColumnDef<IdentifierRecord>[] = [
+  {
+    accessorKey: "value",
+    header: valueColumnHeader,
+    cell: renderIdentifierValueCell,
+    size: 180,
+    meta: { label: "Value" },
+    enableHiding: false,
+  },
+  {
+    accessorKey: "type",
+    header: typeColumnHeader,
+    cell: renderIdentifierTypeCell,
+    size: 140,
+    minSize: 120,
+    meta: { label: "Type" },
+  },
+  {
+    accessorKey: "platform",
+    header: platformColumnHeader,
+    cell: renderIdentifierPlatformCell,
+    size: 140,
+    minSize: 120,
+    meta: { label: "Platform" },
+  },
+  {
+    accessorKey: "status",
+    header: statusColumnHeader,
+    cell: renderIdentifierStatusCell,
+    size: 140,
+    minSize: 120,
+    meta: { label: "Status" },
+  },
+  {
+    accessorKey: "confidence",
+    header: confidenceColumnHeader,
+    cell: renderIdentifierConfidenceCell,
+    size: 140,
+    minSize: 120,
+    meta: { label: "Confidence" },
+  },
+  {
+    id: "evidence",
+    header: evidenceColumnHeader,
+    cell: renderIdentifierEvidenceCell,
+    enableSorting: false,
+    size: 120,
+    meta: { label: "Evidence" },
+  },
+  {
+    accessorKey: "notes",
+    header: notesColumnHeader,
+    cell: renderIdentifierNotesCell,
+    enableSorting: false,
+    size: 140,
+    meta: { label: "Notes" },
+  },
+];
 
-  function renderIdentifierConfidenceCell(
-    ctx: CellContext<IdentifierRecord, unknown>
-  ) {
-    const row = ctx.row.original;
-    return (
-      <EditableSelectCell
-        value={row.confidence}
-        options={CONFIDENCE_OPTIONS}
-        aria-label="Confidence"
-        onCommit={(next) => {
-          const confidence = confidenceTierSchema.parse(next);
-          if (isConfirmedBlocked(confidence, row.evidenceIds)) {
-            toast.error(CONFIRMED_REQUIRES_EVIDENCE_HINT);
-            return;
-          }
-          updateField(row.id, { confidence });
-        }}
-      />
-    );
-  }
-
-  function renderIdentifierEvidenceCell(
-    ctx: CellContext<IdentifierRecord, unknown>
-  ) {
-    const row = ctx.row.original;
-    function handleEvidenceClick(id: string) {
-      meta.onEvidenceClick?.(id);
-    }
-    return (
-      <IdentifierEvidenceCell
-        row={row}
-        evidenceOptions={meta.evidenceOptions}
-        onEvidenceClick={handleEvidenceClick}
-        saveEvidence={meta.saveEvidence}
-      />
-    );
-  }
-
-  function renderIdentifierNotesCell(
-    ctx: CellContext<IdentifierRecord, unknown>
-  ) {
-    const row = ctx.row.original;
-    return (
-      <EditableTextCell
-        value={row.notes ?? ""}
-        placeholder="Notes…"
-        aria-label="Notes"
-        onCommit={(next) => {
-          updateField(row.id, { notes: next });
-        }}
-      />
-    );
-  }
-
-  return [
-    {
-      accessorKey: "value",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Value" />
-      ),
-      cell: renderIdentifierValueCell,
-      size: 180,
-      meta: { label: "Value" },
-      enableHiding: false,
-    },
-    {
-      accessorKey: "type",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Type" />
-      ),
-      cell: renderIdentifierTypeCell,
-      size: 140,
-      minSize: 120,
-      meta: { label: "Type" },
-    },
-    {
-      accessorKey: "platform",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Platform" />
-      ),
-      cell: renderIdentifierPlatformCell,
-      size: 140,
-      minSize: 120,
-      meta: { label: "Platform" },
-    },
-    {
-      accessorKey: "status",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Status" />
-      ),
-      cell: renderIdentifierStatusCell,
-      size: 140,
-      minSize: 120,
-      meta: { label: "Status" },
-    },
-    {
-      accessorKey: "confidence",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Confidence" />
-      ),
-      cell: renderIdentifierConfidenceCell,
-      size: 140,
-      minSize: 120,
-      meta: { label: "Confidence" },
-    },
-    {
-      id: "evidence",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Evidence" />
-      ),
-      cell: renderIdentifierEvidenceCell,
-      enableSorting: false,
-      size: 120,
-      meta: { label: "Evidence" },
-    },
-    {
-      accessorKey: "notes",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Notes" />
-      ),
-      cell: renderIdentifierNotesCell,
-      enableSorting: false,
-      size: 140,
-      meta: { label: "Notes" },
-    },
-  ];
+export function createIdentifierColumns(
+  _meta: IdentifierTableMeta
+): ColumnDef<IdentifierRecord>[] {
+  return dossierIdentifierColumns;
 }
