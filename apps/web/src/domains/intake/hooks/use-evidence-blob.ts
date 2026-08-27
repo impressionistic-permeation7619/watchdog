@@ -4,16 +4,12 @@ import { evidenceDownloadUrlQuery } from "@/domains/intake/queries";
 import type { EvidenceRecord } from "@/domains/intake/types";
 import { artifactContentQuery } from "@/domains/jobs/queries";
 
+const TEXT_MIME_PATTERN =
+  /^(text\/|.*json.*|.*xml.*|.*html.*|.*yaml.*|.*javascript.*)/;
+
 function isTextMime(mime: string | null | undefined): boolean {
   if (!mime) return false;
-  return (
-    mime.startsWith("text/") ||
-    mime.includes("json") ||
-    mime.includes("xml") ||
-    mime.includes("html") ||
-    mime.includes("yaml") ||
-    mime.includes("javascript")
-  );
+  return TEXT_MIME_PATTERN.test(mime);
 }
 
 function evidenceNeedsBlobText(evidence: EvidenceRecord | null): boolean {
