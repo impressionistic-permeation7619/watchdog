@@ -2,9 +2,16 @@ import { describe, expect, it, vi } from "vitest";
 
 import { testHttpOrigin } from "@watchdog/test-kit";
 
-const handleMock = vi.hoisted(() =>
-  vi.fn().mockResolvedValue({ response: new Response("rpc-ok") })
-);
+const { handleMock, RPCHandler } = vi.hoisted(() => {
+  const handleMock = vi.fn().mockResolvedValue({
+    response: new Response("rpc-ok"),
+  });
+  class RPCHandler {
+    handle = handleMock;
+  }
+  return { handleMock, RPCHandler };
+});
+
 const createApiContextMock = vi.hoisted(() =>
   vi.fn().mockResolvedValue({ actorId: "actor-1" })
 );
@@ -19,9 +26,7 @@ vi.mock("@tanstack/react-router", async (importOriginal) => {
 });
 
 vi.mock("@orpc/server/fetch", () => ({
-  RPCHandler: vi.fn(function RPCHandler() {
-    return { handle: handleMock };
-  }),
+  RPCHandler,
 }));
 
 vi.mock("@/auth/api-context.server", () => ({

@@ -2,15 +2,20 @@ import { describe, expect, it, vi } from "vitest";
 
 import { testHttpOrigin } from "@watchdog/test-kit";
 
-const handleMock = vi.hoisted(() => vi.fn());
+const { handleMock, OpenAPIHandler } = vi.hoisted(() => {
+  const handleMock = vi.fn();
+  class OpenAPIHandler {
+    handle = handleMock;
+  }
+  return { handleMock, OpenAPIHandler };
+});
+
 const createApiContextMock = vi.hoisted(() =>
   vi.fn().mockResolvedValue({ actorId: "test-actor" })
 );
 
 vi.mock("@orpc/openapi/fetch", () => ({
-  OpenAPIHandler: vi.fn(function OpenAPIHandler() {
-    return { handle: handleMock };
-  }),
+  OpenAPIHandler,
 }));
 
 vi.mock("@orpc/openapi/plugins", () => ({
