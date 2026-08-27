@@ -5,6 +5,7 @@ import {
   parseCaseList,
   parseEntity,
   parseEvidenceList,
+  parseProposalList,
 } from "./parse-api";
 
 describe("e2e parse-api", () => {
@@ -35,8 +36,18 @@ describe("e2e parse-api", () => {
     expect(() => parseEvidenceList([{}])).toThrow("evidence[0] missing id");
   });
 
+  it("parseProposalList requires id and status on each row", () => {
+    expect(parseProposalList([{ id: "p1", status: "pending" }])).toEqual([
+      { id: "p1", status: "pending" },
+    ]);
+    expect(() => parseProposalList([{ id: "p1" }])).toThrow(
+      "proposals[0] missing id/status"
+    );
+  });
+
   it("e2eApiParsers exposes all parsers", () => {
     expect(e2eApiParsers.caseList).toBe(parseCaseList);
     expect(e2eApiParsers.evidenceList).toBe(parseEvidenceList);
+    expect(e2eApiParsers.proposalList).toBe(parseProposalList);
   });
 });
