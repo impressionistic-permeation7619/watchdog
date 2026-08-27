@@ -43,6 +43,13 @@ function whoisXmlDates(
   };
 }
 
+function pickWhoisField(
+  primary: string | undefined,
+  fallback: string | undefined
+): string | null {
+  return primary ?? fallback ?? null;
+}
+
 function whoisXmlSnapshot(
   host: string,
   raw: z.infer<typeof whoisXmlResponseSchema>
@@ -50,12 +57,15 @@ function whoisXmlSnapshot(
   const rec = raw.WhoisRecord ?? {};
   const registry = rec.registryData;
   const dates = whoisXmlDates(rec);
+  const registrant = rec.registrant;
   return {
     host,
     source: "whoisxml",
-    registrar: rec.registrarName ?? registry?.registrarName ?? null,
-    registrantOrg:
-      rec.registrant?.organization ?? rec.registrant?.name ?? null,
+    registrar: pickWhoisField(rec.registrarName, registry?.registrarName),
+    registrantOrg: pickWhoisField(
+      registrant?.organization,
+      registrant?.name
+    ),
     nameservers: rec.nameServers?.hostNames ?? [],
     status: whoisStatusList(rec.status),
     registeredAt: dates.registeredAt,

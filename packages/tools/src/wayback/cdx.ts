@@ -42,15 +42,23 @@ type WaybackLookupOptions = {
   filterStatus200?: boolean;
 };
 
+const CDX_OPTIONAL_FIELDS = [
+  [2, "statuscode"],
+  [3, "mimetype"],
+  [4, "digest"],
+] as const;
+
 function cdxRowFromArray(row: unknown, url: string): WaybackCdxRow | null {
   if (!isUnknownArray(row) || !row[0]) return null;
-  return {
+  const parsed: WaybackCdxRow = {
     timestamp: cdxField(row[0]) ?? "",
     original: cdxField(row[1]) ?? url,
-    ...(row[2] === undefined ? {} : { statuscode: cdxField(row[2]) ?? "" }),
-    ...(row[3] === undefined ? {} : { mimetype: cdxField(row[3]) ?? "" }),
-    ...(row[4] === undefined ? {} : { digest: cdxField(row[4]) ?? "" }),
   };
+  for (const [index, key] of CDX_OPTIONAL_FIELDS) {
+    if (row[index] === undefined) continue;
+    parsed[key] = cdxField(row[index]) ?? "";
+  }
+  return parsed;
 }
 
 function parseCdxRows(payload: unknown[], url: string): WaybackCdxRow[] {
