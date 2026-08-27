@@ -1,16 +1,20 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+
 import { testId } from "@watchdog/test-kit";
 
 vi.mock("@/auth/server", () => ({
   auth: {},
 }));
 
-const useSearchMock = vi.hoisted(() => vi.fn(() => ({ evidenceId: undefined })));
+const useSearchMock = vi.hoisted(() =>
+  vi.fn(() => ({ evidenceId: undefined }))
+);
 const useNavigateMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@tanstack/react-router", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@tanstack/react-router")>();
+  const actual =
+    await importOriginal<typeof import("@tanstack/react-router")>();
   return {
     ...actual,
     createFileRoute: () => (options: Record<string, unknown>) => ({ options }),

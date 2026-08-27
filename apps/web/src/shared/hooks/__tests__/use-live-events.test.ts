@@ -1,5 +1,6 @@
 import { renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+
 import { testId } from "@watchdog/test-kit";
 
 type Listener = (event: Event) => void;
@@ -41,7 +42,9 @@ import { useLiveEvents } from "@/shared/hooks/use-live-events";
 describe("useLiveEvents", () => {
   it("does not connect when caseId is null", () => {
     EventSourceMock.instances = [];
-    renderHook(() => useLiveEvents(null, vi.fn()));
+    renderHook(() => {
+      useLiveEvents(null, vi.fn());
+    });
     expect(EventSourceMock.instances).toHaveLength(0);
   });
 
@@ -50,10 +53,14 @@ describe("useLiveEvents", () => {
     const onEvent = vi.fn();
     const caseId = testId(10);
 
-    renderHook(() => useLiveEvents(caseId, onEvent));
+    renderHook(() => {
+      useLiveEvents(caseId, onEvent);
+    });
 
     const source = EventSourceMock.instances[0];
-    expect(source?.url).toBe(`/api/events?caseId=${encodeURIComponent(caseId)}`);
+    expect(source?.url).toBe(
+      `/api/events?caseId=${encodeURIComponent(caseId)}`
+    );
 
     source?.emit(
       "job_update",

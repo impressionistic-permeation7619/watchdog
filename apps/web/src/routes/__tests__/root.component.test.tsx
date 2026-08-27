@@ -2,7 +2,8 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@tanstack/react-router", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@tanstack/react-router")>();
+  const actual =
+    await importOriginal<typeof import("@tanstack/react-router")>();
   return {
     ...actual,
     createRootRouteWithContext: () => (options: Record<string, unknown>) => ({
@@ -36,7 +37,10 @@ vi.mock("../styles.css?url", () => ({
 
 import { Route } from "@/routes/__root";
 
-const notFoundProps = { isNotFound: true as const, routeId: "__root__" as const };
+const notFoundProps = {
+  isNotFound: true as const,
+  routeId: "__root__" as const,
+};
 
 describe("__root route", () => {
   it("renders the not-found page with a dashboard link", () => {
@@ -44,10 +48,9 @@ describe("__root route", () => {
     render(<NotFound {...notFoundProps} />);
 
     expect(screen.getByText("Page not found")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Go to dashboard" })).toHaveAttribute(
-      "href",
-      "/"
-    );
+    expect(
+      screen.getByRole("link", { name: "Go to dashboard" })
+    ).toHaveAttribute("href", "/");
   });
 
   it("wraps the app in providers inside the document shell", () => {

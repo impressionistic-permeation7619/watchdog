@@ -20,7 +20,8 @@ vi.mock("@/shared/layout/app-shell", () => ({
 }));
 
 vi.mock("@tanstack/react-router", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@tanstack/react-router")>();
+  const actual =
+    await importOriginal<typeof import("@tanstack/react-router")>();
   return {
     ...actual,
     createFileRoute: () => (options: Record<string, unknown>) => ({ options }),
@@ -32,7 +33,6 @@ vi.mock("@tanstack/react-router", async (importOriginal) => {
 });
 
 import { ensureAppSession } from "@/auth/ensure-session";
-
 import { Route } from "@/routes/_protected";
 
 describe("_protected route", () => {

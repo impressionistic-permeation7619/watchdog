@@ -4,7 +4,8 @@ import { describe, expect, it, vi } from "vitest";
 const useParamsMock = vi.hoisted(() => vi.fn(() => ({ path: "sign-in" })));
 
 vi.mock("@tanstack/react-router", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@tanstack/react-router")>();
+  const actual =
+    await importOriginal<typeof import("@tanstack/react-router")>();
   return {
     ...actual,
     createFileRoute: () => (options: Record<string, unknown>) => ({ options }),
@@ -24,7 +25,6 @@ vi.mock("@/auth/ui/auth", () => ({
 }));
 
 import { ensureAppSession } from "@/auth/ensure-session";
-
 import { Route } from "@/routes/auth/$path";
 
 describe("auth path route", () => {

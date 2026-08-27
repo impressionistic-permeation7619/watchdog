@@ -9,7 +9,8 @@ class ResizeObserverMock {
 vi.stubGlobal("ResizeObserver", ResizeObserverMock);
 
 vi.mock("@tanstack/react-router", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@tanstack/react-router")>();
+  const actual =
+    await importOriginal<typeof import("@tanstack/react-router")>();
   return {
     ...actual,
     Link: ({ to, children }: { to: string; children: React.ReactNode }) => (
@@ -19,7 +20,13 @@ vi.mock("@tanstack/react-router", async (importOriginal) => {
 });
 
 vi.mock("@/shared/ui/split-view", () => ({
-  SplitView: ({ list, detail }: { list: React.ReactNode; detail: React.ReactNode }) => (
+  SplitView: ({
+    list,
+    detail,
+  }: {
+    list: React.ReactNode;
+    detail: React.ReactNode;
+  }) => (
     <div>
       <div>{list}</div>
       <div>{detail}</div>

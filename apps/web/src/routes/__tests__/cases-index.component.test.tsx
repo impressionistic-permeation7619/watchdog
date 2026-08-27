@@ -6,7 +6,8 @@ vi.mock("@/auth/server", () => ({
 }));
 
 vi.mock("@tanstack/react-router", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@tanstack/react-router")>();
+  const actual =
+    await importOriginal<typeof import("@tanstack/react-router")>();
   return {
     ...actual,
     createFileRoute: () => (options: Record<string, unknown>) => ({ options }),
@@ -21,7 +22,9 @@ import { Route } from "@/routes/_protected/cases/index";
 
 describe("cases index route", () => {
   it("prefetches cases context in the loader", async () => {
-    const ensureQueryData = vi.fn().mockResolvedValue({ active: null, cases: [] });
+    const ensureQueryData = vi
+      .fn()
+      .mockResolvedValue({ active: null, cases: [] });
 
     const loader = Route.options.loader as (ctx: never) => Promise<unknown>;
 

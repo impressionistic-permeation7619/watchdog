@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+
 import { testId } from "@watchdog/test-kit";
 
 vi.mock("@/auth/server", () => ({
@@ -10,7 +11,8 @@ const useParamsMock = vi.hoisted(() => vi.fn(() => ({ entitySlug: "target" })));
 const useNavigateMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@tanstack/react-router", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@tanstack/react-router")>();
+  const actual =
+    await importOriginal<typeof import("@tanstack/react-router")>();
   return {
     ...actual,
     createFileRoute: () => (options: Record<string, unknown>) => ({ options }),
@@ -29,13 +31,11 @@ vi.mock("@tanstack/react-router", async (importOriginal) => {
 });
 
 vi.mock("@/domains/dossier/components/dossier", () => ({
-  Dossier: ({
-    entitySlug,
-    tab,
-  }: {
-    entitySlug: string;
-    tab: string;
-  }) => <div>Dossier {entitySlug} ({tab})</div>,
+  Dossier: ({ entitySlug, tab }: { entitySlug: string; tab: string }) => (
+    <div>
+      Dossier {entitySlug} ({tab})
+    </div>
+  ),
 }));
 
 vi.mock("@/domains/dossier/lib/prefetch-dossier", () => ({
