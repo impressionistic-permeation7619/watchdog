@@ -3,7 +3,7 @@ import { describe, it, expect } from "vitest";
 import "../../registry.ts";
 import {
   checkPlaybookAvailability,
-  getPlaybook,
+  requirePlaybook,
   hostFromUrl,
   listPlaybooks,
   materializeBoundInput,
@@ -17,7 +17,7 @@ import {
 
 describe("plan", () => {
   it("host-footprint emits only the first DNS step", () => {
-    const plan = planPlaybook(getPlaybook("host-footprint"), {
+    const plan = planPlaybook(requirePlaybook("host-footprint"), {
       host: "example.com",
     });
     expect(!("kind" in plan)).toBeTruthy();
@@ -28,12 +28,12 @@ describe("plan", () => {
   });
 
   it("host-footprint rejects missing host seed", () => {
-    const plan = planPlaybook(getPlaybook("host-footprint"), {});
+    const plan = planPlaybook(requirePlaybook("host-footprint"), {});
     expect(plan).toEqual({ kind: "missing_seed", seed: "host" });
   });
 
   it("host-posture plans invasive TLS then HTTP probe", () => {
-    const plan = planPlaybook(getPlaybook("host-posture"), {
+    const plan = planPlaybook(requirePlaybook("host-posture"), {
       host: "example.com",
     });
     expect(!("kind" in plan)).toBeTruthy();
@@ -44,12 +44,12 @@ describe("plan", () => {
   });
 
   it("url-capture requires url + evidence; harvest blocked on enrich", () => {
-    const missing = planPlaybook(getPlaybook("url-capture"), {
+    const missing = planPlaybook(requirePlaybook("url-capture"), {
       url: "https://example.com",
     });
     expect(missing).toEqual({ kind: "missing_seed", seed: "evidence" });
 
-    const plan = planPlaybook(getPlaybook("url-capture"), {
+    const plan = planPlaybook(requirePlaybook("url-capture"), {
       url: "https://example.com",
       evidenceId: "00000000-0000-4000-8000-000000000001",
     });
@@ -62,7 +62,7 @@ describe("plan", () => {
   });
 
   it("url-capture-ai descriptor requires third_party egress", () => {
-    const desc = toPlaybookDescriptor(getPlaybook("url-capture-ai"));
+    const desc = toPlaybookDescriptor(requirePlaybook("url-capture-ai"));
     expect(desc.requires.egress).toBe("third_party");
     expect(desc.requires.flags.includes("needs_key")).toBeTruthy();
 
@@ -119,21 +119,21 @@ describe("plan", () => {
   });
 
   it("query alias: email-corpus / handle-presence / ip-exposure plan from typed seed only", () => {
-    const corpus = planPlaybook(getPlaybook("email-corpus"), {
+    const corpus = planPlaybook(requirePlaybook("email-corpus"), {
       email: "a@example.com",
     });
     expect(!("kind" in corpus)).toBeTruthy();
     if ("kind" in corpus) return;
     expect(corpus.step.input.query).toBe("a@example.com");
 
-    const handle = planPlaybook(getPlaybook("handle-presence"), {
+    const handle = planPlaybook(requirePlaybook("handle-presence"), {
       handle: "octocat",
     });
     expect(!("kind" in handle)).toBeTruthy();
     if ("kind" in handle) return;
     expect(handle.step.input.handle).toBe("octocat");
 
-    const exposure = planPlaybook(getPlaybook("ip-exposure"), {
+    const exposure = planPlaybook(requirePlaybook("ip-exposure"), {
       ip: "1.2.3.4",
     });
     expect(!("kind" in exposure)).toBeTruthy();
@@ -143,7 +143,7 @@ describe("plan", () => {
   });
 
   it("url-history plans with only url and derives host; pins wayback limit", () => {
-    const plan = planPlaybook(getPlaybook("url-history"), {
+    const plan = planPlaybook(requirePlaybook("url-history"), {
       url: "https://www.Example.com/path",
     });
     expect(!("kind" in plan)).toBeTruthy();
@@ -161,15 +161,15 @@ describe("plan", () => {
       ["handle-presence", "handle", "octocat"],
     ] as const;
     for (const [id, field, value] of kinds) {
-      const ok = planPlaybook(getPlaybook(id), { [field]: value });
+      const ok = planPlaybook(requirePlaybook(id), { [field]: value });
       expect(!("kind" in ok), id).toBeTruthy();
-      const missing = planPlaybook(getPlaybook(id), {});
+      const missing = planPlaybook(requirePlaybook(id), {});
       expect(missing).toEqual({ kind: "missing_seed", seed: field });
     }
   });
 
   it("ip-exposure greys without vault; url-capture-ai still egress-blocked", () => {
-    const exposure = toPlaybookDescriptor(getPlaybook("ip-exposure"));
+    const exposure = toPlaybookDescriptor(requirePlaybook("ip-exposure"));
     const grey = checkPlaybookAvailability(exposure.requires, {
       hasCredential: () => false,
       allowThirdPartyEgress: true,
@@ -177,7 +177,7 @@ describe("plan", () => {
     expect(grey.ok).toBe(false);
     if (!grey.ok) expect(grey.kind).toBe("missing_credential");
 
-    const ai = toPlaybookDescriptor(getPlaybook("url-capture-ai"));
+    const ai = toPlaybookDescriptor(requirePlaybook("url-capture-ai"));
     const blocked = checkPlaybookAvailability(ai.requires, {
       hasCredential: () => true,
       allowThirdPartyEgress: false,
@@ -200,7 +200,7 @@ describe("plan", () => {
   });
 
   it("host-contacts defers harvest input; bind uses predecessor evidenceId", () => {
-    const plan = planPlaybook(getPlaybook("host-contacts"), {
+    const plan = planPlaybook(requirePlaybook("host-contacts"), {
       host: "example.com",
     });
     expect(!("kind" in plan)).toBeTruthy();
@@ -231,7 +231,7 @@ describe("plan", () => {
   });
 
   it("host-enumerate fans out DNS inputs capped at 25", () => {
-    const plan = planPlaybook(getPlaybook("host-enumerate"), {
+    const plan = planPlaybook(requirePlaybook("host-enumerate"), {
       host: "example.com",
     });
     expect(!("kind" in plan)).toBeTruthy();
@@ -345,23 +345,27 @@ describe("authoring gates", () => {
   });
 
   it("public identity/hash/url books do not require keys; plus siblings do", () => {
-    const email = toPlaybookDescriptor(getPlaybook("email-identity"));
+    const email = toPlaybookDescriptor(requirePlaybook("email-identity"));
     expect(email.requires.credentials).toEqual([]);
-    const emailPlus = toPlaybookDescriptor(getPlaybook("email-identity-plus"));
+    const emailPlus = toPlaybookDescriptor(
+      requirePlaybook("email-identity-plus")
+    );
     expect(
       emailPlus.requires.credentials.some((c) =>
         "name" in c ? c.name === "EMAILREP_API_KEY" : false
       )
     ).toBe(true);
 
-    const hash = toPlaybookDescriptor(getPlaybook("hash-malware"));
+    const hash = toPlaybookDescriptor(requirePlaybook("hash-malware"));
     expect(hash.requires.credentials).toEqual([]);
-    const hashPlus = toPlaybookDescriptor(getPlaybook("hash-malware-plus"));
+    const hashPlus = toPlaybookDescriptor(requirePlaybook("hash-malware-plus"));
     expect(hashPlus.requires.credentials.length).toBeGreaterThan(0);
 
-    const url = toPlaybookDescriptor(getPlaybook("url-reputation"));
+    const url = toPlaybookDescriptor(requirePlaybook("url-reputation"));
     expect(url.requires.credentials).toEqual([]);
-    const urlPlus = toPlaybookDescriptor(getPlaybook("url-reputation-plus"));
+    const urlPlus = toPlaybookDescriptor(
+      requirePlaybook("url-reputation-plus")
+    );
     expect(urlPlus.requires.credentials.length).toBeGreaterThan(0);
   });
 });

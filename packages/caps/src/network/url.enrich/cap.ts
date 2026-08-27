@@ -10,7 +10,7 @@ import { networkUrlEnrichInput } from "./input";
 import type { EnrichSummary, IngestResult } from "./types";
 import { closestWaybackTimestamp, waybackArchiveUrl } from "./wayback";
 
-export const networkUrlEnrich = defineCapability({
+export const urlEnrich = defineCapability({
   id: URL_ENRICH_CAPABILITY_ID,
   version: "1",
   title: "Enrich URL",

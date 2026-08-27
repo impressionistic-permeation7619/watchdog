@@ -1,6 +1,8 @@
 import { z } from "zod";
 
 import { normalizeIp } from "../dns/reverse";
+import { watchdogUserAgent } from "../errors/user-agent";
+import { fetchJsonObject } from "../http/fetch-json";
 import {
   asBool,
   asNumber,
@@ -34,6 +36,33 @@ export const ipctlLookupSnapshotSchema = z.object({
 
 export type IpctlLookupSnapshot = z.infer<typeof ipctlLookupSnapshotSchema>;
 
+function parseIpctlTags(data: Record<string, unknown>): string[] {
+  if (Array.isArray(data.tags)) {
+    return data.tags.flatMap((row) => {
+      const value = asString(row);
+      return value === null ? [] : [value];
+    });
+  }
+  return recordRows(data.tags).flatMap((row) => {
+    const value = asString(row.name) ?? asString(row.tag);
+    return value === null ? [] : [value];
+  });
+}
+
+function firstString(...values: (string | null | undefined)[]): string | null {
+  for (const value of values) {
+    if (value) return value;
+  }
+  return null;
+}
+
+function firstNumber(...values: (number | null | undefined)[]): number | null {
+  for (const value of values) {
+    if (value !== null && value !== undefined) return value;
+  }
+  return null;
+}
+
 export function parseIpctlBody(
   ip: string,
   queriedAt: string,
@@ -42,36 +71,37 @@ export function parseIpctlBody(
   const prefix = isRecord(data.prefix) ? data.prefix : {};
   const asnObj = isRecord(data.asn) ? data.asn : {};
   const geo = isRecord(data.geo) ? data.geo : {};
-  const tags = Array.isArray(data.tags)
-    ? data.tags.flatMap((row) => {
-        const value = asString(row);
-        return value === null ? [] : [value];
-      })
-    : recordRows(data.tags).flatMap((row) => {
-        const value = asString(row.name) ?? asString(row.tag);
-        return value === null ? [] : [value];
-      });
+  const tags = parseIpctlTags(data);
+  const bgpPrefixFromData =
+    asString(data.bgp_prefix) ??
+    (typeof data.prefix === "string" ? asString(data.prefix) : null);
 
   return ipctlLookupSnapshotSchema.parse({
     ip,
     queriedAt,
     source: "api.ipctl.io",
-    asn: asNumber(asnObj.asn) ?? asNumber(prefix.asn) ?? asNumber(data.asn),
+    asn: firstNumber(
+      asNumber(asnObj.asn),
+      asNumber(prefix.asn),
+      asNumber(data.asn)
+    ),
     asName: asString(asnObj.name),
-    bgpPrefix:
-      asString(prefix.prefix) ??
-      asString(data.bgp_prefix) ??
-      (typeof data.prefix === "string" ? asString(data.prefix) : null),
-    rirCountryCode:
-      asString(prefix.country_code) ?? asString(asnObj.country_code),
-    rir: asString(prefix.rir) ?? asString(asnObj.rir),
-    rpkiStatus: asString(prefix.rpki_status) ?? asString(data.rpki_status),
+    bgpPrefix: firstString(asString(prefix.prefix), bgpPrefixFromData),
+    rirCountryCode: firstString(
+      asString(prefix.country_code),
+      asString(asnObj.country_code)
+    ),
+    rir: firstString(asString(prefix.rir), asString(asnObj.rir)),
+    rpkiStatus: firstString(
+      asString(prefix.rpki_status),
+      asString(data.rpki_status)
+    ),
     reverseDns: asString(data.reverse_dns),
     isAnycast: asBool(data.is_anycast),
     isBogon: asBool(data.is_bogon),
     geoCountryCode: asString(geo.country_code),
     geoCity: asString(geo.city),
-    geoRegion: asString(geo.region_name) ?? asString(geo.region),
+    geoRegion: firstString(asString(geo.region_name), asString(geo.region)),
     geoCountryName: asString(geo.country_name),
     threatScore: asNumber(data.threat_score),
     tags,
@@ -83,30 +113,29 @@ export function parseIpctlBody(
  * GET https://api.ipctl.io/v1/ip/{ip}
  * @see https://ipctl.io/vs/bgpview
  */
+
+interface IpctlOptions {
+  userAgent?: string;
+}
 export async function fetchIpctlLookup(
   ipRaw: string,
   signal: AbortSignal,
-  options?: { userAgent?: string }
+  options?: IpctlOptions
 ): Promise<IpctlLookupSnapshot> {
   const ip = normalizeIp(ipRaw);
-  const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+network.ipctl.lookup; OSINT)";
+  const ua = options?.userAgent ?? watchdogUserAgent("network.ipctl.lookup");
 
   const url = `https://api.ipctl.io/v1/ip/${encodeURIComponent(ip)}`;
-  const res = await fetch(url, {
-    method: "GET",
+  const body = await fetchJsonObject({
+    url,
+    init: {
+      method: "GET",
+      headers: { Accept: "application/json", "User-Agent": ua },
+    },
     signal,
-    headers: { Accept: "application/json", "User-Agent": ua },
+    service: "ipctl",
+    subject: ip,
   });
-
-  if (!res.ok) {
-    throw new Error(`ipctl API ${res.status} for ${ip}`);
-  }
-
-  const body: unknown = await res.json();
-  if (!isRecord(body)) {
-    throw new Error(`ipctl response for ${ip} was not a JSON object`);
-  }
   const data = isRecord(body.data) ? body.data : {};
   return parseIpctlBody(ip, new Date().toISOString(), data);
 }

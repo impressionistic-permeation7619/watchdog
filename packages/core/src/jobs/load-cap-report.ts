@@ -14,6 +14,11 @@ export function artifactsHaveCapReport(artifacts: ArtifactRef[]): boolean {
   return artifacts.some((a) => a.name === REPORT_JSON_ARTIFACT);
 }
 
+interface CapReportLoadResult {
+  report: JsonValue;
+  name: string;
+}
+
 /**
  * Load Cap report JSON for pure interpret.
  * Requires canonical `report.json`.
@@ -21,7 +26,7 @@ export function artifactsHaveCapReport(artifacts: ArtifactRef[]): boolean {
 export async function loadCapReport(
   artifacts: ArtifactRef[],
   readArtifact: (uri: string) => Promise<Uint8Array>
-): Promise<{ report: JsonValue; name: string } | null> {
+): Promise<CapReportLoadResult | null> {
   const art = artifacts.find((a) => a.name === REPORT_JSON_ARTIFACT);
   if (!art) return null;
   const bytes = await readArtifact(art.uri);

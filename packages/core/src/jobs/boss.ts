@@ -87,13 +87,13 @@ async function startBoss(role: BossRole): Promise<PgBoss> {
   return boss;
 }
 
-/** Web/API enqueue — no supervise / schedule loops. */
-export async function getBossProducer(): Promise<PgBoss> {
+/** Web/API enqueue — no supervise / schedule loops. Starts pg-boss on first call. */
+export async function ensureBossProducer(): Promise<PgBoss> {
   return startBoss("producer");
 }
 
-/** Worker — supervises heartbeats / expire / maintenance. */
-export async function getBossWorker(): Promise<PgBoss> {
+/** Worker — supervises heartbeats / expire / maintenance. Starts pg-boss on first call. */
+export async function ensureBossWorker(): Promise<PgBoss> {
   return startBoss("worker");
 }
 

@@ -1,5 +1,12 @@
 import { z } from "zod";
 
+import {
+  httpToolsError,
+  missingApiKey,
+  rateLimitedToolsError,
+  validationToolsError,
+} from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
 import { classifyIpOrHost } from "../parse/classify-ip-or-host";
 import { asString, isRecord, recordRows } from "../parse/coerce";
 
@@ -70,18 +77,22 @@ function summarize(raw: unknown): {
  * Header `api-key`.
  * @see https://docs.hudsonrock.com/reference/search-by-domains
  */
+
+interface HudsonrockOptions {
+  userAgent?: string;
+}
 export async function fetchHudsonrockLookup(
   queryRaw: string,
   apiKey: string,
   signal: AbortSignal,
-  options?: { userAgent?: string }
+  options?: HudsonrockOptions
 ): Promise<HudsonrockLookupSnapshot> {
   const key = apiKey.trim();
-  if (!key) throw new Error("HUDSONROCK_API_KEY required");
+  if (!key) throw missingApiKey("HUDSONROCK_API_KEY");
 
   const { kind, value } = classifyHudsonrockQuery(queryRaw);
   const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+breach.hudsonrock.lookup; OSINT)";
+    options?.userAgent ?? watchdogUserAgent("breach.hudsonrock.lookup");
 
   let path: string;
   let body: Record<string, unknown>;
@@ -103,7 +114,7 @@ export async function fetchHudsonrockLookup(
     }
     default: {
       const _exhaustive: never = kind;
-      throw new Error(
+      throw validationToolsError(
         `Unhandled Hudson Rock query kind: ${String(_exhaustive)}`
       );
     }
@@ -133,10 +144,14 @@ export async function fetchHudsonrockLookup(
     });
   }
   if (res.status === 429) {
-    throw new Error(`Hudson Rock rate-limited for ${value}`);
+    throw rateLimitedToolsError("Hudson Rock", value);
   }
   if (!res.ok) {
-    throw new Error(`Hudson Rock API ${res.status} for ${value}`);
+    throw httpToolsError(
+      "Hudson Rock API",
+      res.status,
+      `Hudson Rock API ${res.status} for ${value}`
+    );
   }
 
   const raw: unknown = await res.json();

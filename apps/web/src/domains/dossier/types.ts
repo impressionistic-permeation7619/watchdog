@@ -1,13 +1,6 @@
-import type { EvidenceKind } from "@watchdog/schemas";
+import type { EvidenceOption } from "@/shared/ui/intake/evidence-option";
 
-/** Case Evidence option for pickers / dossier composers (parent owns fetch). */
-export interface EvidenceOption {
-  id: string;
-  kind: EvidenceKind;
-  label?: string | null;
-  sourceUrl?: string | null;
-  sha256?: string | null;
-}
+export type { EvidenceOption };
 
 /** Overview nest = muted line; dedicated tab = EmptyState panel. */
 export type DossierEmptyPresentation = "inline" | "panel";

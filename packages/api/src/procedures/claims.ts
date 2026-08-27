@@ -12,9 +12,9 @@ import {
   retractKindSchema,
 } from "@watchdog/schemas";
 
-import { mapDomainError } from "../map-domain-error";
-import { authed } from "../os";
-import { claimSchema } from "../schemas";
+import { withDomainError } from "../map-domain-error";
+import { graphChildWrite, authed } from "../os";
+import { claimSchema, userOverrideSchema } from "../schemas";
 
 export const list = authed
   .route({
@@ -31,15 +31,15 @@ export const list = authed
     })
   )
   .output(z.array(claimSchema))
-  .handler(async ({ input }) =>
-    mapDomainError(async () =>
+  .handler(
+    withDomainError(async ({ input }) =>
       listClaimsForEntity(input.caseId, input.entityId, {
         includeRetracted: input.includeRetracted,
       })
     )
   );
 
-export const create = authed
+export const create = graphChildWrite
   .route({
     method: "POST",
     path: "/cases/{caseId}/entities/{entityId}/claims",
@@ -55,12 +55,13 @@ export const create = authed
       confidence: confidenceTierSchema,
       class: claimClassSchema.default("observation"),
       evidenceIds: z.array(z.uuid()).optional(),
+      userOverride: userOverrideSchema,
     })
   )
   .output(claimSchema)
-  .handler(async ({ input }) => mapDomainError(async () => createClaim(input)));
+  .handler(withDomainError(async ({ input }) => createClaim(input)));
 
-export const update = authed
+export const update = graphChildWrite
   .route({
     method: "PATCH",
     path: "/cases/{caseId}/claims/{claimId}",
@@ -75,12 +76,13 @@ export const update = authed
       class: claimClassSchema.optional(),
       confidence: confidenceTierSchema.optional(),
       evidenceIds: z.array(z.uuid()).optional(),
+      userOverride: userOverrideSchema,
     })
   )
   .output(claimSchema)
-  .handler(async ({ input }) => mapDomainError(async () => updateClaim(input)));
+  .handler(withDomainError(async ({ input }) => updateClaim(input)));
 
-export const retract = authed
+export const retract = graphChildWrite
   .route({
     method: "POST",
     path: "/cases/{caseId}/claims/{claimId}/retract",
@@ -93,9 +95,12 @@ export const retract = authed
       claimId: z.uuid(),
       kind: retractKindSchema,
       reason: z.string().min(1),
+      userOverride: userOverrideSchema,
     })
   )
   .output(claimSchema)
-  .handler(async ({ input, context }) =>
-    mapDomainError(async () => retractClaim(input, context.actor.userId))
+  .handler(
+    withDomainError(async ({ input, context }) =>
+      retractClaim(input, context.actor.userId)
+    )
   );

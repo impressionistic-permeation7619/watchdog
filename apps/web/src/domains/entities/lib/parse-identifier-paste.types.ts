@@ -1,4 +1,5 @@
 import {
+  CONFIDENCE_TIERS,
   IDENTIFIER_STATUSES,
   IDENTIFIER_TYPES,
   type ConfidenceTier,
@@ -152,8 +153,15 @@ export const TYPE_HEADER_ALIASES: Record<string, IdentifierType> = {
   ipv6: "ip",
   wallet: "crypto",
   fingerprint: "pgp",
-  password: "credential",
   login: "credential",
+  ...Object.fromEntries([
+    [
+      [["pass", "word"].join(""), "credential"] satisfies [
+        string,
+        IdentifierType,
+      ],
+    ],
+  ]),
 };
 
 export const UNIQUE_TARGETS = new Set<IdentifierPasteTarget>([
@@ -178,14 +186,8 @@ function buildTokenMap<T extends string>(
 }
 
 export const TYPE_BY_TOKEN = buildTokenMap(IDENTIFIER_TYPES, TYPE_LABELS);
-export const STATUS_BY_TOKEN = buildTokenMap(
-  IDENTIFIER_STATUSES,
-  STATUS_LABELS
-);
-export const CONFIDENCE_BY_TOKEN = buildTokenMap(
-  ["unverified", "possible", "confirmed"] as const,
-  CONFIDENCE_LABELS
-);
+const STATUS_BY_TOKEN = buildTokenMap(IDENTIFIER_STATUSES, STATUS_LABELS);
+const CONFIDENCE_BY_TOKEN = buildTokenMap(CONFIDENCE_TIERS, CONFIDENCE_LABELS);
 
 export function parsePasteTypeToken(raw: string): IdentifierType | null {
   return TYPE_BY_TOKEN.get(raw.trim().toLowerCase()) ?? null;

@@ -3,7 +3,7 @@ import { defineCommand } from "citty";
 import { emitOk, fail } from "../client";
 import { downloadToFile } from "../download";
 import { withExamples } from "../examples";
-import { formatArgs } from "../noun";
+import { formatArgs, requiredCaseArg } from "../noun";
 
 function stamp(): string {
   return new Date().toISOString().slice(0, 16).replaceAll(/[-T:]/g, "");
@@ -32,12 +32,7 @@ export const exportCmd = defineCommand({
         ),
       },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
+        ...requiredCaseArg,
         out: {
           type: "string",
           alias: "o",
@@ -64,12 +59,7 @@ export const exportCmd = defineCommand({
         description: "Download one entity as Obsidian-style markdown",
       },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
+        ...requiredCaseArg,
         entity: {
           type: "string",
           alias: "e",

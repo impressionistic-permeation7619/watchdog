@@ -1,11 +1,12 @@
 import { z } from "zod";
 
-import { classifyIpOrHost } from "../parse/classify-ip-or-host";
 import {
   httpToolsError,
   missingApiKey,
   parseToolsError,
 } from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
+import { classifyIpOrHost } from "../parse/classify-ip-or-host";
 import { isRecord } from "../parse/coerce";
 
 export const virusTotalLookupSnapshotSchema = z.object({
@@ -36,18 +37,22 @@ export type VirusTotalLookupSnapshot = z.infer<
  * Auth: x-apikey header.
  * @see https://docs.virustotal.com/reference/ip-info
  */
+
+interface VirustotalOptions {
+  userAgent?: string;
+}
 export async function fetchVirusTotalLookup(
   queryRaw: string,
   apiKey: string,
   signal: AbortSignal,
-  options?: { userAgent?: string }
+  options?: VirustotalOptions
 ): Promise<VirusTotalLookupSnapshot> {
   const { kind, value } = classifyIpOrHost(queryRaw);
   const key = apiKey.trim();
   if (!key) throw missingApiKey("VIRUSTOTAL_API_KEY");
 
   const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+threat.virustotal.lookup; OSINT)";
+    options?.userAgent ?? watchdogUserAgent("threat.virustotal.lookup");
   const path =
     kind === "ip"
       ? `ip_addresses/${encodeURIComponent(value)}`

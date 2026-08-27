@@ -18,13 +18,13 @@ const FIELD_PRIORITY = [
 ] as const;
 
 const PLACEHOLDERS: Record<string, string> = {
-  host: "Hostname e.g. example.com",
+  host: "Hostname e.g. host.tld",
   ip: "IP e.g. 8.8.8.8",
-  email: "Email e.g. name@example.com",
+  email: "Email e.g. name@host.tld",
   handle: "Handle e.g. octocat",
   hash: "MD5 or SHA-256 file hash",
   query: "Lookup query",
-  url: "https://example.com/…",
+  url: "Web address with host and optional path",
   evidenceId: "Evidence UUID",
 };
 

@@ -1,0 +1,123 @@
+@theme inline {
+  --font-heading: var(--font-sans);
+  --font-sans: "Geist Variable", sans-serif;
+  /* Fontsource family name — must match @font-face from geist-mono/wght.css. */
+  --font-mono: "Geist Mono Variable", ui-monospace, monospace;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-signal: var(--signal);
+  --color-signal-foreground: var(--signal-foreground);
+
+  /* Domain → Tailwind utilities (e.g. text-confidence-confirmed, bg-status-succeeded-bg) */
+  --color-confidence-confirmed: var(--confidence-confirmed);
+  --color-confidence-confirmed-fg: var(--confidence-confirmed-fg);
+  --color-confidence-confirmed-bg: var(--confidence-confirmed-bg);
+  --color-confidence-possible: var(--confidence-possible);
+  --color-confidence-possible-fg: var(--confidence-possible-fg);
+  --color-confidence-possible-bg: var(--confidence-possible-bg);
+  --color-confidence-unverified: var(--confidence-unverified);
+  --color-confidence-unverified-fg: var(--confidence-unverified-fg);
+  --color-confidence-unverified-bg: var(--confidence-unverified-bg);
+
+  --color-status-disproved: var(--status-disproved);
+  --color-status-disproved-fg: var(--status-disproved-fg);
+  --color-status-disproved-bg: var(--status-disproved-bg);
+  --color-status-current: var(--status-current);
+  --color-status-current-fg: var(--status-current-fg);
+  --color-status-current-bg: var(--status-current-bg);
+  --color-status-former: var(--status-former);
+  --color-status-former-fg: var(--status-former-fg);
+  --color-status-former-bg: var(--status-former-bg);
+  --color-status-unknown: var(--status-unknown);
+  --color-status-unknown-fg: var(--status-unknown-fg);
+  --color-status-unknown-bg: var(--status-unknown-bg);
+  --color-status-contested: var(--status-contested);
+  --color-status-contested-fg: var(--status-contested-fg);
+  --color-status-contested-bg: var(--status-contested-bg);
+  --color-status-retracted: var(--status-retracted);
+  --color-status-retracted-fg: var(--status-retracted-fg);
+  --color-status-retracted-bg: var(--status-retracted-bg);
+  --color-status-queued: var(--status-queued);
+  --color-status-queued-fg: var(--status-queued-fg);
+  --color-status-queued-bg: var(--status-queued-bg);
+  --color-status-running: var(--status-running);
+  --color-status-running-fg: var(--status-running-fg);
+  --color-status-running-bg: var(--status-running-bg);
+  --color-status-succeeded: var(--status-succeeded);
+  --color-status-succeeded-fg: var(--status-succeeded-fg);
+  --color-status-succeeded-bg: var(--status-succeeded-bg);
+  --color-status-failed: var(--status-failed);
+  --color-status-failed-fg: var(--status-failed-fg);
+  --color-status-failed-bg: var(--status-failed-bg);
+  --color-status-cancelled: var(--status-cancelled);
+  --color-status-cancelled-fg: var(--status-cancelled-fg);
+  --color-status-cancelled-bg: var(--status-cancelled-bg);
+  --color-status-pending: var(--status-pending);
+  --color-status-pending-fg: var(--status-pending-fg);
+  --color-status-pending-bg: var(--status-pending-bg);
+  --color-status-accepted: var(--status-accepted);
+  --color-status-accepted-fg: var(--status-accepted-fg);
+  --color-status-accepted-bg: var(--status-accepted-bg);
+  --color-status-rejected: var(--status-rejected);
+  --color-status-rejected-fg: var(--status-rejected-fg);
+  --color-status-rejected-bg: var(--status-rejected-bg);
+
+  --color-kind-person: var(--kind-person);
+  --color-kind-org: var(--kind-org);
+  --color-kind-email: var(--kind-email);
+  --color-kind-handle: var(--kind-handle);
+  --color-kind-phone: var(--kind-phone);
+  --color-kind-crypto: var(--kind-crypto);
+  --color-kind-pgp: var(--kind-pgp);
+  --color-kind-credential: var(--kind-credential);
+  --color-kind-infra: var(--kind-infra);
+  --color-kind-url: var(--kind-url);
+  --color-kind-domain: var(--kind-domain);
+  --color-kind-ip: var(--kind-ip);
+  --color-kind-file: var(--kind-file);
+  --color-kind-observation: var(--kind-observation);
+  --color-kind-assessment: var(--kind-assessment);
+  --color-kind-allegation: var(--kind-allegation);
+  --color-kind-unknown: var(--kind-unknown);
+  --color-kind-url_archive: var(--kind-url_archive);
+  --color-kind-attestation: var(--kind-attestation);
+  --color-kind-other: var(--kind-other);
+
+  /* Product ladder: sm / md(8) / lg only — no xl+ */
+  --radius-sm: calc(var(--radius) * 0.5); /* 4px */
+  --radius-md: var(--radius); /* 8px — default controls */
+  --radius-lg: calc(var(--radius) * 1.5); /* 12px — surfaces */
+}

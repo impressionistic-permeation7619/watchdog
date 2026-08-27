@@ -6,6 +6,7 @@ import {
   rateLimitedToolsError,
   validationToolsError,
 } from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
 import { asString, isRecord, recordRows } from "../parse/coerce";
 
 export const HASHLOOKUP_ALGOS = ["md5", "sha1", "sha256", "sha512"] as const;
@@ -72,15 +73,19 @@ function firstProductName(body: Record<string, unknown>): string | null {
  * GET https://hashlookup.circl.lu/lookup/{md5|sha1|sha256|sha512}/{hash}
  * @see https://hashlookup.circl.lu/
  */
+
+interface HashlookupOptions {
+  userAgent?: string;
+}
 export async function fetchHashlookup(
   hashRaw: string,
   signal: AbortSignal,
-  options?: { userAgent?: string }
+  options?: HashlookupOptions
 ): Promise<HashlookupSnapshot> {
   const hash = normalizeHashlookupHash(hashRaw);
   const algo = algoForHash(hash);
   const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+threat.hashlookup.lookup; OSINT)";
+    options?.userAgent ?? watchdogUserAgent("threat.hashlookup.lookup");
 
   const res = await fetch(
     `https://hashlookup.circl.lu/lookup/${algo}/${hash}`,

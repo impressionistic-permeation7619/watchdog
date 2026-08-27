@@ -9,6 +9,8 @@ import {
   defineNounCommand,
   entityArg,
   pickDefined,
+  requiredCaseArg,
+  requiredEntityArg,
 } from "../noun";
 
 const LIST_COLUMNS = ["id", "text", "status"];
@@ -53,18 +55,8 @@ export const questionsCmd = defineNounCommand({
         description: "Create a question (--user-override required)",
       },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
-        entity: {
-          type: "string",
-          alias: "e",
-          description: "Entity slug or UUID",
-          required: true,
-        },
+        ...requiredCaseArg,
+        ...requiredEntityArg,
         text: {
           type: "string",
           description: "Question text",
@@ -79,6 +71,7 @@ export const questionsCmd = defineNounCommand({
           caseId: args.case,
           entityId,
           text: args.text,
+          userOverride: true,
         });
         emit(row);
       },
@@ -89,12 +82,7 @@ export const questionsCmd = defineNounCommand({
         description: "Update a question (--user-override required)",
       },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
+        ...requiredCaseArg,
         question: {
           type: "positional",
           description: "Question ID",
@@ -120,6 +108,7 @@ export const questionsCmd = defineNounCommand({
         const row = await api().questions.update({
           caseId: args.case,
           questionId: args.question,
+          userOverride: true,
           ...pickDefined({ text: args.text }),
           ...(resolvedNote === undefined ? {} : { resolvedNote }),
         });
@@ -132,12 +121,7 @@ export const questionsCmd = defineNounCommand({
         description: "Resolve a question (--user-override required)",
       },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
+        ...requiredCaseArg,
         question: {
           type: "positional",
           description: "Question ID",
@@ -154,6 +138,7 @@ export const questionsCmd = defineNounCommand({
         const row = await api().questions.resolve({
           caseId: args.case,
           questionId: args.question,
+          userOverride: true,
           ...pickDefined({ resolvedNote: args.note }),
         });
         emit(row);
@@ -165,12 +150,7 @@ export const questionsCmd = defineNounCommand({
         description: "Reopen a resolved question (--user-override required)",
       },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
+        ...requiredCaseArg,
         question: {
           type: "positional",
           description: "Question ID",
@@ -183,6 +163,7 @@ export const questionsCmd = defineNounCommand({
         const row = await api().questions.reopen({
           caseId: args.case,
           questionId: args.question,
+          userOverride: true,
         });
         emit(row);
       },

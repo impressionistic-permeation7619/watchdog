@@ -2,7 +2,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
-import { capTimeoutMs, type CapContext } from "@watchdog/caps";
+import { capTimeoutMs, type CapContext } from "@watchdog/cap-sdk";
 import { db, jobsRepo, type JobArtifact } from "@watchdog/db";
 import type { EvidenceSnapshot } from "@watchdog/schemas";
 
@@ -11,13 +11,9 @@ import { readArtifactBytes, uploadArtifact } from "../../infra/blob";
 import { logSwallowed } from "../../infra/process-log";
 import { getCredential, hasCredential } from "../../infra/vault";
 import { hashCapInput, lookupCapCache } from "../cap-cache";
+import { registerActiveJobController } from "../job-cancel-registry";
 import { artifactsHaveCapReport } from "../load-cap-report";
-import {
-  activeControllers,
-  inputString,
-  linkedEvidenceId,
-  type JobLog,
-} from "./helpers";
+import { inputString, linkedEvidenceId, type JobLog } from "./helpers";
 import type { PreflightState } from "./preflight";
 
 export interface CollectRuntime {
@@ -131,7 +127,7 @@ export async function collect(
 
   const scratchDir = await mkdtemp(path.join(tmpdir(), "wd-cap-"));
   const controller = new AbortController();
-  activeControllers.set(state.jobId, controller);
+  registerActiveJobController(state.jobId, controller);
   const timeoutMs = capTimeoutMs(state.cap);
   const timer = setTimeout(() => {
     controller.abort("timeout");
@@ -188,7 +184,6 @@ export async function collect(
             output: artifacts,
             evidenceIds,
             logs: jobLog.lines,
-            updatedAt: new Date(),
           });
         }
       }
@@ -208,7 +203,7 @@ export async function collect(
       runtime,
     };
   } catch (error) {
-    // Leave activeControllers set so executeJob can read abortReason before finally.
+    // Leave registry entry until executeJob finally unregisters (abortReason read).
     clearTimeout(timer);
     await rm(scratchDir, { recursive: true, force: true }).catch(
       (cleanupError: unknown) => {

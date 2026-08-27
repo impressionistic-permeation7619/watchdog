@@ -26,6 +26,13 @@ export class DomainError extends Error {
   }
 }
 
+/** Extract a human-readable message from an unknown catch value. */
+export function errorMessage(error: unknown, fallback?: string): string {
+  if (error instanceof Error) return error.message;
+  if (fallback !== undefined) return fallback;
+  return String(error);
+}
+
 function unknownRecordMessage(
   error: unknown,
   record: { message?: unknown }

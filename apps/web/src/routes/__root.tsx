@@ -6,10 +6,10 @@ import {
   createRootRouteWithContext,
 } from "@tanstack/react-router";
 
-import { Providers } from "#/shared/layout/providers";
-import { Button } from "#/shared/ui/shadcn/button";
-import { Toaster } from "#/shared/ui/shadcn/sonner";
-import { TooltipProvider } from "#/shared/ui/shadcn/tooltip";
+import { Providers } from "@/shared/layout/providers";
+import { Button } from "@/shared/ui/shadcn/button";
+import { Toaster } from "@/shared/ui/shadcn/sonner";
+import { TooltipProvider } from "@/shared/ui/shadcn/tooltip";
 
 import appCss from "../styles.css?url";
 
@@ -46,8 +46,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     <html lang="en" suppressHydrationWarning>
       <head>
         {/* XSS-safe static theme bootstrap — no user input */}
-        {/* oxlint-disable-next-line react/no-danger -- intentional inline theme script */}
-        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        <script suppressHydrationWarning>{THEME_INIT_SCRIPT}</script>
         <HeadContent />
       </head>
       <body className="selection:bg-primary/20 font-sans [overflow-wrap:anywhere] antialiased">

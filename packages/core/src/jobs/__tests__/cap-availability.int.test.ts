@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { getCapability } from "@watchdog/caps";
+import { requireCapability } from "@watchdog/caps";
 import { putCredential } from "@watchdog/core";
 import { casesRepo, db } from "@watchdog/db";
 import { TEST_ACTOR_ID } from "@watchdog/test-kit";
@@ -16,7 +16,7 @@ describe("evaluateCapAvailability", () => {
   it("blocks extract.ai without vault credentials even when egress is on", async () => {
     const cased = await seedCase(db);
     await casesRepo.update(db, cased.id, { allowThirdPartyEgress: true });
-    const cap = getCapability("evidence.extract.ai");
+    const cap = requireCapability("evidence.extract.ai");
     const { result } = await evaluateCapAvailability({
       actorId: TEST_ACTOR_ID,
       caseId: cased.id,
@@ -35,7 +35,7 @@ describe("evaluateCapAvailability", () => {
       name: "AI_COMPAT_API_KEY",
       secret: "sk-test",
     });
-    const cap = getCapability("evidence.extract.ai");
+    const cap = requireCapability("evidence.extract.ai");
     const { result } = await evaluateCapAvailability({
       actorId: TEST_ACTOR_ID,
       caseId: cased.id,

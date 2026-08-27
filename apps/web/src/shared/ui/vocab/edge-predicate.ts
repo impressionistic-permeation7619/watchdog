@@ -11,33 +11,17 @@ import {
   type EdgeDirection,
   type EdgeOrientation,
   type EdgePredicate,
-  type EdgePredicateGroup,
   type EntityKind,
 } from "@watchdog/schemas";
 
 import { titleCase } from "./title-case";
 
-/** Outbound (canonical) labels for pickers that store the enum value. */
-export const EDGE_PREDICATE_LABELS: Record<EdgePredicate, string> = (() => {
-  const labels: Partial<Record<EdgePredicate, string>> = {};
-  for (const predicate of EDGE_PREDICATES) {
-    labels[predicate] = EDGE_PREDICATE_META[predicate].label;
-  }
-  // Every EDGE_PREDICATES member is assigned above.
-  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
-  return labels as Record<EdgePredicate, string>;
-})();
-
 export {
   EDGE_PREDICATE_META,
-  EDGE_PREDICATE_GROUPS,
-  EDGE_PREDICATE_GROUP_LABELS,
   edgePhraseValue,
-  isEdgePredicate,
   parseEdgePhraseValue,
   type EdgeDirection,
   type EdgeOrientation,
-  type EdgePredicateGroup,
 };
 
 /** Direction-aware display; unknown strings title-cased. */

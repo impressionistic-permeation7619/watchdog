@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { testHttpOrigin } from "@watchdog/test-kit";
+
 import { createWatchdogModel } from "../provider";
 
 describe("createWatchdogModel", () => {
@@ -16,7 +18,7 @@ describe("createWatchdogModel", () => {
     const model = createWatchdogModel({
       kind: "openai_compat",
       apiKey: "sk-test",
-      baseUrl: "http://127.0.0.1:4000/v1",
+      baseUrl: testHttpOrigin("127.0.0.1:4000", "/v1"),
       model: "gpt-4o",
     });
     expect(model).toBeTruthy();

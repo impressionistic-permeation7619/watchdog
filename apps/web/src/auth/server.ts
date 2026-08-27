@@ -72,8 +72,15 @@ export const auth = betterAuth({
   plugins: [
     apiKeyPlugin({
       defaultPrefix: "wd_",
-      keyExpiration: { defaultExpiresIn: null },
-      rateLimit: { enabled: false },
+      keyExpiration: {
+        // Bound compromise window; agents can request shorter expiry at create time.
+        defaultExpiresIn: 60 * 60 * 24 * 90,
+      },
+      rateLimit: {
+        enabled: true,
+        timeWindow: 60 * 60 * 1000,
+        maxRequests: 2000,
+      },
     }),
     // Must be last — otherwise later plugins' Set-Cookie can be dropped.
     tanstackStartCookies(),

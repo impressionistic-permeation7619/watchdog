@@ -1,0 +1,34 @@
+import { describe, expect, it, vi } from "vitest";
+
+const coreFactory = vi.hoisted(() =>
+  vi.fn(() => ({
+    securityCards: ["security-card"],
+    organization: { enabled: true },
+  }))
+);
+
+vi.mock("@better-auth-ui/core/plugins", () => ({
+  apiKeyPlugin: Object.assign(() => coreFactory(), { id: "apiKey" }),
+}));
+
+vi.mock("@better-auth-ui/core", () => ({
+  createAuthPlugin: (_id: string, factory: (options?: unknown) => unknown) =>
+    factory({}),
+}));
+
+vi.mock("@/auth/ui/api-key/organization-api-keys", () => ({
+  OrganizationApiKeys: "OrganizationApiKeys",
+}));
+
+import { apiKeyPlugin } from "@/auth/plugins/api-key";
+
+describe("apiKeyPlugin", () => {
+  it("clears security cards and wires organization cards", () => {
+    expect(coreFactory).toHaveBeenCalled();
+    expect(apiKeyPlugin).toMatchObject({
+      securityCards: [],
+      organizationCards: ["OrganizationApiKeys"],
+    });
+    expect(coreFactory).toHaveBeenCalledTimes(1);
+  });
+});

@@ -1,3 +1,4 @@
+import { httpToolsError } from "../errors/tools-error";
 import { fetchBytes } from "../http/fetch-bytes";
 import {
   waybackFetchSnapshotSchema,
@@ -10,9 +11,6 @@ import {
 const CDX = "https://web.archive.org/cdx/search/cdx";
 
 export {
-  waybackFetchSnapshotSchema,
-  waybackLookupSnapshotSchema,
-  type WaybackCdxRow,
   type WaybackFetchSnapshot,
   type WaybackLookupSnapshot,
 } from "./schema";
@@ -35,17 +33,50 @@ export function waybackArchiveUrl(timestamp: string, url: string): string {
   return `https://web.archive.org/web/${timestamp}id_/${url}`;
 }
 
+interface WaybackLookupOptions {
+  userAgent: string;
+  limit?: number;
+  filterStatus200?: boolean;
+}
+
+const CDX_OPTIONAL_FIELDS = [
+  [2, "statuscode"],
+  [3, "mimetype"],
+  [4, "digest"],
+] as const;
+
+function cdxRowFromArray(row: unknown, url: string): WaybackCdxRow | null {
+  if (!isUnknownArray(row) || !row[0]) return null;
+  const parsed: WaybackCdxRow = {
+    timestamp: cdxField(row[0]) ?? "",
+    original: cdxField(row[1]) ?? url,
+  };
+  for (const [index, key] of CDX_OPTIONAL_FIELDS) {
+    if (row[index] === undefined) continue;
+    parsed[key] = cdxField(row[index]) ?? "";
+  }
+  return parsed;
+}
+
+function parseCdxRows(payload: unknown[], url: string): WaybackCdxRow[] {
+  const hasHeader =
+    isUnknownArray(payload[0]) && String(payload[0][0]) === "timestamp";
+  const dataRows = hasHeader ? payload.slice(1) : payload;
+  const rows: WaybackCdxRow[] = [];
+  for (const row of dataRows) {
+    const parsed = cdxRowFromArray(row, url);
+    if (parsed) rows.push(parsed);
+  }
+  return rows;
+}
+
 /**
  * CDX history rows for a URL — shared by archive.wayback.lookup and url.enrich.
  */
 export async function fetchWaybackLookup(
   url: string,
   signal: AbortSignal,
-  options: {
-    userAgent: string;
-    limit?: number;
-    filterStatus200?: boolean;
-  }
+  options: WaybackLookupOptions
 ): Promise<WaybackLookupSnapshot> {
   const limit = options.limit ?? 25;
   const params = new URLSearchParams({
@@ -64,7 +95,11 @@ export async function fetchWaybackLookup(
     headers: { "User-Agent": options.userAgent },
   });
   if (!res.ok) {
-    throw new Error(`Wayback CDX HTTP ${res.status} for ${url}`);
+    throw httpToolsError(
+      "Wayback CDX",
+      res.status,
+      `Wayback CDX HTTP ${res.status} for ${url}`
+    );
   }
   const payload: unknown = await res.json();
   if (!isUnknownArray(payload) || payload.length === 0) {
@@ -77,20 +112,7 @@ export async function fetchWaybackLookup(
     });
   }
 
-  const hasHeader =
-    isUnknownArray(payload[0]) && String(payload[0][0]) === "timestamp";
-  const dataRows = hasHeader ? payload.slice(1) : payload;
-  const rows: WaybackCdxRow[] = [];
-  for (const row of dataRows) {
-    if (!isUnknownArray(row) || !row[0]) continue;
-    rows.push({
-      timestamp: cdxField(row[0]) ?? "",
-      original: cdxField(row[1]) ?? url,
-      ...(row[2] === undefined ? {} : { statuscode: cdxField(row[2]) ?? "" }),
-      ...(row[3] === undefined ? {} : { mimetype: cdxField(row[3]) ?? "" }),
-      ...(row[4] === undefined ? {} : { digest: cdxField(row[4]) ?? "" }),
-    });
-  }
+  const rows = parseCdxRows(payload, url);
 
   return waybackLookupSnapshotSchema.parse({
     url,
@@ -116,11 +138,16 @@ export async function closestWaybackTimestamp(
 }
 
 /** Fetch a Wayback raw snapshot body (id_ URL). */
+
+interface CdxOptions {
+  userAgent: string;
+  maxBytes?: number;
+}
 export async function fetchWaybackSnapshot(
   url: string,
   timestamp: string,
   signal: AbortSignal,
-  options: { userAgent: string; maxBytes?: number }
+  options: CdxOptions
 ): Promise<WaybackFetchSnapshot> {
   const archiveUrl = waybackArchiveUrl(timestamp, url);
   const maxBytes = options.maxBytes ?? 512_000;

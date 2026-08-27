@@ -169,5 +169,5 @@ export const KNOWN_CREDENTIALS: KnownCredential[] = [
 ];
 
 export function listKnownCredentials(): KnownCredential[] {
-  return KNOWN_CREDENTIALS;
+  return [...KNOWN_CREDENTIALS];
 }

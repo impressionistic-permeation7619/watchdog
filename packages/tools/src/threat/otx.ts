@@ -10,6 +10,7 @@ import {
   rateLimitedToolsError,
   validationToolsError,
 } from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
 import { asString, isRecord, recordRows } from "../parse/coerce";
 import { normalizeHost } from "../whois/normalize";
 
@@ -106,17 +107,21 @@ function extractPulseInfo(body: Record<string, unknown>): {
  * GET https://otx.alienvault.com/api/v1/indicators/{type}/{value}/general
  * @see https://otx.alienvault.com/assets/static/external_api.html
  */
+
+interface OtxOptions {
+  userAgent?: string;
+}
 export async function fetchOtxLookup(
   queryRaw: string,
   apiKey: string,
   signal: AbortSignal,
-  options?: { userAgent?: string }
+  options?: OtxOptions
 ): Promise<OtxLookupSnapshot> {
   const key = apiKey.trim();
   if (!key) throw missingApiKey("OTX_API_KEY");
 
   const { kind, otxType, value } = classifyOtxIndicator(queryRaw);
-  const ua = options?.userAgent ?? "Watchdog/1.0 (+threat.otx.lookup; OSINT)";
+  const ua = options?.userAgent ?? watchdogUserAgent("threat.otx.lookup");
   const url = `https://otx.alienvault.com/api/v1/indicators/${otxType}/${encodeURIComponent(value)}/general`;
 
   const res = await fetch(url, {

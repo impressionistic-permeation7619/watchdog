@@ -6,15 +6,8 @@ async function waitForHydratedNode(
   page: Page,
   selector: string
 ): Promise<void> {
-  await page.waitForFunction(
-    (sel) => {
-      const el = document.querySelector(sel);
-      if (el === null) return false;
-      return Object.keys(el).some((key) => key.includes("react"));
-    },
-    selector,
-    { timeout: 30_000 }
-  );
+  await page.waitForSelector("html[data-hydrated=true]", { timeout: 30_000 });
+  await page.locator(selector).waitFor({ timeout: 30_000 });
 }
 
 export async function signUp(page: Page, stamp: string): Promise<void> {
@@ -37,10 +30,8 @@ export async function signUp(page: Page, stamp: string): Promise<void> {
 
 export async function createCase(page: Page, name: string): Promise<void> {
   await page.goto("/cases");
-  await waitForHydratedNode(page, "[data-slot=button]");
-  const trigger = page
-    .locator("[data-slot=button]")
-    .filter({ hasText: "New Case" });
+  await page.waitForSelector("html[data-hydrated=true]", { timeout: 30_000 });
+  const trigger = page.getByRole("button", { name: "New Case" }).first();
   await trigger.waitFor({ timeout: 30_000 });
   await trigger.click();
   const dialog = page.locator("[data-slot=alert-dialog-content]");
@@ -52,11 +43,10 @@ export async function createCase(page: Page, name: string): Promise<void> {
 
 export async function dumpPasteViaUi(page: Page, body: string): Promise<void> {
   await page.goto("/intake");
-  await waitForHydratedNode(page, "[data-slot=button]");
-  await page
-    .getByLabel("Dump evidence")
-    .getByRole("button", { name: "Paste" })
-    .click();
+  await page.waitForSelector("html[data-hydrated=true]", { timeout: 30_000 });
+  const dumpEvidence = page.getByLabel("Dump evidence");
+  await dumpEvidence.waitFor({ timeout: 30_000 });
+  await dumpEvidence.getByRole("button", { name: "Paste" }).click();
   await page
     .getByPlaceholder("Paste page text, tool output, notes…")
     .fill(body);

@@ -3,6 +3,15 @@ import type { JobStatus } from "@watchdog/schemas";
 
 import { notifyEvent } from "../infra/events";
 
+interface SetJobStatusOpts {
+  unlessCancelled?: boolean;
+  onlyStatuses?: JobStatus[];
+  notify?: boolean;
+  caseId?: string;
+}
+
+type JobStatusPatch = JobPatch & { status: JobStatus };
+
 /**
  * Persist Job status (+ related fields). Returns the updated row, or null when
  * the update matched no row (e.g. already cancelled with unlessCancelled).
@@ -10,18 +19,13 @@ import { notifyEvent } from "../infra/events";
  */
 export async function setJobStatus(
   jobId: string,
-  patch: JobPatch & { status: JobStatus },
-  opts?: {
-    unlessCancelled?: boolean;
-    onlyStatuses?: JobStatus[];
-    notify?: boolean;
-    caseId?: string;
-  }
+  patch: JobStatusPatch,
+  opts?: SetJobStatusOpts
 ): Promise<JobRow | null> {
   const updated = await jobsRepo.update(
     db,
     jobId,
-    { ...patch, updatedAt: patch.updatedAt ?? new Date() },
+    { ...patch },
     {
       unlessCancelled: opts?.unlessCancelled,
       onlyStatuses: opts?.onlyStatuses,

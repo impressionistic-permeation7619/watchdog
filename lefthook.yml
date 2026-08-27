@@ -1,0 +1,41 @@
+# Local git hooks — fast checks only. CI remains the merge gate (tests, knip, e2e, drift).
+# Install: automatic in `nix develop` (see flake.nix). Manual: `lefthook install`
+# Overrides: lefthook-local.yml (gitignored) — e.g. skip slow commands locally
+
+min_version: 1.10.0
+
+pre-commit:
+  parallel: true
+  skip:
+    - merge
+    - rebase
+  commands:
+    ultracite:
+      glob:
+        - "*.{ts,tsx,js,mjs,json,yml,yaml,md}"
+        - "**/*.{ts,tsx,js,mjs,json,yml,yaml,md}"
+      exclude:
+        - "**/routeTree.gen.ts"
+        - "packages/client/src/generated/**"
+        - "packages/caps/capabilities.gen.json"
+        - "apps/web/src/shared/ui/shadcn/**"
+      run: pnpm fix
+      stage_fixed: true
+    agents:
+      glob:
+        - "{AGENTS.md,**/AGENTS.md}"
+        - "scripts/check-agents.mjs"
+      run: pnpm check:agents:strict
+
+pre-push:
+  parallel: true
+  skip:
+    - merge
+    - rebase
+  commands:
+    typecheck:
+      run: pnpm typecheck
+    web-ds:
+      root: apps/web/
+      glob: "apps/web/**"
+      run: pnpm ds:check

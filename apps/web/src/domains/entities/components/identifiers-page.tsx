@@ -5,10 +5,6 @@ import { useState } from "react";
 
 import { casesContextQuery } from "@/domains/cases/queries";
 import type { CaseRecord } from "@/domains/cases/types";
-import {
-  IdentifierComposerAppend,
-  IdentifierComposerEvidence,
-} from "@/domains/dossier/components/identifiers-section.composer";
 import { BulkAddIdentifiersDialog } from "@/domains/entities/components/bulk-add-identifiers-dialog";
 import { useIdentifiersTable } from "@/domains/entities/hooks/use-identifiers-table";
 import { Page, PageHeader } from "@/shared/layout/page";
@@ -22,6 +18,10 @@ import {
   DataTableViewOptions,
 } from "@/shared/ui/data-table";
 import { FormInlineError } from "@/shared/ui/form-inline-message";
+import {
+  IdentifierComposerAppend,
+  IdentifierComposerEvidence,
+} from "@/shared/ui/identifiers/identifier-composer";
 import { SearchField } from "@/shared/ui/search-field";
 import { Button } from "@/shared/ui/shadcn/button";
 import { Checkbox } from "@/shared/ui/shadcn/checkbox";

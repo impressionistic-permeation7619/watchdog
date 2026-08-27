@@ -26,6 +26,7 @@ playwright/.cache/
 # Regenerable platform output
 export/
 .wd-runtime/
+scorecard.png
 
 # Web build
 apps/web/dist/
@@ -53,3 +54,4 @@ Thumbs.db
 # Local
 CLAUDE.local.md
 *.local
+lefthook-local.yml

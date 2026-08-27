@@ -1,6 +1,12 @@
 import { z } from "zod";
 
 import { normalizeIp } from "../dns/reverse";
+import {
+  httpToolsError,
+  parseToolsError,
+  validationToolsError,
+} from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
 import { isRecord, recordRows } from "../parse/coerce";
 
 export const censysLookupSnapshotSchema = z.object({
@@ -55,10 +61,9 @@ export async function fetchCensysHost(
   const id = apiId.trim();
   const secret = apiSecret.trim();
   if (!id || !secret)
-    throw new Error("CENSYS_API_ID and CENSYS_API_SECRET required");
+    throw validationToolsError("CENSYS_API_ID and CENSYS_API_SECRET required");
 
-  const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+network.censys.lookup; OSINT)";
+  const ua = options?.userAgent ?? watchdogUserAgent("network.censys.lookup");
   const auth = Buffer.from(`${id}:${secret}`).toString("base64");
   const url = `https://search.censys.io/api/v2/hosts/${encodeURIComponent(ip)}`;
 
@@ -90,12 +95,16 @@ export async function fetchCensysHost(
   }
 
   if (!res.ok) {
-    throw new Error(`Censys API ${res.status} for ${ip}`);
+    throw httpToolsError(
+      "Censys API",
+      res.status,
+      `Censys API ${res.status} for ${ip}`
+    );
   }
 
   const body: unknown = await res.json();
   if (!isRecord(body)) {
-    throw new Error(`Censys response for ${ip} was not a JSON object`);
+    throw parseToolsError("Censys", ip);
   }
   const result = isRecord(body.result) ? body.result : {};
   const location = isRecord(result.location) ? result.location : {};

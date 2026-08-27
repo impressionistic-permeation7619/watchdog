@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { slugifyName } from "@/lib/utils";
+import type { CaseRecord as CoreCaseRecord } from "@watchdog/core";
 import {
   nonEmptyTrimmed,
   optionalTrimmedSchema,
@@ -8,13 +9,7 @@ import {
   uuidSchema,
 } from "@watchdog/schemas";
 
-export interface CaseRecord {
-  id: string;
-  name: string;
-  slug: string;
-  description: string | null;
-  allowThirdPartyEgress: boolean;
-}
+export type CaseRecord = CoreCaseRecord;
 
 /** Cases list + healed active Case (cookie). */
 export interface CasesContext {

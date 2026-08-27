@@ -1,8 +1,7 @@
-import { z } from "zod";
-
 import { searchCase } from "@watchdog/core";
+import { searchCaseInputSchema } from "@watchdog/schemas";
 
-import { mapDomainError } from "../map-domain-error";
+import { withDomainError } from "../map-domain-error";
 import { authed } from "../os";
 import { searchCaseResultSchema } from "../schemas";
 
@@ -13,16 +12,10 @@ export const searchCaseProc = authed
     summary: "Search Active Case material and Cases by name",
     tags: ["search"],
   })
-  .input(
-    z.object({
-      caseId: z.uuid(),
-      q: z.string(),
-      limit: z.number().int().min(1).max(50).optional(),
-    })
-  )
+  .input(searchCaseInputSchema)
   .output(searchCaseResultSchema)
-  .handler(async ({ input }) =>
-    mapDomainError(async () =>
+  .handler(
+    withDomainError(async ({ input }) =>
       searchCase({
         caseId: input.caseId,
         q: input.q,

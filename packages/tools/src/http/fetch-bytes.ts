@@ -1,3 +1,5 @@
+import { errorMessage } from "../errors/tools-error";
+
 export interface FetchBytesOptions {
   /** User-Agent header (Cap OPSEC policy — pass from Cap, never hardcode Cap id here). */
   userAgent: string;
@@ -15,6 +17,17 @@ export interface FetchBytesResult {
   markdownTokensHint?: number;
   finalUrl: string;
   error?: string;
+}
+
+function fetchBytesFailure(url: string, error: unknown): FetchBytesResult {
+  return {
+    ok: false,
+    status: 0,
+    bytes: new Uint8Array(),
+    contentType: null,
+    finalUrl: url,
+    error: errorMessage(error),
+  };
 }
 
 /** Dumb fetch + truncate — Cap supplies UA / limits / Accept. */
@@ -51,13 +64,6 @@ export async function fetchBytes(
       ...(res.ok ? {} : { error: `HTTP ${res.status}` }),
     };
   } catch (error) {
-    return {
-      ok: false,
-      status: 0,
-      bytes: new Uint8Array(),
-      contentType: null,
-      finalUrl: url,
-      error: error instanceof Error ? error.message : String(error),
-    };
+    return fetchBytesFailure(url, error);
   }
 }

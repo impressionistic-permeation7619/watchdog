@@ -8,7 +8,7 @@ import {
 } from "@watchdog/core";
 import { patchOpSchema } from "@watchdog/schemas";
 
-import { mapDomainError } from "../map-domain-error";
+import { withDomainError } from "../map-domain-error";
 import { authed } from "../os";
 import {
   confidenceTierSchema,
@@ -32,8 +32,8 @@ export const create = authed
     })
   )
   .output(proposalSchema)
-  .handler(async ({ input, context }) =>
-    mapDomainError(async () => {
+  .handler(
+    withDomainError(async ({ input, context }) => {
       const { proposal } = await createAgentProposal({
         caseId: input.caseId,
         actorId: context.actor.userId,
@@ -59,8 +59,8 @@ export const listForCase = authed
     })
   )
   .output(z.array(proposalSchema))
-  .handler(async ({ input }) =>
-    mapDomainError(async () =>
+  .handler(
+    withDomainError(async ({ input }) =>
       listProposalsForCase(input.caseId, { status: input.status })
     )
   );
@@ -82,8 +82,8 @@ export const accept = authed
     })
   )
   .output(proposalSchema)
-  .handler(async ({ input, context }) =>
-    mapDomainError(async () =>
+  .handler(
+    withDomainError(async ({ input, context }) =>
       acceptProposal({
         caseId: input.caseId,
         proposalId: input.proposalId,
@@ -110,8 +110,8 @@ export const reject = authed
     })
   )
   .output(proposalSchema)
-  .handler(async ({ input, context }) =>
-    mapDomainError(async () =>
+  .handler(
+    withDomainError(async ({ input, context }) =>
       rejectProposal({
         caseId: input.caseId,
         proposalId: input.proposalId,

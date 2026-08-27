@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { createTtlCache } from "../cache/ttl-memory";
 import { httpToolsError, ToolsError } from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
 import { classifyIpOrHost } from "../parse/classify-ip-or-host";
 import { asString, isRecord } from "../parse/coerce";
 
@@ -69,14 +70,18 @@ async function fetchScannerFeed(
  * (30-minute in-process cache — public feed, not per-query.)
  * @see https://greedybear-docs.readthedocs.io/en/latest/OpenAPI.html
  */
+
+interface GreedybearOptions {
+  userAgent?: string;
+}
 export async function fetchGreedybearLookup(
   queryRaw: string,
   signal: AbortSignal,
-  options?: { userAgent?: string }
+  options?: GreedybearOptions
 ): Promise<GreedybearLookupSnapshot> {
   const { kind, value } = classifyIpOrHost(queryRaw);
   const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+threat.greedybear.lookup; OSINT)";
+    options?.userAgent ?? watchdogUserAgent("threat.greedybear.lookup");
 
   const feed = await fetchScannerFeed(signal, ua);
 

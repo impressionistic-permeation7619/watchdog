@@ -1,0 +1,255 @@
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    @apply font-sans;
+  }
+
+  body {
+    @apply bg-background text-foreground m-0 font-sans antialiased;
+  }
+
+  /* Content links opt in with underline / hover:underline — don't force
+     underlines on every <a>, including Button render={<a />} shells. */
+  a {
+    @apply text-primary underline-offset-4;
+  }
+
+  .maplibregl-popup-content {
+    @apply !rounded-none !bg-transparent !p-0 !shadow-none;
+  }
+
+  .maplibregl-popup-tip {
+    @apply !hidden;
+  }
+}
+
+/*
+  Field chrome — unlayered so it beats Tailwind utilities on stock
+  SelectTrigger (survives `shadcn add select` regenerating select.tsx).
+  Resting border comes from global `--border` / `--input` tokens (quiet mix).
+  `.wd-field-trigger` = non-Select peers (EvidencePicker Add).
+*/
+[data-slot="select-trigger"]:focus-visible,
+[data-slot="field-trigger"]:focus-visible,
+.wd-field-trigger:focus-visible {
+  border-color: color-mix(in oklab, var(--ring) 50%, transparent);
+  --tw-ring-width: 2px;
+  --tw-ring-color: color-mix(in oklab, var(--ring) 30%, transparent);
+  box-shadow: 0 0 0 var(--tw-ring-width) var(--tw-ring-color);
+}
+
+[data-slot="select-trigger"][aria-invalid="true"],
+[data-slot="select-trigger"][data-invalid],
+[data-slot="field-trigger"][aria-invalid="true"],
+[data-slot="field-trigger"][data-invalid],
+.wd-field-trigger[aria-invalid="true"],
+.wd-field-trigger[data-invalid] {
+  border-color: var(--destructive);
+}
+
+/* Dark fill comes from SelectTrigger utilities (dark:bg-input/30) — same as InputGroup / EntityCombobox. */
+
+/* Quieter inside tables (inventory / editable cells) — lock h-7 across controls */
+[data-slot="table-cell"] [data-slot="select-trigger"] {
+  height: 1.75rem;
+  padding-block: 0;
+  border-color: color-mix(in oklab, var(--border) 30%, transparent);
+  background-color: transparent;
+  box-shadow: none;
+}
+
+[data-slot="table-cell"] [data-slot="select-trigger"]:hover {
+  border-color: color-mix(in oklab, var(--border) 50%, transparent);
+  background-color: color-mix(in oklab, var(--muted) 25%, transparent);
+}
+
+[data-slot="table-cell"] [data-slot="select-trigger"]:focus-visible {
+  border-color: color-mix(in oklab, var(--border) 55%, transparent);
+  background-color: var(--background);
+  --tw-ring-width: 1px;
+  --tw-ring-color: color-mix(in oklab, var(--ring) 28%, transparent);
+  box-shadow: 0 0 0 var(--tw-ring-width) var(--tw-ring-color);
+}
+
+/* Peer EntityCombobox (InputGroup) — same quiet resting chrome + height as SelectTrigger */
+[data-slot="table-cell"] [data-slot="input-group"] {
+  height: 1.75rem;
+  min-height: 1.75rem;
+  border-color: color-mix(in oklab, var(--border) 30%, transparent);
+  background-color: transparent;
+  box-shadow: none;
+}
+
+[data-slot="table-cell"] [data-slot="input-group"]:hover {
+  border-color: color-mix(in oklab, var(--border) 50%, transparent);
+  background-color: color-mix(in oklab, var(--muted) 25%, transparent);
+}
+
+[data-slot="table-cell"] [data-slot="input-group"]:focus-within {
+  border-color: color-mix(in oklab, var(--border) 55%, transparent);
+  background-color: var(--background);
+  --tw-ring-width: 1px;
+  --tw-ring-color: color-mix(in oklab, var(--ring) 28%, transparent);
+  box-shadow: 0 0 0 var(--tw-ring-width) var(--tw-ring-color);
+}
+
+/* Notes / text cells — same quiet h-7 chrome as SelectTrigger / InputGroup */
+[data-slot="table-cell"] [data-slot="input"] {
+  height: 1.75rem;
+  padding-block: 0;
+  border-color: color-mix(in oklab, var(--border) 30%, transparent);
+  background-color: transparent;
+  box-shadow: none;
+}
+
+[data-slot="table-cell"] [data-slot="input"]:hover {
+  border-color: color-mix(in oklab, var(--border) 50%, transparent);
+  background-color: color-mix(in oklab, var(--muted) 25%, transparent);
+}
+
+[data-slot="table-cell"] [data-slot="input"]:focus-visible {
+  border-color: color-mix(in oklab, var(--border) 55%, transparent);
+  background-color: var(--background);
+  --tw-ring-width: 1px;
+  --tw-ring-color: color-mix(in oklab, var(--ring) 28%, transparent);
+  box-shadow: 0 0 0 var(--tw-ring-width) var(--tw-ring-color);
+}
+
+/*
+  Tabs chrome — soft overrides that survive `shadcn add tabs` regenerating
+  components/ui/tabs.tsx.
+*/
+[data-slot="tabs-list"] {
+  border-color: color-mix(in oklab, var(--border) 45%, transparent);
+  box-shadow: none;
+}
+
+[data-slot="tabs-list"][data-variant="default"] {
+  background-color: color-mix(in oklab, var(--muted) 70%, transparent);
+}
+
+.dark [data-slot="tabs-list"][data-variant="default"] {
+  background-color: color-mix(in oklab, var(--muted) 55%, transparent);
+}
+
+[data-slot="tabs-trigger"] {
+  outline: none;
+}
+
+[data-slot="tabs-trigger"]:focus-visible {
+  border-color: color-mix(in oklab, var(--ring) 45%, transparent);
+  outline: none;
+  --tw-ring-width: 2px;
+  --tw-ring-color: color-mix(in oklab, var(--ring) 28%, transparent);
+  box-shadow: 0 0 0 var(--tw-ring-width) var(--tw-ring-color);
+}
+
+.dark [data-slot="tabs-trigger"][data-active],
+.dark [data-slot="tabs-trigger"][aria-selected="true"] {
+  border-color: color-mix(in oklab, var(--input) 40%, transparent);
+}
+
+/*
+  Writing fields — thin focus instead of shadcn’s default ring-3 halo.
+  Unlayered so it beats utilities on input / textarea / rich-text / input-group.
+*/
+[data-slot="input"]:focus-visible,
+[data-slot="textarea"]:focus-visible {
+  border-color: color-mix(in oklab, var(--ring) 45%, transparent);
+  outline: none;
+  --tw-ring-width: 1px;
+  --tw-ring-color: color-mix(in oklab, var(--ring) 22%, transparent);
+  box-shadow: 0 0 0 var(--tw-ring-width) var(--tw-ring-color);
+}
+
+[data-slot="input-group"]:has([data-slot="input-group-control"]:focus-visible) {
+  border-color: color-mix(in oklab, var(--ring) 45%, transparent);
+  outline: none;
+  --tw-ring-width: 1px;
+  --tw-ring-color: color-mix(in oklab, var(--ring) 22%, transparent);
+  box-shadow: 0 0 0 var(--tw-ring-width) var(--tw-ring-color);
+}
+
+[data-slot="combobox-chips"]:focus-within {
+  border-color: color-mix(in oklab, var(--ring) 45%, transparent);
+  outline: none;
+  --tw-ring-width: 1px;
+  --tw-ring-color: color-mix(in oklab, var(--ring) 22%, transparent);
+  box-shadow: 0 0 0 var(--tw-ring-width) var(--tw-ring-color);
+}
+
+[data-slot="rich-text-editor"]:focus-within {
+  border-color: color-mix(in oklab, var(--ring) 40%, transparent);
+  outline: none;
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--ring) 22%, transparent);
+}
+
+/* Contenteditable fills the surface so empty padding is clickable. */
+[data-slot="rich-text-editor"] [data-slate-editor] {
+  box-sizing: border-box;
+  min-height: 100%;
+  height: 100%;
+  cursor: text;
+}
+
+.graph-studio-canvas {
+  background: var(--graph-canvas-bg);
+}
+
+/* CapMatch — amber selection bar; cold roster, no card chrome */
+.cap-match-row-selected {
+  box-shadow: inset 3px 0 0 var(--signal);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cap-match-row {
+    transition: none;
+  }
+
+  /* Kill decorative motion globally (pulse/spin/animate-in/chrome transitions). */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── Thin scrollbars ───────────────────────────────────────────────────────── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklch, var(--muted-foreground) 60%, transparent)
+    transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: color-mix(
+    in oklch,
+    var(--muted-foreground) 60%,
+    transparent
+  );
+  border-radius: 9999px;
+  min-height: 40px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(
+    in oklch,
+    var(--muted-foreground) 85%,
+    transparent
+  );
+}

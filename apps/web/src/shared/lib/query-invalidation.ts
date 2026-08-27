@@ -11,11 +11,14 @@ import { entitiesKeys } from "@/domains/entities/queries";
 import { questionsKeys } from "@/domains/entities/questions/queries";
 import { proposalsKeys } from "@/domains/inbox/queries";
 import { evidenceKeys } from "@/domains/intake/queries";
-import { jobsKeys } from "@/domains/jobs/queries";
+import { jobsKeys } from "@/domains/jobs/jobs-keys";
 import { credentialsKeys } from "@/domains/settings/queries";
 import { tasksKeys } from "@/domains/tasks/queries";
 
-const JOB_FOLLOWUP_DELAYS_MS = [3000, 8000] as const;
+interface EntityChangedOpts {
+  entityId?: string;
+  slug?: string;
+}
 
 /** Soft settle: mark stale without flashing loading, then refetch active observers. */
 async function softInvalidate(
@@ -34,21 +37,10 @@ export async function invalidateAfterCaseSwitch(
 
 export async function invalidateAfterJobMutation(
   client: QueryClient,
-  caseId: string,
-  opts?: { withRetry?: boolean }
+  caseId: string
 ): Promise<void> {
-  const key = jobsKeys.all(caseId);
-  await softInvalidate(client, key);
+  await softInvalidate(client, jobsKeys.all(caseId));
   await softInvalidate(client, activityKeys.all);
-  if (opts?.withRetry) {
-    for (const delay of JOB_FOLLOWUP_DELAYS_MS) {
-      setTimeout(() => {
-        void softInvalidate(client, key);
-        void softInvalidate(client, proposalsKeys.all(caseId));
-        void softInvalidate(client, activityKeys.all);
-      }, delay);
-    }
-  }
 }
 
 export async function invalidateAfterProposalAccept(
@@ -77,23 +69,21 @@ export async function invalidateAfterProposalQueueChange(
 export async function invalidateAfterEntityChanged(
   client: QueryClient,
   caseId: string,
-  entityId?: string,
-  slug?: string
+  opts?: EntityChangedOpts
 ): Promise<void> {
   await softInvalidate(client, entitiesKeys.all(caseId));
-  if (slug) {
-    await softInvalidate(client, entitiesKeys.detail(caseId, slug));
+  if (opts?.slug) {
+    await softInvalidate(client, entitiesKeys.detail(caseId, opts.slug));
   }
-  // Case-wide lists denormalize entity labels (forCase + entity-scoped).
   await Promise.all([
     softInvalidate(client, edgesKeys.prefix(caseId)),
     softInvalidate(client, identifiersKeys.prefix(caseId)),
   ]);
-  if (entityId) {
+  if (opts?.entityId) {
     await Promise.all([
-      softInvalidate(client, claimsKeys.all(caseId, entityId)),
-      softInvalidate(client, eventsKeys.all(caseId, entityId)),
-      softInvalidate(client, questionsKeys.all(caseId, entityId)),
+      softInvalidate(client, claimsKeys.all(caseId, opts.entityId)),
+      softInvalidate(client, eventsKeys.all(caseId, opts.entityId)),
+      softInvalidate(client, questionsKeys.all(caseId, opts.entityId)),
     ]);
   }
 }
@@ -106,7 +96,7 @@ export async function invalidateAfterTaskMutation(
   await softInvalidate(client, activityKeys.all);
 }
 
-export async function invalidateEvidence(
+export async function invalidateAfterEvidenceMutation(
   client: QueryClient,
   caseId: string
 ): Promise<void> {
@@ -114,7 +104,7 @@ export async function invalidateEvidence(
   await softInvalidate(client, activityKeys.all);
 }
 
-export async function invalidateCredentials(
+export async function invalidateAfterCredentialMutation(
   client: QueryClient
 ): Promise<void> {
   await softInvalidate(client, credentialsKeys.all);

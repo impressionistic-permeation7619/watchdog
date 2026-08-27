@@ -14,7 +14,7 @@ import {
   softDeleteEvidence,
 } from "@watchdog/core";
 
-import { mapDomainError } from "../map-domain-error";
+import { withDomainError } from "../map-domain-error";
 import { authed } from "../os";
 import { evidenceSchema, jobSchema, presignedUploadSchema } from "../schemas";
 
@@ -34,8 +34,8 @@ export const list = authed
     })
   )
   .output(z.array(evidenceSchema))
-  .handler(async ({ input }) =>
-    mapDomainError(async () =>
+  .handler(
+    withDomainError(async ({ input }) =>
       listEvidenceForCase(input.caseId, {
         unprocessedOnly: input.unprocessedOnly,
         unattachedOnly: input.unattachedOnly,
@@ -62,8 +62,8 @@ export const createPaste = authed
     })
   )
   .output(evidenceSchema)
-  .handler(async ({ input, context }) =>
-    mapDomainError(async () =>
+  .handler(
+    withDomainError(async ({ input, context }) =>
       dumpPaste({ ...input, actorId: context.actor.userId })
     )
   );
@@ -86,8 +86,8 @@ export const createUrl = authed
     })
   )
   .output(evidenceSchema)
-  .handler(async ({ input, context }) =>
-    mapDomainError(async () =>
+  .handler(
+    withDomainError(async ({ input, context }) =>
       dumpUrl({ ...input, actorId: context.actor.userId })
     )
   );
@@ -101,8 +101,8 @@ export const softDelete = authed
   })
   .input(z.object({ caseId: z.uuid(), evidenceId: z.uuid() }))
   .output(z.object({ ok: z.literal(true) }))
-  .handler(async ({ input }) =>
-    mapDomainError(async () => {
+  .handler(
+    withDomainError(async ({ input }) => {
       await softDeleteEvidence(input);
       return { ok: true as const };
     })
@@ -117,8 +117,8 @@ export const restore = authed
   })
   .input(z.object({ caseId: z.uuid(), evidenceId: z.uuid() }))
   .output(z.object({ ok: z.literal(true) }))
-  .handler(async ({ input }) =>
-    mapDomainError(async () => {
+  .handler(
+    withDomainError(async ({ input }) => {
       await restoreEvidence(input);
       return { ok: true as const };
     })
@@ -139,9 +139,7 @@ export const attachEntity = authed
     })
   )
   .output(evidenceSchema)
-  .handler(async ({ input }) =>
-    mapDomainError(async () => attachEvidenceEntity(input))
-  );
+  .handler(withDomainError(async ({ input }) => attachEvidenceEntity(input)));
 
 export const presign = authed
   .route({
@@ -160,9 +158,7 @@ export const presign = authed
     })
   )
   .output(presignedUploadSchema)
-  .handler(async ({ input }) =>
-    mapDomainError(async () => presignUpload(input))
-  );
+  .handler(withDomainError(async ({ input }) => presignUpload(input)));
 
 export const confirmFile = authed
   .route({
@@ -184,8 +180,10 @@ export const confirmFile = authed
     })
   )
   .output(evidenceSchema)
-  .handler(async ({ input, context }) =>
-    mapDomainError(async () => confirmFileUpload(input, context.actor.userId))
+  .handler(
+    withDomainError(async ({ input, context }) =>
+      confirmFileUpload(input, context.actor.userId)
+    )
   );
 
 export const downloadUrl = authed
@@ -197,8 +195,8 @@ export const downloadUrl = authed
   })
   .input(z.object({ caseId: z.uuid(), evidenceId: z.uuid() }))
   .output(z.object({ url: z.string().nullable() }))
-  .handler(async ({ input }) =>
-    mapDomainError(async () =>
+  .handler(
+    withDomainError(async ({ input }) =>
       getEvidenceDownloadUrl(input.caseId, input.evidenceId)
     )
   );
@@ -219,8 +217,8 @@ export const process = authed
     })
   )
   .output(jobSchema)
-  .handler(async ({ input, context }) =>
-    mapDomainError(async () =>
+  .handler(
+    withDomainError(async ({ input, context }) =>
       processEvidence({ ...input, actorId: context.actor.userId })
     )
   );
@@ -235,8 +233,8 @@ export const enrich = authed
   })
   .input(z.object({ caseId: z.uuid(), evidenceId: z.uuid() }))
   .output(jobSchema)
-  .handler(async ({ input, context }) =>
-    mapDomainError(async () =>
+  .handler(
+    withDomainError(async ({ input, context }) =>
       enrichUrlEvidence({ ...input, actorId: context.actor.userId })
     )
   );

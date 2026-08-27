@@ -1,6 +1,12 @@
 import { z } from "zod";
 
 import { normalizeIp } from "../dns/reverse";
+import {
+  httpToolsError,
+  missingApiKey,
+  parseToolsError,
+} from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
 import { isRecord } from "../parse/coerce";
 
 export const shodanLookupSnapshotSchema = z.object({
@@ -26,18 +32,21 @@ export type ShodanLookupSnapshot = z.infer<typeof shodanLookupSnapshotSchema>;
  * Shodan host lookup — GET /shodan/host/{ip}?key=&minify=true
  * @see https://developer.shodan.io/api
  */
+
+interface ShodanOptions {
+  userAgent?: string;
+}
 export async function fetchShodanHost(
   ipRaw: string,
   apiKey: string,
   signal: AbortSignal,
-  options?: { userAgent?: string }
+  options?: ShodanOptions
 ): Promise<ShodanLookupSnapshot> {
   const ip = normalizeIp(ipRaw);
   const key = apiKey.trim();
-  if (!key) throw new Error("SHODAN_API_KEY required");
+  if (!key) throw missingApiKey("SHODAN_API_KEY");
 
-  const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+network.shodan.lookup; OSINT)";
+  const ua = options?.userAgent ?? watchdogUserAgent("network.shodan.lookup");
   const url = new URL(
     `https://api.shodan.io/shodan/host/${encodeURIComponent(ip)}`
   );
@@ -70,12 +79,16 @@ export async function fetchShodanHost(
   }
 
   if (!res.ok) {
-    throw new Error(`Shodan API ${res.status} for ${ip}`);
+    throw httpToolsError(
+      "Shodan API",
+      res.status,
+      `Shodan API ${res.status} for ${ip}`
+    );
   }
 
   const body: unknown = await res.json();
   if (!isRecord(body)) {
-    throw new Error(`Shodan response for ${ip} was not a JSON object`);
+    throw parseToolsError("Shodan", ip);
   }
   const hostnames = Array.isArray(body.hostnames)
     ? body.hostnames.filter((h): h is string => typeof h === "string")

@@ -13,7 +13,7 @@ import {
   type PlaybookSeedKind,
 } from "@watchdog/schemas";
 
-import { CAPABILITIES, getCapability } from "../registry";
+import { CAPABILITIES, requireCapability } from "../registry";
 import {
   presentSeedKinds,
   seedKindToCapIo,
@@ -82,6 +82,9 @@ export interface PlaybookRequires {
   egress: CapEgress;
   flags: CapFlag[];
 }
+
+/** Credential/egress requirements for a single Cap (same wire shape as playbooks). */
+export type CapabilityRequires = PlaybookRequires;
 
 export interface PlaybookDescriptor {
   id: string;
@@ -183,7 +186,7 @@ function parseCapInput(
   capabilityId: string,
   candidate: Record<string, unknown>
 ): JsonObject | PlanError {
-  const cap = getCapability(capabilityId);
+  const cap = requireCapability(capabilityId);
   const parsed = cap.input.safeParse(candidate);
   if (!parsed.success) {
     return {
@@ -232,6 +235,83 @@ function validateStepRefs(
   return undefined;
 }
 
+function findUnknownCap(defs: PlaybookStepDef[]): PlanError | undefined {
+  for (const def of defs) {
+    if (!CAPABILITIES.some((c) => c.id === def.capabilityId)) {
+      return { kind: "unknown_cap", capabilityId: def.capabilityId };
+    }
+  }
+  return undefined;
+}
+
+function buildSeedAvailability(
+  playbook: PlaybookDef,
+  present: Set<PlaybookSeedKind>
+): Set<string> {
+  const available = new Set(
+    playbook.seedKinds.map((k) => ioKey(seedKindToCapIo(k)))
+  );
+  for (const k of present) available.add(ioKey(seedKindToCapIo(k)));
+  return available;
+}
+
+function unsatisfiedConsumeError(
+  def: PlaybookStepDef,
+  available: Set<string>
+): PlanError | undefined {
+  const cap = requireCapability(def.capabilityId);
+  const consumes = cap.consumes ?? [];
+  const deferInput = def.bind !== undefined || def.fanOut !== undefined;
+  if (consumes.length === 0 || deferInput) return undefined;
+  const covered = consumes.some((c) => available.has(ioKey(c)));
+  if (covered) return undefined;
+  return {
+    kind: "unsatisfied_step",
+    capabilityId: def.capabilityId,
+    needs: consumes[0],
+  };
+}
+
+function resolveStepInput(
+  def: PlaybookStepDef,
+  candidate: Record<string, unknown>
+): JsonObject | PlanError | "deferred" {
+  const deferInput = def.bind !== undefined || def.fanOut !== undefined;
+  if (deferInput) return "deferred";
+  return parseCapInput(def.capabilityId, mergeJson(candidate, def.input));
+}
+
+function addProducesToAvailability(
+  def: PlaybookStepDef,
+  available: Set<string>
+): void {
+  const cap = requireCapability(def.capabilityId);
+  for (const p of cap.produces ?? []) available.add(ioKey(p));
+}
+
+function validateStepAtPlanTime(
+  def: PlaybookStepDef,
+  candidate: Record<string, unknown>,
+  stepIndex: number
+): PlannedStep | PlanError | undefined {
+  if (def.fanOut !== undefined) {
+    return stepIndex === 0
+      ? { capabilityId: def.capabilityId, input: {}, playbookStep: 0 }
+      : undefined;
+  }
+
+  const parsed = resolveStepInput(def, candidate);
+  if (parsed === "deferred") {
+    return stepIndex === 0
+      ? { capabilityId: def.capabilityId, input: {}, playbookStep: 0 }
+      : undefined;
+  }
+  if (isPlanError(parsed)) return parsed;
+  return stepIndex === 0
+    ? { capabilityId: def.capabilityId, input: parsed, playbookStep: 0 }
+    : undefined;
+}
+
 /** Pure — no DB / pg-boss. Validates the whole recipe; emits step 0 only. */
 export function planPlaybook(
   playbook: PlaybookDef,
@@ -245,62 +325,30 @@ export function planPlaybook(
   }
 
   const defs = playbook.steps.map(normalizePlaybookStep);
-  for (const def of defs) {
-    if (!CAPABILITIES.some((c) => c.id === def.capabilityId)) {
-      return { kind: "unknown_cap", capabilityId: def.capabilityId };
-    }
-  }
+  const unknownCap = findUnknownCap(defs);
+  if (unknownCap) return unknownCap;
 
   for (let i = 0; i < defs.length; i += 1) {
     const refErr = validateStepRefs(defs[i], i);
     if (refErr) return refErr;
   }
 
-  const seedCovered = new Set(
-    playbook.seedKinds.map((k) => ioKey(seedKindToCapIo(k)))
-  );
-  for (const k of present) seedCovered.add(ioKey(seedKindToCapIo(k)));
-
-  const available = new Set(seedCovered);
+  const available = buildSeedAvailability(playbook, present);
   const candidate = seedValuesToCandidateInput(seed);
   let firstStep: PlannedStep | undefined;
 
   for (let i = 0; i < defs.length; i += 1) {
     const def = defs[i];
-    const cap = getCapability(def.capabilityId);
-    const consumes = cap.consumes ?? [];
-    const deferInput = def.bind !== undefined || def.fanOut !== undefined;
-    if (consumes.length > 0 && !deferInput) {
-      const covered = consumes.some((c) => available.has(ioKey(c)));
-      if (!covered) {
-        return {
-          kind: "unsatisfied_step",
-          capabilityId: def.capabilityId,
-          needs: consumes[0],
-        };
-      }
+    const consumeErr = unsatisfiedConsumeError(def, available);
+    if (consumeErr) return consumeErr;
+
+    const stepResult = validateStepAtPlanTime(def, candidate, i);
+    if (stepResult !== undefined) {
+      if ("kind" in stepResult) return stepResult;
+      firstStep = stepResult;
     }
 
-    if (def.fanOut === undefined) {
-      let input: JsonObject = {};
-      if (!deferInput) {
-        const parsed = parseCapInput(
-          def.capabilityId,
-          mergeJson(candidate, def.input)
-        );
-        if (isPlanError(parsed)) return parsed;
-        input = parsed;
-      }
-      if (i === 0) {
-        firstStep = {
-          capabilityId: def.capabilityId,
-          input,
-          playbookStep: 0,
-        };
-      }
-    }
-
-    for (const p of cap.produces ?? []) available.add(ioKey(p));
+    addProducesToAvailability(def, available);
   }
 
   if (!firstStep) {
@@ -411,7 +459,7 @@ export function derivePlaybookRequires(
   let egress: CapEgress = "none";
 
   for (const id of playbookCapabilityIds(playbook)) {
-    const desc = toCapDescriptor(getCapability(id));
+    const desc = toCapDescriptor(requireCapability(id));
     if (desc.egress === "third_party") egress = "third_party";
     for (const f of desc.flags ?? []) flags.add(f);
     for (const c of desc.credentials ?? []) {
@@ -470,6 +518,18 @@ export function checkPlaybookAvailability(
     }
   }
   return { ok: true };
+}
+
+/** Single-Cap availability — same predicate as playbooks, distinct entry point. */
+export function checkCapabilityAvailability(
+  requires: CapabilityRequires,
+  opts: {
+    hasCredential: (name: string) => boolean;
+    allowThirdPartyEgress: boolean;
+    thirdPartyCapabilityId?: string;
+  }
+): AvailabilityResult {
+  return checkPlaybookAvailability(requires, opts);
 }
 
 export function formatPlanError(err: PlanError): string {

@@ -112,13 +112,27 @@ export const cancelPlaybookInputSchema = z.object({
 });
 export type CancelPlaybookInput = z.output<typeof cancelPlaybookInputSchema>;
 
-export const getArtifactContentInputSchema = z.object({
-  uri: nonEmptyTrimmed,
-  mime: z
-    .string()
-    .optional()
-    .transform((value) => value?.trim() ?? ""),
-});
+const artifactMimeSchema = z
+  .string()
+  .optional()
+  .transform((value) => value?.trim() ?? "");
+
+/** Resolve blob keys server-side — never accept client-supplied storage URIs. */
+export const getArtifactContentInputSchema = z.discriminatedUnion("source", [
+  z.object({
+    source: z.literal("job"),
+    caseId: uuidSchema,
+    jobId: uuidSchema,
+    sha256: nonEmptyTrimmed,
+    mime: artifactMimeSchema,
+  }),
+  z.object({
+    source: z.literal("evidence"),
+    caseId: uuidSchema,
+    evidenceId: uuidSchema,
+    mime: artifactMimeSchema,
+  }),
+]);
 export type GetArtifactContentInput = z.output<
   typeof getArtifactContentInputSchema
 >;

@@ -10,24 +10,19 @@ import {
 import { jobsRepo } from "../jobs.repo.ts";
 
 describe("jobsRepo", () => {
-  it("releases a blocked playbook step to queued", async () => {
+  it("unblocks historical blocked playbook rows via status update", async () => {
     await withTestTx(async (tx) => {
       const cased = await seedCase(tx);
       const run = await seedPlaybookRun(tx, cased.id);
-      await seedJob(tx, cased.id, {
+      const blocked = await seedJob(tx, cased.id, {
         playbookRunId: run.id,
         playbookStep: 1,
         status: "blocked",
       });
-      const released = await jobsRepo.releaseBlockedStep(tx, run.id, 1);
-      expect(released).toHaveLength(1);
-      const row = released[0];
-      expect(row).toBeDefined();
-      if (row === undefined) {
-        throw new TypeError("expected a released job");
-      }
-      const queued = await jobsRepo.get(tx, row.id);
-      expect(queued?.status).toBe("queued");
+      const updated = await jobsRepo.update(tx, blocked.id, {
+        status: "queued",
+      });
+      expect(updated?.status).toBe("queued");
     });
   });
 

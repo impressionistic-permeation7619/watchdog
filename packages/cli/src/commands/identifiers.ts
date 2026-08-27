@@ -19,6 +19,8 @@ import {
   defineNounCommand,
   entityArg,
   pickDefined,
+  requiredCaseArg,
+  requiredEntityArg,
 } from "../noun";
 
 const LIST_COLUMNS = ["id", "type", "value", "confidence", "status"];
@@ -62,18 +64,8 @@ export const identifiersCmd = defineNounCommand({
         description: "Create an identifier (--user-override required)",
       },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
-        entity: {
-          type: "string",
-          alias: "e",
-          description: "Entity slug or UUID",
-          required: true,
-        },
+        ...requiredCaseArg,
+        ...requiredEntityArg,
         type: {
           type: "string",
           description: "Identifier type",
@@ -104,7 +96,7 @@ export const identifiersCmd = defineNounCommand({
       },
       run: async ({ args }) => {
         requireUserOverride(args["user-override"]);
-        refuseConfirmed(args.confidence);
+        refuseConfirmed(confidenceTierSchema.parse(args.confidence));
         const entityId = await resolveEntityId(args.case, args.entity);
         const evidenceIds = parseIdList(args.evidence);
         const row = await api().identifiers.create({
@@ -114,6 +106,7 @@ export const identifiersCmd = defineNounCommand({
           value: args.value,
           confidence: confidenceTierSchema.parse(args.confidence),
           status: identifierStatusSchema.parse(args.status),
+          userOverride: true,
           ...pickDefined({
             platform: args.platform,
             notes: args.notes,
@@ -129,12 +122,7 @@ export const identifiersCmd = defineNounCommand({
         description: "Update an identifier (--user-override required)",
       },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
+        ...requiredCaseArg,
         identifier: {
           type: "positional",
           description: "Identifier ID",
@@ -157,7 +145,7 @@ export const identifiersCmd = defineNounCommand({
       },
       run: async ({ args }) => {
         requireUserOverride(args["user-override"]);
-        refuseConfirmed(args.confidence);
+        refuseConfirmed(confidenceTierSchema.parse(args.confidence));
         const evidenceIds = parseIdList(args.evidence);
         const typeValue =
           args.type !== undefined && args.type !== ""
@@ -174,6 +162,7 @@ export const identifiersCmd = defineNounCommand({
         const row = await api().identifiers.update({
           caseId: args.case,
           identifierId: args.identifier,
+          userOverride: true,
           ...pickDefined({
             value: args.value,
             type: typeValue,

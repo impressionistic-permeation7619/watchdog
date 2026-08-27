@@ -1,0 +1,81 @@
+/* Type roles — Geist-shaped, ops-dense (prefer over raw text-[Npx]) */
+@utility text-heading-page {
+  font-size: 1.25rem;
+  line-height: 1.25;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+@utility text-heading-dossier {
+  font-size: 1.5rem;
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+@utility text-heading-section {
+  font-size: 0.9375rem;
+  line-height: 1.35;
+  font-weight: 500;
+}
+
+@utility text-label {
+  font-size: 0.875rem;
+  line-height: 1.25;
+  font-weight: 500;
+}
+
+@utility text-label-sm {
+  font-size: 0.8125rem;
+  line-height: 1.25;
+  font-weight: 500;
+}
+
+@utility text-label-meta {
+  font-size: 0.6875rem;
+  line-height: 1.2;
+  font-weight: 500;
+}
+
+@utility text-label-meta-sm {
+  font-size: 0.625rem;
+  line-height: 1.2;
+  font-weight: 500;
+}
+
+@utility text-label-mono {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.25;
+}
+
+@utility text-label-mono-sm {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  line-height: 1.2;
+}
+
+@utility text-copy {
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+
+@utility text-copy-sm {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+/* Aliases (Phase 1 plan) */
+@utility text-meta {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  line-height: 1.2;
+}
+
+@utility text-chip {
+  font-size: 0.625rem;
+  line-height: 1.2;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}

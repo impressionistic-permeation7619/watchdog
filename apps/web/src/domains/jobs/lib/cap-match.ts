@@ -1,7 +1,7 @@
 import type { CapListItem } from "@/domains/jobs/types";
 
 /** Jobs category label from Cap id first segment (`docs/CAPS.md`). */
-export const CAP_CATEGORY_LABELS: Record<string, string> = {
+const CAP_CATEGORY_LABELS: Record<string, string> = {
   network: "Infrastructure",
   archive: "Archives",
   web: "Live web",
@@ -60,59 +60,73 @@ function looksLikeIp(value: string): boolean {
   return IPV4_RE.test(value) || looksLikeIpv6(value);
 }
 
-/** Detect seed kind from a paste / CapMatch input. */
-export function detectPasteSeed(raw: string): PasteDetectResult {
-  const value = raw.trim();
-  if (!value) return { kind: "unknown", value: "" };
+function detectEvidenceOrIp(value: string): PasteDetectResult | null {
   if (UUID_RE.test(value)) return { kind: "evidence", value };
-
   if (IPV4_RE.test(value) || (value.includes(":") && looksLikeIpv6(value))) {
     return { kind: "ip", value };
   }
+  return null;
+}
 
+function detectEmailOrHandle(value: string): PasteDetectResult | null {
   if (EMAIL_RE.test(value)) {
     return { kind: "email", value: value.toLowerCase() };
   }
-
   if (/^@[a-z0-9](?:[a-z0-9]|-(?=[a-z0-9])){0,38}$/i.test(value)) {
     return { kind: "handle", value: value.slice(1).toLowerCase() };
   }
+  return null;
+}
 
+function detectUrlOrHost(value: string): PasteDetectResult | null {
   try {
     const withScheme = /^[a-z][a-z0-9+.-]*:/i.test(value)
       ? value
       : `https://${value}`;
     const u = new URL(withScheme);
-    if (u.protocol === "http:" || u.protocol === "https:") {
-      const looksLikeUrl =
-        /^https?:\/\//i.test(value) ||
-        value.includes("/") ||
-        value.includes("?");
-      if (looksLikeUrl) {
-        return { kind: "url", value, hostHint: u.hostname };
-      }
-      // bare hostname
-      if (u.hostname.includes(".") || u.hostname === "localhost") {
-        return { kind: "host", value: u.hostname, hostHint: u.hostname };
-      }
+    if (u.protocol !== "http:" && u.protocol !== "https:") return null;
+
+    const looksLikeUrl =
+      /^https?:\/\//i.test(value) || value.includes("/") || value.includes("?");
+    if (looksLikeUrl) {
+      return { kind: "url", value, hostHint: u.hostname };
+    }
+    if (u.hostname.includes(".") || u.hostname === "localhost") {
+      return { kind: "host", value: u.hostname, hostHint: u.hostname };
     }
   } catch {
-    // fall through
+    return null;
   }
+  return null;
+}
 
+function detectBareHost(value: string): PasteDetectResult | null {
   if (/^[a-z0-9.-]+\.[a-z]{2,}$/i.test(value) || value === "localhost") {
-    return {
-      kind: "host",
-      value: value.toLowerCase(),
-      hostHint: value.toLowerCase(),
-    };
+    const host = value.toLowerCase();
+    return { kind: "host", value: host, hostHint: host };
   }
+  return null;
+}
 
+function detectFileHash(value: string): PasteDetectResult | null {
   if (FILE_HASH_RE.test(value)) {
     return { kind: "hash", value: value.toLowerCase() };
   }
+  return null;
+}
 
-  return { kind: "unknown", value };
+/** Detect seed kind from a paste / CapMatch input. */
+export function detectPasteSeed(raw: string): PasteDetectResult {
+  const value = raw.trim();
+  if (!value) return { kind: "unknown", value: "" };
+
+  return (
+    detectEvidenceOrIp(value) ??
+    detectEmailOrHandle(value) ??
+    detectUrlOrHost(value) ??
+    detectBareHost(value) ??
+    detectFileHash(value) ?? { kind: "unknown", value }
+  );
 }
 
 export function capCategory(id: string): string {
@@ -125,7 +139,7 @@ export function capCategoryLabel(id: string): string {
 }
 
 /** Paste-facing consume labels for CapMatch (may be multiple per Cap). */
-export function capPasteKinds(cap: CapListItem): Set<PasteSeedKind> {
+function capPasteKinds(cap: CapListItem): Set<PasteSeedKind> {
   const out = new Set<PasteSeedKind>();
   for (const c of cap.consumes ?? []) {
     switch (c.kind) {
@@ -163,21 +177,6 @@ export function capPasteKinds(cap: CapListItem): Set<PasteSeedKind> {
   return out;
 }
 
-/** Primary consume kind for ranking (first match wins). */
-export function capConsumesKind(
-  cap: CapListItem
-): Exclude<PasteSeedKind, "unknown"> | null {
-  const kinds = capPasteKinds(cap);
-  if (kinds.has("ip")) return "ip";
-  if (kinds.has("host")) return "host";
-  if (kinds.has("email")) return "email";
-  if (kinds.has("handle")) return "handle";
-  if (kinds.has("url")) return "url";
-  if (kinds.has("evidence")) return "evidence";
-  if (kinds.has("hash")) return "hash";
-  return null;
-}
-
 /** Paste kinds a CapMatch seed can satisfy (URL also unlocks host / IP). */
 function pasteCompatibleKinds(paste: PasteDetectResult): Set<PasteSeedKind> {
   if (paste.kind !== "url") return new Set([paste.kind]);
@@ -198,46 +197,46 @@ export interface CapMatchFilters {
   paste: PasteDetectResult | null;
 }
 
-/** Filter + rank Caps for CapMatch / Jobs launcher. */
-export function matchCaps(
-  caps: readonly CapListItem[],
-  filters: CapMatchFilters
+function capMatchesPaste(
+  cap: CapListItem,
+  compatible: Set<PasteSeedKind>
+): boolean {
+  const kinds = capPasteKinds(cap);
+  if (kinds.size === 0) return false;
+  for (const kind of kinds) {
+    if (compatible.has(kind)) return true;
+  }
+  return false;
+}
+
+function capMatchesFilters(
+  cap: CapListItem,
+  filters: CapMatchFilters,
+  compatible: Set<PasteSeedKind> | null
+): boolean {
+  if (filters.kindFilter && cap.kind !== filters.kindFilter) return false;
+  if (
+    filters.categoryFilter &&
+    capCategory(cap.id) !== filters.categoryFilter
+  ) {
+    return false;
+  }
+  if (filters.useCaseFilter) {
+    const cases = cap.useCases ?? [];
+    if (!cases.includes(filters.useCaseFilter)) return false;
+  }
+  if (filters.needsKeyOnly && !(cap.flags ?? []).includes("needs_key")) {
+    return false;
+  }
+  if (compatible) return capMatchesPaste(cap, compatible);
+  return true;
+}
+
+function sortCapsByPasteKind(
+  caps: CapListItem[],
+  pasteKind: PasteSeedKind
 ): CapListItem[] {
-  const pasteKind = filters.paste?.kind;
-  const compatible =
-    filters.paste && pasteKind !== undefined && pasteKind !== "unknown"
-      ? pasteCompatibleKinds(filters.paste)
-      : null;
-
-  const filtered = caps.filter((c) => {
-    if (filters.kindFilter && c.kind !== filters.kindFilter) return false;
-    if (
-      filters.categoryFilter &&
-      capCategory(c.id) !== filters.categoryFilter
-    ) {
-      return false;
-    }
-    if (filters.useCaseFilter) {
-      const cases = c.useCases ?? [];
-      if (!cases.includes(filters.useCaseFilter)) return false;
-    }
-    if (filters.needsKeyOnly && !(c.flags ?? []).includes("needs_key")) {
-      return false;
-    }
-    if (compatible) {
-      const kinds = capPasteKinds(c);
-      if (kinds.size === 0) return false;
-      for (const kind of kinds) {
-        if (compatible.has(kind)) return true;
-      }
-      return false;
-    }
-    return true;
-  });
-
-  if (!pasteKind || pasteKind === "unknown") return filtered;
-
-  return [...filtered].sort((a, b) => {
+  return [...caps].sort((a, b) => {
     const aMatch = capPasteKinds(a).has(pasteKind) ? 0 : 1;
     const bMatch = capPasteKinds(b).has(pasteKind) ? 0 : 1;
     if (aMatch !== bMatch) return aMatch - bMatch;
@@ -245,12 +244,32 @@ export function matchCaps(
   });
 }
 
+/** Filter + rank Caps for CapMatch / Jobs launcher. */
+export function matchCaps(
+  caps: readonly CapListItem[],
+  filters: CapMatchFilters
+): CapListItem[] {
+  const pasteKind = filters.paste?.kind;
+  const compatible =
+    filters.paste && pasteKind !== "unknown"
+      ? pasteCompatibleKinds(filters.paste)
+      : null;
+
+  const filtered = caps.filter((cap) =>
+    capMatchesFilters(cap, filters, compatible)
+  );
+
+  if (!pasteKind || pasteKind === "unknown") return filtered;
+
+  return sortCapsByPasteKind(filtered, pasteKind);
+}
+
 /** Distinct categories present in the catalog, labeled. */
 export function categoryFilterOptions(
   caps: readonly CapListItem[]
 ): { value: string; label: string }[] {
   const cats = [...new Set(caps.map((c) => capCategory(c.id)).filter(Boolean))];
-  cats.sort();
+  cats.sort((a, b) => a.localeCompare(b));
   return [
     { value: "", label: "All categories" },
     ...cats.map((c) => ({

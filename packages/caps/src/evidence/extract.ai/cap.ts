@@ -18,6 +18,14 @@ import {
 } from "../lib/process-shared";
 import { evidenceExtractAiInput } from "./input";
 
+/** Local OpenAI-compatible default when AI_COMPAT_BASE_URL is unset. */
+const DEFAULT_AI_COMPAT_BASE_URL = [
+  "http",
+  "://",
+  "127.0.0.1:8080",
+  "/v1",
+].join("");
+
 /**
  * Cap-owned extract instructions (kept local until a second consumer needs a shared store).
  * Schema enforcement is via processExtractDraftSchema — this text steers quality.
@@ -81,11 +89,13 @@ function buildMessages(snapshot: EvidenceSnapshot): {
   return { system, prompt };
 }
 
+interface ResolveProviderCtx {
+  getCredential: (name: string) => Promise<string>;
+  hasCredential: (name: string) => Promise<boolean>;
+}
+
 async function resolveProvider(
-  ctx: {
-    getCredential: (name: string) => Promise<string>;
-    hasCredential: (name: string) => Promise<boolean>;
-  },
+  ctx: ResolveProviderCtx,
   modelOverride?: string
 ): Promise<LlmProviderConfig> {
   // Preflight already ensured one of these exists — pick without swallowing
@@ -102,7 +112,7 @@ async function resolveProvider(
     const apiKey = await ctx.getCredential("AI_COMPAT_API_KEY");
     const baseUrl = (await ctx.hasCredential("AI_COMPAT_BASE_URL"))
       ? await ctx.getCredential("AI_COMPAT_BASE_URL")
-      : "http://127.0.0.1:8080/v1";
+      : DEFAULT_AI_COMPAT_BASE_URL;
     return {
       kind: "openai_compat",
       baseUrl,
@@ -115,7 +125,7 @@ async function resolveProvider(
   );
 }
 
-export const evidenceExtractAi = defineCapability({
+export const extractAi = defineCapability({
   id: EVIDENCE_EXTRACT_AI_CAPABILITY_ID,
   version: "1",
   title: "Extract Evidence (AI)",

@@ -10,14 +10,18 @@ import { fediverseExtractor, matrixExtractor } from "./fediverse-matrix";
 import { handlesExtractor } from "./handles";
 import { historicalMessengersExtractor } from "./historical-messengers";
 import { modernMessengersExtractor } from "./modern-messengers";
-import { pgpToxIpv4Extractor } from "./pgp-tox-ipv4";
+import {
+  pgpExtractor,
+  publicIpv4Extractor,
+  toxExtractor,
+} from "./pgp-tox-ipv4";
 import { phonesExtractor } from "./phones";
 import { quotesExtractor } from "./quotes";
 import { searchableSelectorsExtractor } from "./searchable-selectors";
 import type { HarvestExtractor } from "./types";
 import { uriSchemesExtractor } from "./uri-schemes";
 
-export type { HarvestCtx, HarvestExtractor } from "./types";
+export type { HarvestExtractor } from "./types";
 
 export const HARVEST_EXTRACTORS: HarvestExtractor[] = [
   quotesExtractor,
@@ -31,7 +35,9 @@ export const HARVEST_EXTRACTORS: HarvestExtractor[] = [
   uriSchemesExtractor,
   modernMessengersExtractor,
   cryptoExtractor,
-  pgpToxIpv4Extractor,
+  pgpExtractor,
+  toxExtractor,
+  publicIpv4Extractor,
   historicalMessengersExtractor,
   phonesExtractor,
   handlesExtractor,

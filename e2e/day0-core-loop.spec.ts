@@ -11,6 +11,7 @@ test.describe("Day-0 core loop", () => {
   test("signs in, dumps evidence, harvests, accepts into the dossier", async ({
     page,
   }) => {
+    test.setTimeout(180_000);
     const { stamp, caseId } = await setupAuthenticatedCase(page, "Day0");
 
     const entity = await apiJson(
@@ -51,7 +52,24 @@ test.describe("Day-0 core loop", () => {
       .click();
     await page.getByRole("button", { name: /^harvest$/i }).click();
 
+    await expect
+      .poll(
+        async () => {
+          const proposals = await apiJson(
+            page,
+            "GET",
+            `/cases/${caseId}/proposals`,
+            undefined,
+            e2eApiParsers.proposalList
+          );
+          return proposals.filter((row) => row.status === "pending").length;
+        },
+        { timeout: 120_000 }
+      )
+      .toBeGreaterThan(0);
+
     await page.goto("/inbox");
+    await page.waitForSelector("html[data-hydrated=true]", { timeout: 30_000 });
     const accept = page.getByRole("button", { name: /^accept$/i });
     await expect(accept).toBeVisible({ timeout: 90_000 });
     await accept.click();

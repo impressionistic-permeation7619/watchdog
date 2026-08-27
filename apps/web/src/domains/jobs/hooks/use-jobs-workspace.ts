@@ -14,11 +14,14 @@ import {
   startPlaybookFn,
 } from "@/domains/jobs/jobs.functions";
 import { buildCapRunInput } from "@/domains/jobs/lib/cap-run-input";
-import { jobDetailQuery, jobsKeys } from "@/domains/jobs/queries";
+import {
+  jobDetailQuery,
+  jobsKeys,
+  refreshJobsAfterMutation,
+} from "@/domains/jobs/queries";
 import type { CapListItem } from "@/domains/jobs/types";
 import { errMessage } from "@/lib/utils";
 import { useLiveEvents } from "@/shared/hooks/use-live-events";
-import { invalidateAfterJobMutation } from "@/shared/lib/query-invalidation";
 import { resolveQueueSelection } from "@/shared/lib/queue-selection";
 
 const STUCK_JOB_MS = 60_000;
@@ -113,7 +116,7 @@ export function useJobsWorkspace(
 
   useLiveEvents(caseId, (event) => {
     if (event.type === "job_update") {
-      void invalidateAfterJobMutation(queryClient, caseId);
+      void refreshJobsAfterMutation(queryClient, caseId);
     }
   });
 
@@ -139,9 +142,7 @@ export function useJobsWorkspace(
     onSuccess: async (job) => {
       cacheStartedJobs(queryClient, caseId, [job]);
       onJobIdChange(job.id);
-      await invalidateAfterJobMutation(queryClient, caseId, {
-        withRetry: true,
-      });
+      await refreshJobsAfterMutation(queryClient, caseId);
     },
     onError: (e) => {
       setError(errMessage(e, "Couldn't start job"));
@@ -181,9 +182,7 @@ export function useJobsWorkspace(
     onSuccess: async (result) => {
       cacheStartedJobs(queryClient, caseId, result.jobs);
       onJobIdChange(result.jobs[0]?.id ?? null);
-      await invalidateAfterJobMutation(queryClient, caseId, {
-        withRetry: true,
-      });
+      await refreshJobsAfterMutation(queryClient, caseId);
     },
     onError: (e) => {
       setError(errMessage(e, "Couldn't start playbook"));
@@ -196,7 +195,7 @@ export function useJobsWorkspace(
       return cancelJobFn({ data: { caseId, jobId: selectedId } });
     },
     onSuccess: async () => {
-      await invalidateAfterJobMutation(queryClient, caseId);
+      await refreshJobsAfterMutation(queryClient, caseId);
     },
     onError: (e) => {
       setError(errMessage(e, "Cancel failed"));
@@ -212,7 +211,7 @@ export function useJobsWorkspace(
       });
     },
     onSuccess: async () => {
-      await invalidateAfterJobMutation(queryClient, caseId);
+      await refreshJobsAfterMutation(queryClient, caseId);
     },
     onError: (e) => {
       setError(errMessage(e, "Couldn't cancel playbook"));

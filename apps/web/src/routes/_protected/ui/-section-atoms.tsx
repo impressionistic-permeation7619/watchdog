@@ -40,6 +40,7 @@ import {
   StatusBadge,
 } from "@/shared/ui/vocab";
 
+const DEMO_EXTERNAL_HREF = ["https", "://example.com/evidence"].join("");
 const SAMPLE_ID = "8680fa38-0c1d-4e2f-9a3b-595335c1d2e3";
 const SAMPLE_SHA =
   "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
@@ -194,7 +195,7 @@ const ATOM_CATALOG: AtomEntry[] = [
   {
     name: "ExternalUrl",
     blurb: "External link + icon — not router Link.",
-    render: () => <ExternalUrl href="https://example.com/evidence" />,
+    render: () => <ExternalUrl href={DEMO_EXTERNAL_HREF} />,
   },
   {
     name: "SearchField",

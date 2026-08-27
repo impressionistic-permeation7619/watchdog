@@ -1,8 +1,9 @@
 import type { JobArtifact, JobHandoff } from "@watchdog/db";
 import type { PatchOp } from "@watchdog/schemas";
 
-import { tryParsePatch } from "../../graph/patch";
+import { tryParsePatch } from "../../graph/patch/patch";
 import { readArtifactBytes } from "../../infra/blob";
+import { errorMessage } from "../../infra/domain-error";
 import { loadCapReport } from "../load-cap-report";
 import type { CollectRuntime } from "./collect";
 import type { JobLog } from "./helpers";
@@ -17,6 +18,11 @@ export interface InterpretStageResult {
   handoff?: JobHandoff;
 }
 
+interface InterpretExistingState {
+  proposalId: string | null;
+  resultSummary: string | null;
+}
+
 /**
  * Load Cap report and run pure interpret → parse PatchOp[].
  * Handoff is computed here but persisted on the success write.
@@ -25,10 +31,7 @@ export async function interpretStage(
   state: PreflightState,
   artifacts: JobArtifact[],
   runtime: CollectRuntime,
-  existing: {
-    proposalId: string | null;
-    resultSummary: string | null;
-  }
+  existing: InterpretExistingState
 ): Promise<InterpretStageResult> {
   let resultSummary = existing.resultSummary;
   let markSourceProcessed: boolean | undefined;
@@ -85,7 +88,7 @@ export async function interpretStage(
       interpretError = `interpret patch invalid: ${parsedPatch.error}`;
     }
   } catch (error) {
-    interpretError = error instanceof Error ? error.message : String(error);
+    interpretError = errorMessage(error);
   }
 
   return {

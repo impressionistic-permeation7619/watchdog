@@ -122,6 +122,7 @@ describe("vault", () => {
     expect(slot.configured).toBe(true);
     expect(JSON.stringify(slot)).not.toContain("slot-secret");
 
-    expect(await deleteCredential(TEST_ACTOR_ID, "WHOIS_API_KEY")).toBe(true);
+    await deleteCredential(TEST_ACTOR_ID, "WHOIS_API_KEY");
+    expect(await hasCredential(TEST_ACTOR_ID, "WHOIS_API_KEY")).toBe(false);
   });
 });

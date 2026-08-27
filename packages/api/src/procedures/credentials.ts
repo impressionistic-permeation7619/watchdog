@@ -1,4 +1,3 @@
-import { ORPCError } from "@orpc/server";
 import { z } from "zod";
 
 import {
@@ -7,7 +6,7 @@ import {
   putCredentialSlot,
 } from "@watchdog/core";
 
-import { mapDomainError } from "../map-domain-error";
+import { withDomainError } from "../map-domain-error";
 import { authed } from "../os";
 import { credentialSlotSchema } from "../schemas";
 
@@ -19,8 +18,10 @@ export const list = authed
     tags: ["credentials"],
   })
   .output(z.array(credentialSlotSchema))
-  .handler(async ({ context }) =>
-    mapDomainError(async () => listCredentialSlots(context.actor.userId))
+  .handler(
+    withDomainError(async ({ context }) =>
+      listCredentialSlots(context.actor.userId)
+    )
   );
 
 export const put = authed
@@ -38,8 +39,8 @@ export const put = authed
     })
   )
   .output(credentialSlotSchema)
-  .handler(async ({ input, context }) =>
-    mapDomainError(async () =>
+  .handler(
+    withDomainError(async ({ input, context }) =>
       putCredentialSlot({
         userId: context.actor.userId,
         name: input.name,
@@ -58,12 +59,9 @@ export const remove = authed
   })
   .input(z.object({ name: z.string().min(1) }))
   .output(z.object({ ok: z.literal(true) }))
-  .handler(async ({ input, context }) =>
-    mapDomainError(async () => {
-      const ok = await deleteCredential(context.actor.userId, input.name);
-      if (!ok) {
-        throw new ORPCError("NOT_FOUND", { message: "Credential not found" });
-      }
+  .handler(
+    withDomainError(async ({ input, context }) => {
+      await deleteCredential(context.actor.userId, input.name);
       return { ok: true as const };
     })
   );

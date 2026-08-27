@@ -1,8 +1,8 @@
 import {
   checkPlaybookAvailability,
   formatPlanError,
-  getCapability,
-  getPlaybook,
+  requireCapability,
+  requirePlaybook,
   planPlaybook,
   playbookCapabilityIds,
   seedValuesToJson,
@@ -15,8 +15,9 @@ import {
   assertCaseExists,
   assertEntityInCase,
   assertEvidenceInCase,
-} from "../graph/guards";
-import { DomainError } from "../infra/domain-error";
+} from "../graph/patch/guards";
+import { DomainError, errorMessage } from "../infra/domain-error";
+import { logProcess } from "../infra/process-log";
 import { hasCredential } from "../infra/vault";
 import { enqueueCapJob } from "./boss";
 import { toJobRecord, type JobRecord } from "./start-job";
@@ -34,62 +35,109 @@ export interface PlaybookRunResult {
   jobs: JobRecord[];
 }
 
-/** Plan → insert run + step-0 Job → enqueue. */
-export async function runPlaybook(
-  input: RunPlaybookInput
-): Promise<PlaybookRunResult> {
-  await assertCaseExists(input.caseId);
-  const playbook = getPlaybook(input.playbookId);
-  const { seed } = input;
+function loadPlaybook(playbookId: string) {
+  try {
+    return requirePlaybook(playbookId);
+  } catch (error) {
+    throw new DomainError("not_found", errorMessage(error));
+  }
+}
 
+async function assertSeedAnchorsInCase(
+  caseId: string,
+  seed: SeedValues
+): Promise<void> {
   if (seed.entityId !== undefined && seed.entityId !== "") {
-    await assertEntityInCase(input.caseId, seed.entityId);
+    await assertEntityInCase(caseId, seed.entityId);
   }
   if (seed.evidenceId !== undefined && seed.evidenceId !== "") {
-    await assertEvidenceInCase(input.caseId, seed.evidenceId);
+    await assertEvidenceInCase(caseId, seed.evidenceId);
   }
+}
 
-  const plan = planPlaybook(playbook, seed);
-  if ("kind" in plan) {
-    throw new Error(formatPlanError(plan));
-  }
-
-  const descriptor = toPlaybookDescriptor(playbook);
-  const thirdPartyCapabilityId = playbookCapabilityIds(playbook).find(
-    (id) => (getCapability(id).egress ?? "none") === "third_party"
-  );
-
+function credentialNamesFromDescriptor(
+  descriptor: ReturnType<typeof toPlaybookDescriptor>
+): Set<string> {
   const credNames = new Set<string>();
   for (const spec of descriptor.requires.credentials) {
     if ("anyOf" in spec) for (const n of spec.anyOf) credNames.add(n);
     else credNames.add(spec.name);
   }
+  return credNames;
+}
+
+async function presentCredentialNames(
+  actorId: string,
+  credNames: Iterable<string>
+): Promise<Set<string>> {
   const present = new Set<string>();
   // Independent credential lookups — safe to check concurrently.
   await Promise.all(
     [...credNames].map(async (name) => {
-      if (await hasCredential(input.actorId, name)) present.add(name);
+      if (await hasCredential(actorId, name)) present.add(name);
     })
   );
+  return present;
+}
 
-  const caseRow = await casesRepo.getById(db, input.caseId);
-  const allowThirdPartyEgress = caseRow?.allowThirdPartyEgress ?? false;
+function thirdPartyCapabilityId(playbook: ReturnType<typeof requirePlaybook>) {
+  return playbookCapabilityIds(playbook).find(
+    (id) => (requireCapability(id).egress ?? "none") === "third_party"
+  );
+}
 
+function ensurePlaybookRunnable(
+  descriptor: ReturnType<typeof toPlaybookDescriptor>,
+  present: Set<string>,
+  allowThirdPartyEgress: boolean,
+  playbook: ReturnType<typeof requirePlaybook>
+): void {
   const availability = checkPlaybookAvailability(descriptor.requires, {
     hasCredential: (name) => present.has(name),
     allowThirdPartyEgress,
-    thirdPartyCapabilityId,
+    thirdPartyCapabilityId: thirdPartyCapabilityId(playbook),
   });
-  if (!availability.ok) {
-    if (availability.kind === "egress_blocked") {
-      throw new Error(
-        `Case does not permit third-party egress — enable it in Case settings before running ${availability.capabilityId}`
-      );
-    }
-    throw new Error(
-      `Missing credential — set one of ${availability.names.join(" | ")} in Settings before running this playbook`
+  if (availability.ok) return;
+  if (availability.kind === "egress_blocked") {
+    throw new DomainError(
+      "forbidden",
+      `Case does not permit third-party egress — enable it in Case settings before running ${availability.capabilityId}`
     );
   }
+  throw new DomainError(
+    "forbidden",
+    `Missing credential — set one of ${availability.names.join(" | ")} in Settings before running this playbook`
+  );
+}
+
+/** Plan → insert run + step-0 Job → enqueue. */
+export async function runPlaybook(
+  input: RunPlaybookInput
+): Promise<PlaybookRunResult> {
+  await assertCaseExists(input.caseId);
+  const playbook = loadPlaybook(input.playbookId);
+  const { seed } = input;
+
+  await assertSeedAnchorsInCase(input.caseId, seed);
+
+  const plan = planPlaybook(playbook, seed);
+  if ("kind" in plan) {
+    throw new DomainError("invalid", formatPlanError(plan));
+  }
+
+  const descriptor = toPlaybookDescriptor(playbook);
+  const present = await presentCredentialNames(
+    input.actorId,
+    credentialNamesFromDescriptor(descriptor)
+  );
+
+  const caseRow = await casesRepo.getById(db, input.caseId);
+  ensurePlaybookRunnable(
+    descriptor,
+    present,
+    caseRow?.allowThirdPartyEgress ?? false,
+    playbook
+  );
 
   const seedJson = seedValuesToJson(seed);
 
@@ -101,7 +149,9 @@ export async function runPlaybook(
       status: "running",
       actorId: input.actorId,
     });
-    if (!run) throw new Error("Failed to create playbook run");
+    if (!run) {
+      throw new DomainError("invalid", "Failed to create playbook run");
+    }
 
     const row = await jobsRepo.create(tx, {
       caseId: input.caseId,
@@ -115,7 +165,8 @@ export async function runPlaybook(
       playbookFanIndex: 0,
     });
     if (!row) {
-      throw new Error(
+      throw new DomainError(
+        "invalid",
         `Failed to create Job for step ${plan.step.playbookStep}`
       );
     }
@@ -127,7 +178,9 @@ export async function runPlaybook(
   await Promise.all(
     result.jobRows
       .filter((row) => row.status === "queued")
-      .map(async (row) => enqueueCapJob(row.id, row.capabilityId))
+      .map(async (row) => {
+        await enqueueCapJob(row.id, row.capabilityId);
+      })
   );
 
   return {
@@ -139,13 +192,23 @@ export async function runPlaybook(
   };
 }
 
+interface CancelPlaybookRunOpts {
+  actorId?: string;
+}
+
+interface CancelPlaybookRunResult {
+  playbookRunId: string;
+  cancelledJobIds: string[];
+}
+
 export async function cancelPlaybookRun(
   caseId: string,
-  playbookRunId: string
-): Promise<{ playbookRunId: string; cancelledJobIds: string[] }> {
+  playbookRunId: string,
+  opts?: CancelPlaybookRunOpts
+): Promise<CancelPlaybookRunResult> {
   await assertCaseExists(caseId);
   const now = new Date();
-  return db.transaction(async (tx) => {
+  const result = await db.transaction(async (tx) => {
     const run = await playbookRunsRepo.lock(tx, playbookRunId);
     if (!run || run.caseId !== caseId) {
       throw new DomainError("not_found", "Playbook run not found");
@@ -174,4 +237,13 @@ export async function cancelPlaybookRun(
     );
     return { playbookRunId, cancelledJobIds };
   });
+  if (opts?.actorId) {
+    logProcess("playbook.cancel", "Playbook run cancelled", {
+      caseId,
+      playbookRunId,
+      actorId: opts.actorId,
+      cancelledJobCount: result.cancelledJobIds.length,
+    });
+  }
+  return result;
 }

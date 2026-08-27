@@ -9,6 +9,7 @@
 import { mkdir, rename, rm, writeFile } from "node:fs/promises";
 import nodePath from "node:path";
 
+import type { EvidenceRow } from "@watchdog/db";
 import { env } from "@watchdog/env/server";
 
 import { readArtifactBytes } from "./blob";
@@ -30,7 +31,7 @@ async function write(
   await writeFile(path, content);
 }
 
-function safeFilename(label: string): string {
+export function safeFilename(label: string): string {
   return (
     label
       // oxlint-disable-next-line eslint/no-control-regex -- intentionally strips filesystem-illegal control chars
@@ -62,9 +63,68 @@ function evidenceExt(mime: string | null, label: string | null): string {
   return map[base] ?? ".bin";
 }
 
-/**
- * Write (or overwrite) a single entity's markdown file.
- */
+interface EvidenceExportCounts {
+  included: number;
+  skipped: number;
+}
+
+async function writeUriEvidenceFile(
+  caseId: string,
+  evidenceDir: string,
+  ev: EvidenceRow
+): Promise<"included" | "skipped"> {
+  const prefix = ev.id.slice(0, 8);
+  const labelBase = safeFilename(ev.label ?? ev.sourceUrl ?? ev.id.slice(0, 8));
+  if (!ev.uri) return "skipped";
+  try {
+    const bytes = await readArtifactBytes(ev.uri);
+    const ext = evidenceExt(ev.mime, ev.label);
+    const filename = `${prefix}--${labelBase}${ext}`;
+    await write(nodePath.join(evidenceDir, filename), bytes);
+    return "included";
+  } catch (error) {
+    logSwallowed("export-sync.evidence_skip", error, {
+      caseId,
+      evidenceId: ev.id,
+    });
+    return "skipped";
+  }
+}
+
+async function writeInlineEvidenceFile(
+  evidenceDir: string,
+  ev: EvidenceRow
+): Promise<void> {
+  const prefix = ev.id.slice(0, 8);
+  const labelBase = safeFilename(ev.label ?? ev.sourceUrl ?? ev.id.slice(0, 8));
+  const filename = `${prefix}--${labelBase}.txt`;
+  if (ev.text === null || ev.text === undefined) return;
+  await write(nodePath.join(evidenceDir, filename), ev.text);
+}
+
+async function writeCaseEvidenceFiles(
+  caseId: string,
+  evidenceDir: string,
+  evidenceRows: EvidenceRow[]
+): Promise<EvidenceExportCounts> {
+  const counts: EvidenceExportCounts = { included: 0, skipped: 0 };
+  await Promise.all(
+    evidenceRows.map(async (ev) => {
+      if (ev.uri !== null) {
+        const outcome = await writeUriEvidenceFile(caseId, evidenceDir, ev);
+        if (outcome === "included") counts.included += 1;
+        else counts.skipped += 1;
+        return;
+      }
+      if (ev.text !== null && ev.text !== "" && ev.kind !== "attestation") {
+        await writeInlineEvidenceFile(evidenceDir, ev);
+        counts.included += 1;
+      }
+    })
+  );
+  return counts;
+}
+
 export async function writeEntityExport(entityId: string): Promise<void> {
   const exported = await renderEntityMarkdown(entityId);
   if (!exported) return;
@@ -106,44 +166,8 @@ export async function writeCaseExport(caseId: string): Promise<void> {
   const evidenceDir = nodePath.join(root, "evidence");
   await mkdir(evidenceDir, { recursive: true });
 
-  let evidenceIncluded = 0;
-  let evidenceSkipped = 0;
-
-  await Promise.all(
-    evidenceRows.map(async (ev) => {
-      const prefix = ev.id.slice(0, 8);
-      const labelBase = safeFilename(
-        ev.label ?? ev.sourceUrl ?? ev.id.slice(0, 8)
-      );
-
-      if (ev.uri !== null) {
-        // File/url_archive — fetch bytes from MinIO
-        try {
-          const bytes = await readArtifactBytes(ev.uri);
-          const ext = evidenceExt(ev.mime, ev.label);
-          const filename = `${prefix}--${labelBase}${ext}`;
-          await write(nodePath.join(evidenceDir, filename), bytes);
-          evidenceIncluded += 1;
-        } catch (error) {
-          evidenceSkipped += 1;
-          logSwallowed("export-sync.evidence_skip", error, {
-            caseId,
-            evidenceId: ev.id,
-          });
-        }
-      } else if (
-        ev.text !== null &&
-        ev.text !== "" &&
-        ev.kind !== "attestation"
-      ) {
-        // Text evidence (non-attestation) — write inline
-        const filename = `${prefix}--${labelBase}.txt`;
-        await write(nodePath.join(evidenceDir, filename), ev.text);
-        evidenceIncluded += 1;
-      }
-      // attestation text-only items are written to evidence/attestations.md via mdFiles
-    })
-  );
+  const { included: evidenceIncluded, skipped: evidenceSkipped } =
+    await writeCaseEvidenceFiles(caseId, evidenceDir, evidenceRows);
 
   if (evidenceSkipped > 0) {
     logProcess("export-sync", "evidence blob skips during case export", {

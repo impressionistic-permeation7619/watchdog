@@ -3,7 +3,7 @@ import type { EntityKind } from "@watchdog/schemas";
 
 import { DomainError } from "../infra/domain-error";
 import { notifyEntityChanged } from "../infra/events";
-import { assertCaseExists } from "./guards";
+import { assertCaseExists } from "./patch/guards";
 import { seedDefaultQuestions } from "./questions";
 
 export interface EntityRecord {

@@ -9,7 +9,7 @@ import {
   updateCase,
 } from "@watchdog/core";
 
-import { mapDomainError } from "../map-domain-error";
+import { withDomainError } from "../map-domain-error";
 import { authed } from "../os";
 import {
   caseSchema,
@@ -25,7 +25,7 @@ export const list = authed
     tags: ["cases"],
   })
   .output(z.array(caseSchema))
-  .handler(async () => mapDomainError(async () => listCases()));
+  .handler(withDomainError(async () => listCases()));
 
 export const get = authed
   .route({
@@ -36,11 +36,13 @@ export const get = authed
   })
   .input(z.object({ caseId: z.uuid() }))
   .output(caseSchema)
-  .handler(async ({ input }) => {
-    const row = await mapDomainError(async () => getCaseById(input.caseId));
-    if (!row) throw new ORPCError("NOT_FOUND", { message: "Case not found" });
-    return row;
-  });
+  .handler(
+    withDomainError(async ({ input }) => {
+      const row = await getCaseById(input.caseId);
+      if (!row) throw new ORPCError("NOT_FOUND", { message: "Case not found" });
+      return row;
+    })
+  );
 
 export const create = authed
   .route({
@@ -52,7 +54,7 @@ export const create = authed
   })
   .input(createCaseInputSchema)
   .output(caseSchema)
-  .handler(async ({ input }) => mapDomainError(async () => createCase(input)));
+  .handler(withDomainError(async ({ input }) => createCase(input)));
 
 export const update = authed
   .route({
@@ -64,8 +66,8 @@ export const update = authed
   })
   .input(updateCaseInputSchema)
   .output(caseSchema)
-  .handler(async ({ input }) =>
-    mapDomainError(async () =>
+  .handler(
+    withDomainError(async ({ input }) =>
       updateCase({
         id: input.caseId,
         ...(input.name === undefined ? {} : { name: input.name }),
@@ -88,9 +90,9 @@ export const remove = authed
   })
   .input(z.object({ caseId: z.uuid() }))
   .output(z.object({ ok: z.literal(true) }))
-  .handler(async ({ input }) =>
-    mapDomainError(async () => {
-      await deleteCase(input.caseId);
+  .handler(
+    withDomainError(async ({ input, context }) => {
+      await deleteCase(input.caseId, { actorId: context.actor.userId });
       return { ok: true as const };
     })
   );

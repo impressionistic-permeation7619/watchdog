@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { CONTROL_SHELL } from "@/shared/ui/control-chrome";
+import { CONTROL_HEIGHT } from "@/shared/ui/control-chrome";
 import type { FieldSelectOption } from "@/shared/ui/field-select";
 import {
   Combobox,
@@ -95,7 +95,7 @@ export function FieldCombobox({
         aria-label={ariaLabel}
         placeholder={placeholder}
         className={cn(
-          CONTROL_SHELL,
+          CONTROL_HEIGHT,
           "w-full shrink-0 [&_[data-slot=input-group-control]]:text-xs",
           className
         )}

@@ -115,10 +115,10 @@ The `_legacy-*` trees that record this history are untracked and live outside th
 
 ## See also
 
-| Doc | Owns |
-| --- | --- |
-| [`ROADMAP.md`](../ROADMAP.md) | Phases, backlog, maturity |
-| **This file** | Nouns, hard bets |
-| [`UX.md`](UX.md) | IA, flows, experience debt |
-| [`apps/web/docs/UI.md`](../apps/web/docs/UI.md) | Design system / chrome |
-| [`README.md`](README.md) | Platform docs index |
+| Doc                                             | Owns                       |
+| ----------------------------------------------- | -------------------------- |
+| [`ROADMAP.md`](../ROADMAP.md)                   | Phases, backlog, maturity  |
+| **This file**                                   | Nouns, hard bets           |
+| [`UX.md`](UX.md)                                | IA, flows, experience debt |
+| [`apps/web/docs/UI.md`](../apps/web/docs/UI.md) | Design system / chrome     |
+| [`README.md`](README.md)                        | Platform docs index        |

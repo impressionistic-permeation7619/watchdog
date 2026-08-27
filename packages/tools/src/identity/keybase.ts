@@ -2,6 +2,9 @@ import { isIP } from "node:net";
 
 import { z } from "zod";
 
+import { parseToolsError, validationToolsError } from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
+import { fetchJsonObject } from "../http/fetch-json";
 import { asString, isRecord } from "../parse/coerce";
 import { normalizeHost } from "../whois/normalize";
 
@@ -46,7 +49,7 @@ function classifyQuery(raw: string): {
   }
   const username = trimmed.toLowerCase();
   if (!/^[a-z0-9][a-z0-9_]{1,15}$/i.test(username)) {
-    throw new Error(`Invalid Keybase query: ${raw}`);
+    throw validationToolsError(`Invalid Keybase query: ${raw}`);
   }
   return { kind: "username", value: username, param: "usernames" };
 }
@@ -84,28 +87,31 @@ function emptySnap(
   });
 }
 
-function proofsFromUser(user: Record<string, unknown>): KeybaseProof[] {
+function proofFromPresentationRow(
+  platform: string,
+  row: Record<string, unknown>
+): KeybaseProof {
+  return {
+    platform,
+    username: asString(row.nametag) ?? asString(row.username),
+    url: asString(row.proof_url) ?? asString(row.human_url),
+  };
+}
+
+function proofsFromByGroup(byGroup: Record<string, unknown>): KeybaseProof[] {
   const proofs: KeybaseProof[] = [];
-  const proofsSummary = isRecord(user.proofs_summary)
-    ? user.proofs_summary
-    : {};
-  const byGroup = proofsSummary.by_presentation_group;
-  if (isRecord(byGroup)) {
-    for (const [platform, rows] of Object.entries(byGroup)) {
-      if (!Array.isArray(rows)) continue;
-      for (const row of rows) {
-        if (!isRecord(row)) continue;
-        proofs.push({
-          platform,
-          username: asString(row.nametag) ?? asString(row.username),
-          url: asString(row.proof_url) ?? asString(row.human_url),
-        });
-      }
+  for (const [platform, rows] of Object.entries(byGroup)) {
+    if (!Array.isArray(rows)) continue;
+    for (const row of rows) {
+      if (!isRecord(row)) continue;
+      proofs.push(proofFromPresentationRow(platform, row));
     }
   }
-  if (proofs.length > 0) return proofs;
-  const all = proofsSummary.all;
-  if (!Array.isArray(all)) return proofs;
+  return proofs;
+}
+
+function proofsFromAll(all: unknown[]): KeybaseProof[] {
+  const proofs: KeybaseProof[] = [];
   for (const row of all) {
     if (!isRecord(row)) continue;
     const platform = asString(row.proof_type);
@@ -117,6 +123,20 @@ function proofsFromUser(user: Record<string, unknown>): KeybaseProof[] {
     });
   }
   return proofs;
+}
+
+function proofsFromUser(user: Record<string, unknown>): KeybaseProof[] {
+  const proofsSummary = isRecord(user.proofs_summary)
+    ? user.proofs_summary
+    : {};
+  const byGroup = proofsSummary.by_presentation_group;
+  if (isRecord(byGroup)) {
+    const fromGroup = proofsFromByGroup(byGroup);
+    if (fromGroup.length > 0) return fromGroup;
+  }
+  const all = proofsSummary.all;
+  if (!Array.isArray(all)) return [];
+  return proofsFromAll(all);
 }
 
 function pgpFromUser(user: Record<string, unknown>): string[] {
@@ -158,12 +178,12 @@ export function parseKeybaseBody(
   body: unknown
 ): KeybaseLookupSnapshot {
   if (!isRecord(body)) {
-    throw new Error(`Keybase response for ${query} was not a JSON object`);
+    throw parseToolsError("Keybase", query);
   }
   const status = isRecord(body.status) ? body.status : null;
   const code = status?.code;
   if (code !== 0 && code !== "0") {
-    throw new Error(
+    throw validationToolsError(
       `Keybase status ${String(code)} (${asString(status?.name) ?? "?"}) for ${query}`
     );
   }
@@ -204,27 +224,30 @@ export function parseKeybaseBody(
  * GET https://keybase.io/_/api/1.0/user/lookup.json?usernames=|domain=
  * @see https://keybase.io/docs/api/1.0/call/user/lookup
  */
+
+interface KeybaseOptions {
+  userAgent?: string;
+}
 export async function fetchKeybaseLookup(
   queryRaw: string,
   signal: AbortSignal,
-  options?: { userAgent?: string }
+  options?: KeybaseOptions
 ): Promise<KeybaseLookupSnapshot> {
   const { kind, value, param } = classifyQuery(queryRaw);
-  const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+identity.keybase.lookup; OSINT)";
+  const ua = options?.userAgent ?? watchdogUserAgent("identity.keybase.lookup");
 
   const url = new URL("https://keybase.io/_/api/1.0/user/lookup.json");
   url.searchParams.set(param, value);
 
-  const res = await fetch(url, {
-    method: "GET",
+  const body = await fetchJsonObject({
+    url,
+    init: {
+      method: "GET",
+      headers: { Accept: "application/json", "User-Agent": ua },
+    },
     signal,
-    headers: { Accept: "application/json", "User-Agent": ua },
+    service: "Keybase",
+    subject: value,
   });
-  if (!res.ok) {
-    throw new Error(`Keybase API ${res.status} for ${value}`);
-  }
-
-  const body: unknown = await res.json();
   return parseKeybaseBody(value, kind, new Date().toISOString(), body);
 }

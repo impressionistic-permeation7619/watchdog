@@ -3,8 +3,9 @@ import { isIPv4, isIPv6 } from "node:net";
 import { z } from "zod";
 
 import { createTtlCache } from "../cache/ttl-memory";
-import { httpToolsError } from "../errors/tools-error";
 import { normalizeIp } from "../dns/reverse";
+import { httpToolsError } from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
 
 export const fireholLookupSnapshotSchema = z.object({
   ip: z.string().min(1),
@@ -126,14 +127,17 @@ async function fetchCidrList(
  * GET https://iplists.firehol.org/files/firehol_level1.netset
  * @see http://iplists.firehol.org/?ipset=firehol_level1
  */
+
+interface FireholOptions {
+  userAgent?: string;
+}
 export async function fetchFireholLookup(
   ipRaw: string,
   signal: AbortSignal,
-  options?: { userAgent?: string }
+  options?: FireholOptions
 ): Promise<FireholLookupSnapshot> {
   const ip = normalizeIp(ipRaw);
-  const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+threat.firehol.lookup; OSINT)";
+  const ua = options?.userAgent ?? watchdogUserAgent("threat.firehol.lookup");
 
   let found = false;
   const list = await fetchCidrList(signal, ua);

@@ -1,3 +1,5 @@
+import { errorMessage } from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
 import {
   archiveSubmitSnapshotSchema,
   type ArchiveSubmitSnapshot,
@@ -20,14 +22,18 @@ function ensureHttpUrl(raw: string): string {
  * Push a URL to Wayback Save Page Now.
  * Creates a public archive record — Cap must declare third_party egress.
  */
+
+interface SubmitOptions {
+  userAgent?: string;
+}
 export async function submitWaybackSave(
   url: string,
   signal: AbortSignal,
-  options?: { userAgent?: string }
+  options?: SubmitOptions
 ): Promise<ArchiveSubmitSnapshot> {
   const target = ensureHttpUrl(url);
   const saveUrl = `https://web.archive.org/save/${target}`;
-  const ua = options?.userAgent ?? "Watchdog/1.0 (+archive.url.submit; OSINT)";
+  const ua = options?.userAgent ?? watchdogUserAgent("archive.url.submit");
 
   let status: number | null = null;
   let archiveUrl: string | null = null;
@@ -55,7 +61,7 @@ export async function submitWaybackSave(
     detail = `HTTP ${res.status}`;
   } catch (error) {
     accepted = false;
-    detail = error instanceof Error ? error.message : String(error);
+    detail = errorMessage(error);
   }
 
   return archiveSubmitSnapshotSchema.parse({

@@ -1,6 +1,10 @@
-import { Resolver } from "node:dns/promises";
-
 import { z } from "zod";
+
+import {
+  assertNotAborted,
+  withAbortableResolver,
+} from "../dns/abortable-resolver";
+import { validationToolsError } from "../errors/tools-error";
 
 export const emailLookupSnapshotSchema = z.object({
   email: z.string().min(1),
@@ -56,11 +60,11 @@ export function normalizeEmail(raw: string): { email: string; domain: string } {
   const trimmed = raw.trim().toLowerCase();
   const at = trimmed.lastIndexOf("@");
   if (at <= 0 || at === trimmed.length - 1) {
-    throw new Error(`Invalid email: ${raw}`);
+    throw validationToolsError(`Invalid email: ${raw}`);
   }
   const domain = trimmed.slice(at + 1);
   if (!domain.includes(".") || domain.includes(" ")) {
-    throw new Error(`Invalid email domain: ${raw}`);
+    throw validationToolsError(`Invalid email domain: ${raw}`);
   }
   return { email: trimmed, domain };
 }
@@ -88,19 +92,10 @@ export async function fetchEmailLookup(
   signal: AbortSignal
 ): Promise<EmailLookupSnapshot> {
   const { email, domain } = normalizeEmail(emailRaw);
-  const resolver = new Resolver();
-  const onAbort = () => {
-    try {
-      resolver.cancel();
-    } catch {
-      // already cancelled / idle
-    }
-  };
-  if (signal.aborted) {
-    onAbort();
-    throw new Error("Email lookup aborted");
-  }
-  signal.addEventListener("abort", onAbort, { once: true });
+  const { resolver, cleanup } = withAbortableResolver(
+    signal,
+    "Email lookup aborted"
+  );
   try {
     const [mx, txtRoot, txtDmarc] = await Promise.all([
       resolver
@@ -109,7 +104,7 @@ export async function fetchEmailLookup(
       resolver.resolveTxt(domain).catch(() => [] as string[][]),
       resolver.resolveTxt(`_dmarc.${domain}`).catch(() => [] as string[][]),
     ]);
-    if (signal.aborted) throw new Error("Email lookup aborted");
+    assertNotAborted(signal, "Email lookup aborted");
 
     const root = flatTxt(txtRoot);
     const dmarc = flatTxt(txtDmarc);
@@ -130,6 +125,6 @@ export async function fetchEmailLookup(
       dmarcPresent: dmarc.some((r) => /v=DMARC1/i.test(r)),
     });
   } finally {
-    signal.removeEventListener("abort", onAbort);
+    cleanup();
   }
 }

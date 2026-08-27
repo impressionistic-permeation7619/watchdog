@@ -1,6 +1,14 @@
-import { isIP, isIPv4 } from "node:net";
-
 import { z } from "zod";
+
+import { errorMessage } from "../errors/tools-error";
+import {
+  isBlockedUnshortenUrl,
+  isRedirectResponse,
+  isRedirectStatus,
+  resolveRedirectUrl,
+} from "./unshorten-guards";
+
+export { isBlockedUnshortenUrl } from "./unshorten-guards";
 
 export const unshortenSnapshotSchema = z.object({
   url: z.string().min(1),
@@ -18,39 +26,87 @@ export const unshortenSnapshotSchema = z.object({
 
 export type UnshortenSnapshot = z.infer<typeof unshortenSnapshotSchema>;
 
-/** Block private, loopback, link-local, and CGNAT hop URLs. */
-export function isBlockedUnshortenUrl(raw: string): boolean {
-  let hostname: string;
-  try {
-    hostname = new URL(raw).hostname.replace(/^\[/, "").replace(/\]$/, "");
-  } catch {
-    return true;
+type HopResult =
+  | { kind: "redirect"; nextUrl: string; status: number }
+  | { kind: "done"; status: number };
+
+async function fetchHop(
+  current: string,
+  method: "HEAD" | "GET",
+  signal: AbortSignal,
+  userAgent: string
+): Promise<Response> {
+  return fetch(current, {
+    method,
+    redirect: "manual",
+    signal,
+    headers:
+      method === "GET"
+        ? {
+            "User-Agent": userAgent,
+            Accept: "*/*",
+            Range: "bytes=0-0",
+          }
+        : { "User-Agent": userAgent, Accept: "*/*" },
+  });
+}
+
+async function followHop(
+  current: string,
+  signal: AbortSignal,
+  userAgent: string
+): Promise<HopResult> {
+  const head = await fetchHop(current, "HEAD", signal, userAgent);
+  const headLocation = head.headers.get("location");
+  if (isRedirectResponse(head.status, headLocation)) {
+    return {
+      kind: "redirect",
+      nextUrl: resolveRedirectUrl(current, headLocation),
+      status: head.status,
+    };
   }
-  const host = hostname.toLowerCase();
-  if (host === "localhost" || host.endsWith(".localhost")) return true;
-  if (!isIP(host)) return false;
-  if (host === "::1" || host.startsWith("fe80:")) return true;
-  if (host.startsWith("fc") || host.startsWith("fd")) return true;
-  if (!isIPv4(host)) return false;
-  const octets = host.split(".").map(Number);
-  const a = octets[0] ?? 0;
-  const b = octets[1] ?? 0;
-  if (a === 10 || a === 127) return true;
-  if (a === 0 || (a === 169 && b === 254)) return true;
-  if (a === 192 && b === 168) return true;
-  if (a === 172 && b >= 16 && b <= 31) return true;
-  if (a === 100 && b >= 64 && b <= 127) return true;
-  return false;
+  if (head.status !== 405 && head.status !== 501) {
+    return { kind: "done", status: head.status };
+  }
+
+  const get = await fetchHop(current, "GET", signal, userAgent);
+  const getLocation = get.headers.get("location");
+  if (isRedirectResponse(get.status, getLocation)) {
+    return {
+      kind: "redirect",
+      nextUrl: resolveRedirectUrl(current, getLocation),
+      status: get.status,
+    };
+  }
+  return { kind: "done", status: get.status };
+}
+
+function resolvedFinalUrl(
+  chain: { url: string; status: number }[],
+  current: string,
+  fallback: string
+): string {
+  const last = chain.at(-1);
+  const finalUrl = last?.url ?? fallback;
+  if (last && isRedirectStatus(last.status) && current !== last.url) {
+    return current;
+  }
+  return finalUrl;
 }
 
 /**
  * Follow redirects without downloading bodies — records the hop chain.
  * Capacitively capped (maxHops) to avoid loops.
  */
+
+interface UnshortenOptions {
+  userAgent: string;
+  maxHops?: number;
+}
 export async function fetchUnshorten(
   url: string,
   signal: AbortSignal,
-  options: { userAgent: string; maxHops?: number }
+  options: UnshortenOptions
 ): Promise<UnshortenSnapshot> {
   const maxHops = options.maxHops ?? 10;
   const chain: { url: string; status: number }[] = [];
@@ -68,81 +124,26 @@ export async function fetchUnshorten(
     }
     try {
       // oxlint-disable-next-line no-await-in-loop -- redirect chain must follow hops in order
-      const res = await fetch(current, {
-        method: "HEAD",
-        redirect: "manual",
-        signal,
-        headers: { "User-Agent": options.userAgent, Accept: "*/*" },
-      });
-      chain.push({ url: current, status: res.status });
-      const loc = res.headers.get("location");
-      if (
-        loc &&
-        (res.status === 301 ||
-          res.status === 302 ||
-          res.status === 303 ||
-          res.status === 307 ||
-          res.status === 308)
-      ) {
-        current = new URL(loc, current).href;
+      const hop = await followHop(current, signal, options.userAgent);
+      chain.push({ url: current, status: hop.status });
+      if (hop.kind === "redirect") {
+        current = hop.nextUrl;
         continue;
-      }
-      // Some shorteners reject HEAD — try GET with manual redirects.
-      if (res.status === 405 || res.status === 501) {
-        // oxlint-disable-next-line no-await-in-loop -- same redirect chain as above, must stay in hop order
-        const get = await fetch(current, {
-          method: "GET",
-          redirect: "manual",
-          signal,
-          headers: {
-            "User-Agent": options.userAgent,
-            Accept: "*/*",
-            Range: "bytes=0-0",
-          },
-        });
-        chain[chain.length - 1] = { url: current, status: get.status };
-        const getLoc = get.headers.get("location");
-        if (
-          getLoc &&
-          (get.status === 301 ||
-            get.status === 302 ||
-            get.status === 303 ||
-            get.status === 307 ||
-            get.status === 308)
-        ) {
-          current = new URL(getLoc, current).href;
-          continue;
-        }
       }
       break;
     } catch (caughtError) {
-      error =
-        caughtError instanceof Error
-          ? caughtError.message
-          : String(caughtError);
+      error = errorMessage(caughtError);
       break;
     }
   }
 
-  const last = chain.at(-1);
-  const finalUrl = last?.url ?? url;
-  // If last hop redirected into `current` but we broke, prefer current when chain ended mid-redirect
-  const resolvedFinal =
-    last &&
-    (last.status === 301 ||
-      last.status === 302 ||
-      last.status === 303 ||
-      last.status === 307 ||
-      last.status === 308) &&
-    current !== last.url
-      ? current
-      : finalUrl;
+  const finalUrl = resolvedFinalUrl(chain, current, url);
 
   return unshortenSnapshotSchema.parse({
     url,
     queriedAt: new Date().toISOString(),
     chain,
-    finalUrl: resolvedFinal,
+    finalUrl,
     hopCount: Math.max(0, chain.length - 1),
     ...(error ? { error } : {}),
   });

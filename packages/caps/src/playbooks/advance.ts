@@ -11,7 +11,6 @@ import {
   normalizePlaybookStep,
   type PlaybookDef,
   type PlaybookStepDef,
-  type PlanError,
   type PredecessorJob,
   type SeedValues,
 } from "./plan";
@@ -104,5 +103,3 @@ export function decidePlaybookAdvance(
 
   return { kind: "finish" };
 }
-
-export type { PlanError };

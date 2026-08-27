@@ -5,19 +5,20 @@ export async function seedProposal(
   exec: DbExec,
   caseId: string,
   patch: PatchOp[],
-  overrides: Partial<NewProposal> = {}
+  overrides?: Partial<NewProposal>
 ): Promise<{ id: string }> {
+  const overridesResolved = overrides ?? {};
   const created = await proposalsRepo.create(exec, {
     caseId,
-    status: overrides.status ?? "pending",
+    status: overridesResolved.status ?? "pending",
     patch,
-    summary: overrides.summary ?? "test proposal",
-    suppressedCount: overrides.suppressedCount,
-    evidenceIds: overrides.evidenceIds ?? [],
-    jobId: overrides.jobId,
-    agentSourced: overrides.agentSourced ?? false,
-    userOverridden: overrides.userOverridden ?? false,
-    createdBy: overrides.createdBy,
+    summary: overridesResolved.summary ?? "test proposal",
+    suppressedCount: overridesResolved.suppressedCount,
+    evidenceIds: overridesResolved.evidenceIds ?? [],
+    jobId: overridesResolved.jobId,
+    agentSourced: overridesResolved.agentSourced ?? false,
+    userOverridden: overridesResolved.userOverridden ?? false,
+    createdBy: overridesResolved.createdBy,
   });
   if (!created) {
     throw new Error("seedProposal failed");

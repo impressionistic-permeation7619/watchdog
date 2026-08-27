@@ -1,9 +1,13 @@
-import { Resolver } from "node:dns/promises";
 import { isIP } from "node:net";
 
 import { z } from "zod";
 
+import {
+  assertNotAborted,
+  withAbortableResolver,
+} from "../dns/abortable-resolver";
 import { normalizeIp } from "../dns/reverse";
+import { validationToolsError } from "../errors/tools-error";
 
 export const ipLookupSnapshotSchema = z.object({
   ip: z.string().min(1),
@@ -30,7 +34,7 @@ function stripTxtQuotes(s: string): string {
 
 function expandIpv6(ip: string): string {
   const parts = ip.split("::");
-  if (parts.length > 2) throw new Error(`Invalid IPv6: ${ip}`);
+  if (parts.length > 2) throw validationToolsError(`Invalid IPv6: ${ip}`);
   const head =
     parts[0] !== undefined && parts[0] !== "" ? parts[0].split(":") : [];
   const tail =
@@ -41,7 +45,7 @@ function expandIpv6(ip: string): string {
     ...Array.from({ length: Math.max(missing, 0) }, () => "0"),
     ...tail,
   ];
-  if (full.length !== 8) throw new Error(`Invalid IPv6: ${ip}`);
+  if (full.length !== 8) throw validationToolsError(`Invalid IPv6: ${ip}`);
   return full.map((h) => h.padStart(4, "0")).join(":");
 }
 
@@ -60,7 +64,44 @@ function originLookupName(ip: string): string {
     const nibbles = nibbleChars.reverse().join(".");
     return `${nibbles}.origin6.asn.cymru.com`;
   }
-  throw new Error(`Invalid IP address: ${ip}`);
+  throw validationToolsError(`Invalid IP address: ${ip}`);
+}
+
+function parseOriginFields(rawOrigin: string): {
+  asns: string[];
+  bgpPrefix: string | null;
+  countryCode: string | null;
+  registry: string | null;
+  allocated: string | null;
+} {
+  const parts = rawOrigin.split("|").map((p) => p.trim());
+  return {
+    asns: (parts[0] ?? "")
+      .split(/\s+/)
+      .map((a) => a.trim())
+      .filter(Boolean),
+    bgpPrefix: parts[1] || null,
+    countryCode: parts[2] || null,
+    registry: parts[3] || null,
+    allocated: parts[4] || null,
+  };
+}
+
+async function lookupAsName(
+  resolver: ReturnType<typeof withAbortableResolver>["resolver"],
+  primaryAsn: string
+): Promise<{ rawAs: string | null; asName: string | null }> {
+  return resolver
+    .resolveTxt(`AS${primaryAsn}.asn.cymru.com`)
+    .catch(() => [] as string[][])
+    .then((asChunks) => {
+      if (asChunks.length === 0) {
+        return { rawAs: null, asName: null };
+      }
+      const rawAs = stripTxtQuotes(asChunks[0]?.join("") ?? "");
+      const asParts = rawAs.split("|").map((p) => p.trim());
+      return { rawAs, asName: asParts[4] || null };
+    });
 }
 
 /**
@@ -72,32 +113,22 @@ export async function fetchIpLookup(
   signal: AbortSignal
 ): Promise<IpLookupSnapshot> {
   const ip = normalizeIp(ipRaw);
-  const resolver = new Resolver();
-  const onAbort = () => {
-    try {
-      resolver.cancel();
-    } catch {
-      // already cancelled / idle
-    }
-  };
-  if (signal.aborted) {
-    onAbort();
-    throw new Error("IP lookup aborted");
-  }
-  signal.addEventListener("abort", onAbort, { once: true });
+  const { resolver, cleanup } = withAbortableResolver(
+    signal,
+    "IP lookup aborted"
+  );
   try {
     const originName = originLookupName(ip);
     const originChunks = await resolver
       .resolveTxt(originName)
       .catch(() => [] as string[][]);
-    if (signal.aborted) throw new Error("IP lookup aborted");
+    assertNotAborted(signal, "IP lookup aborted");
 
     const rawOrigin =
       originChunks.length > 0
         ? stripTxtQuotes(originChunks[0]?.join("") ?? "")
         : null;
 
-    // "ASN | BGP Prefix | CC | Registry | Allocated"
     let asns: string[] = [];
     let bgpPrefix: string | null = null;
     let countryCode: string | null = null;
@@ -107,27 +138,18 @@ export async function fetchIpLookup(
     let rawAs: string | null = null;
 
     if (rawOrigin) {
-      const parts = rawOrigin.split("|").map((p) => p.trim());
-      asns = (parts[0] ?? "")
-        .split(/\s+/)
-        .map((a) => a.trim())
-        .filter(Boolean);
-      bgpPrefix = parts[1] || null;
-      countryCode = parts[2] || null;
-      registry = parts[3] || null;
-      allocated = parts[4] || null;
+      const originFields = parseOriginFields(rawOrigin);
+      asns = originFields.asns;
+      bgpPrefix = originFields.bgpPrefix;
+      countryCode = originFields.countryCode;
+      registry = originFields.registry;
+      allocated = originFields.allocated;
 
       const primary = asns[0];
       if (primary) {
-        const asChunks = await resolver
-          .resolveTxt(`AS${primary}.asn.cymru.com`)
-          .catch(() => [] as string[][]);
-        if (asChunks.length > 0) {
-          rawAs = stripTxtQuotes(asChunks[0]?.join("") ?? "");
-          // "ASN | CC | Registry | Allocated | AS Name"
-          const asParts = rawAs.split("|").map((p) => p.trim());
-          asName = asParts[4] || null;
-        }
+        const asLookup = await lookupAsName(resolver, primary);
+        rawAs = asLookup.rawAs;
+        asName = asLookup.asName;
       }
     }
 
@@ -146,6 +168,6 @@ export async function fetchIpLookup(
       rawAs,
     });
   } finally {
-    signal.removeEventListener("abort", onAbort);
+    cleanup();
   }
 }

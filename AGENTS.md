@@ -16,6 +16,7 @@ On product nouns, **[`docs/PRODUCT.md`](docs/PRODUCT.md)** wins. On platform/UI 
 | Install / migrate | `pnpm install` · `pnpm db:migrate` |
 | Dev | `pnpm dev:web` · `pnpm dev:worker` |
 | Lint / fix | `pnpm check` · `pnpm fix` |
+| Git hooks | `lefthook install` (auto in `nix develop`) · `lefthook-local.yml` overrides · pre-commit: fix + agents · pre-push: typecheck + web DS |
 | Typecheck / test | `pnpm typecheck` · `pnpm test` · `pnpm test:component` · `pnpm test:integration` · `pnpm test:e2e` |
 | Web DS | `pnpm --filter @watchdog/web ds:check` |
 | Caps / client regen | `pnpm generate:caps` · `pnpm generate:client` |
@@ -61,9 +62,9 @@ Breach data carries its own caveats: treat a hit as evidence that a record exist
 
 ## External References
 
-| Need | File |
-| --- | --- |
-| Platform docs | [`docs/README.md`](docs/README.md) |
-| Web docs | [`apps/web/docs/README.md`](apps/web/docs/README.md) |
-| Roadmap | [`ROADMAP.md`](ROADMAP.md) |
-| Human README | [`README.md`](README.md) |
+| Need          | File                                                 |
+| ------------- | ---------------------------------------------------- |
+| Platform docs | [`docs/README.md`](docs/README.md)                   |
+| Web docs      | [`apps/web/docs/README.md`](apps/web/docs/README.md) |
+| Roadmap       | [`ROADMAP.md`](ROADMAP.md)                           |
+| Human README  | [`README.md`](README.md)                             |

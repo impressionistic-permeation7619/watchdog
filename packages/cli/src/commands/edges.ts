@@ -16,6 +16,7 @@ import {
   dryRunArg,
   entityArg,
   pickDefined,
+  requiredCaseArg,
 } from "../noun";
 
 const LIST_COLUMNS = ["id", "from", "to", "predicate", "confidence"];
@@ -60,12 +61,7 @@ export const edgesCmd = defineNounCommand({
         description: "Create an edge (--user-override required)",
       },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
+        ...requiredCaseArg,
         from: {
           type: "string",
           description: "From entity slug or UUID",
@@ -95,7 +91,7 @@ export const edgesCmd = defineNounCommand({
       },
       run: async ({ args }) => {
         requireUserOverride(args["user-override"]);
-        refuseConfirmed(args.confidence);
+        refuseConfirmed(confidenceTierSchema.parse(args.confidence));
         const fromId = await resolveEntityId(args.case, args.from);
         const toId = await resolveEntityId(args.case, args.to);
         const evidenceIds = parseIdList(args.evidence);
@@ -105,6 +101,7 @@ export const edgesCmd = defineNounCommand({
           toId,
           predicate: edgePredicateSchema.parse(args.predicate),
           confidence: confidenceTierSchema.parse(args.confidence),
+          userOverride: true,
           ...pickDefined({ notes: args.notes, evidenceIds }),
         });
         emit(row);
@@ -116,12 +113,7 @@ export const edgesCmd = defineNounCommand({
         description: "Delete an edge (--user-override required)",
       },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
+        ...requiredCaseArg,
         edge: {
           type: "positional",
           description: "Edge ID",
@@ -139,6 +131,7 @@ export const edgesCmd = defineNounCommand({
         await api().edges.delete({
           caseId: args.case,
           edgeId: args.edge,
+          userOverride: true,
         });
         emitOk({ deleted: true, id: args.edge });
       },

@@ -1,5 +1,7 @@
 import { describe, it, expect } from "vitest";
 
+import { testHttpUrl } from "@watchdog/test-kit";
+
 import type { CapListItem } from "../../types.ts";
 import {
   capCategory,
@@ -102,7 +104,7 @@ describe("cap-match", () => {
     expect(detectPasteSeed("2001:4860:4860::8888").kind).toBe("ip");
     expect(detectPasteSeed("bob@example.com").kind).toBe("email");
     expect(detectPasteSeed("@octocat").kind).toBe("handle");
-    expect(detectPasteSeed("https://example.com/a").kind).toBe("url");
+    expect(detectPasteSeed(testHttpUrl("example.com/a")).kind).toBe("url");
     expect(detectPasteSeed("11111111-1111-4111-8111-111111111111").kind).toBe(
       "evidence"
     );
@@ -177,7 +179,7 @@ describe("cap-match", () => {
       categoryFilter: "",
       useCaseFilter: "",
       needsKeyOnly: false,
-      paste: detectPasteSeed("https://evil.example/path"),
+      paste: detectPasteSeed(testHttpUrl("evil.example/path")),
     });
     const ids = matched.map((c) => c.id);
     expect(ids).toContain("threat.virustotal.lookup");

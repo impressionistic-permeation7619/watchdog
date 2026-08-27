@@ -8,7 +8,7 @@ import type { EntityKind, QuestionStatus } from "@watchdog/schemas";
 
 import { DomainError } from "../infra/domain-error";
 import { notifyEntityChanged } from "../infra/events";
-import { assertEntityInCase } from "./guards";
+import { assertEntityInCase } from "./patch/guards";
 
 export interface QuestionRecord {
   id: string;
@@ -52,9 +52,11 @@ const DEFAULT_QUESTIONS: Partial<Record<EntityKind, readonly string[]>> = {
   ],
 };
 
+interface SeedQuestionEntity { id: string; kind: EntityKind }
+
 export async function seedDefaultQuestions(
   tx: DbExec,
-  row: { id: string; kind: EntityKind }
+  row: SeedQuestionEntity
 ): Promise<void> {
   const texts = DEFAULT_QUESTIONS[row.kind];
   if (!texts) return;

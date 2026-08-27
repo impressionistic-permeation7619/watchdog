@@ -18,7 +18,7 @@
     "@watchdog/cap-sdk": "workspace:*",
     "@watchdog/db": "workspace:*",
     "@watchdog/schemas": "workspace:*",
-    "drizzle-orm": "^0.44.7",
+    "drizzle-orm": "^0.45.2",
     "fast-check": "^4.5.3",
     "msw": "^2.12.10",
     "vitest": "^4.1.10"

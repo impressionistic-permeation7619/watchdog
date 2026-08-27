@@ -45,7 +45,7 @@ function debugEnabled(): boolean {
   return process.env.WD_CLI_DEBUG === "1";
 }
 
-function capHelp(help: string[] | undefined): string[] | undefined {
+function limitHelpLines(help: string[] | undefined): string[] | undefined {
   if (!helpEnabled() || help === undefined || help.length === 0) {
     return undefined;
   }
@@ -112,12 +112,12 @@ export function emitList(input: {
   table?: boolean;
   columns?: string[];
 }): void {
-  const help = capHelp(input.help);
+  const help = limitHelpLines(input.help);
   if (input.table === true) {
     printTable(input.items, input.columns);
     if (help !== undefined) {
       for (const line of help) {
-        console.error(`help: ${line}`);
+        process.stderr.write(`help: ${line}\n`);
       }
     }
     return;
@@ -133,7 +133,7 @@ export function emitList(input: {
 }
 
 export function emitOk(value: Record<string, unknown>, help?: string[]): void {
-  const h = capHelp(help);
+  const h = limitHelpLines(help);
   if (h === undefined) {
     emit({ ok: true, ...value });
     return;
@@ -146,7 +146,7 @@ export function fail(
   message: string,
   opts?: { help?: string[]; status?: number; exitCode?: number }
 ): never {
-  const help = capHelp(opts?.help);
+  const help = limitHelpLines(opts?.help);
   const error: CliErrorBody["error"] = { code, message };
   if (opts?.status !== undefined) {
     error.status = opts.status;
@@ -268,7 +268,9 @@ export function handleCliError(error: unknown): never {
     process.exit(error.exitCode);
   }
   if (debugEnabled()) {
-    console.error(error);
+    process.stderr.write(
+      `${error instanceof Error ? (error.stack ?? error.message) : String(error)}\n`
+    );
   }
   if (isOrpcError(error)) {
     fail(error.code, error.message, {

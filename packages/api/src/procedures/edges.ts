@@ -9,9 +9,9 @@ import {
 } from "@watchdog/core";
 import { confidenceTierSchema, edgePredicateSchema } from "@watchdog/schemas";
 
-import { mapDomainError } from "../map-domain-error";
-import { authed } from "../os";
-import { caseEdgeSchema, edgeSchema } from "../schemas";
+import { withDomainError } from "../map-domain-error";
+import { authed, graphChildWrite } from "../os";
+import { caseEdgeSchema, edgeSchema, userOverrideSchema } from "../schemas";
 
 export const list = authed
   .route({
@@ -27,8 +27,10 @@ export const list = authed
     })
   )
   .output(z.array(edgeSchema))
-  .handler(async ({ input }) =>
-    mapDomainError(async () => listEdgesForEntity(input.caseId, input.entityId))
+  .handler(
+    withDomainError(async ({ input }) =>
+      listEdgesForEntity(input.caseId, input.entityId)
+    )
   );
 
 export const listForCase = authed
@@ -40,11 +42,11 @@ export const listForCase = authed
   })
   .input(z.object({ caseId: z.uuid() }))
   .output(z.array(caseEdgeSchema))
-  .handler(async ({ input }) =>
-    mapDomainError(async () => listEdgesForCase(input.caseId))
+  .handler(
+    withDomainError(async ({ input }) => listEdgesForCase(input.caseId))
   );
 
-export const create = authed
+export const create = graphChildWrite
   .route({
     method: "POST",
     path: "/cases/{caseId}/edges",
@@ -62,12 +64,13 @@ export const create = authed
       notes: z.string().optional(),
       evidenceIds: z.array(z.uuid()).optional(),
       viewEntityId: z.uuid().optional(),
+      userOverride: userOverrideSchema,
     })
   )
   .output(edgeSchema)
-  .handler(async ({ input }) => mapDomainError(async () => createEdge(input)));
+  .handler(withDomainError(async ({ input }) => createEdge(input)));
 
-export const update = authed
+export const update = graphChildWrite
   .route({
     method: "PATCH",
     path: "/cases/{caseId}/edges/{edgeId}",
@@ -80,13 +83,14 @@ export const update = authed
       .object({
         caseId: z.uuid(),
         edgeId: z.uuid(),
-        entityId: z.uuid(),
+        viewEntityId: z.uuid().optional(),
         fromId: z.uuid().optional(),
         toId: z.uuid().optional(),
         predicate: edgePredicateSchema.optional(),
         confidence: confidenceTierSchema.optional(),
         notes: z.string().optional(),
         evidenceIds: z.array(z.uuid()).optional(),
+        userOverride: userOverrideSchema,
       })
       .refine(
         (v) =>
@@ -96,9 +100,9 @@ export const update = authed
       )
   )
   .output(edgeSchema)
-  .handler(async ({ input }) => mapDomainError(async () => updateEdge(input)));
+  .handler(withDomainError(async ({ input }) => updateEdge(input)));
 
-export const remove = authed
+export const remove = graphChildWrite
   .route({
     method: "DELETE",
     path: "/cases/{caseId}/edges/{edgeId}",
@@ -109,9 +113,13 @@ export const remove = authed
     z.object({
       caseId: z.uuid(),
       edgeId: z.uuid(),
+      userOverride: userOverrideSchema,
     })
   )
-  .output(z.void())
-  .handler(async ({ input }) =>
-    mapDomainError(async () => deleteEdge(input.caseId, input.edgeId))
+  .output(z.object({ ok: z.literal(true) }))
+  .handler(
+    withDomainError(async ({ input }) => {
+      await deleteEdge(input.caseId, input.edgeId);
+      return { ok: true as const };
+    })
   );

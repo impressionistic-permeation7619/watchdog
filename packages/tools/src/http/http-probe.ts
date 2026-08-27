@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 
 import { z } from "zod";
 
+import { errorMessage } from "../errors/tools-error";
 import { fetchBytes } from "../http/fetch-bytes";
 
 const SECURITY_HEADER_NAMES = [
@@ -52,25 +53,46 @@ function pickHeaders(headers: Headers): Record<string, string> {
   return out;
 }
 
+type CdnHintRule = (headers: Headers) => string | null;
+
+const CDN_HINT_RULES: CdnHintRule[] = [
+  (headers) =>
+    headers.get("cf-ray") || headers.get("cf-cache-status")
+      ? "cloudflare"
+      : null,
+  (headers) =>
+    headers.get("x-akamai-transformed") || headers.get("akamai-grn")
+      ? "akamai"
+      : null,
+  (headers) => {
+    const via = headers.get("via")?.toLowerCase() ?? "";
+    return headers.get("x-served-by") ||
+      headers.get("fastly-debug-digest") ||
+      via.includes("fastly")
+      ? "fastly"
+      : null;
+  },
+  (headers) =>
+    headers.get("server")?.toLowerCase().includes("cloudflare")
+      ? "cloudflare"
+      : null,
+  (headers) => {
+    const server = headers.get("server")?.toLowerCase() ?? "";
+    return server.includes("amazons3") || headers.get("x-amz-request-id")
+      ? "aws"
+      : null;
+  },
+  (headers) => {
+    const xcdn = headers.get("x-cdn") ?? headers.get("x-cache");
+    return xcdn ? `header:${xcdn.slice(0, 64)}` : null;
+  },
+];
+
 function detectCdnHints(headers: Headers): string[] {
-  const hints: string[] = [];
-  const server = headers.get("server")?.toLowerCase() ?? "";
-  const via = headers.get("via")?.toLowerCase() ?? "";
-  const cfRay = headers.get("cf-ray");
-  const cf = headers.get("cf-cache-status");
-  const xcdn = headers.get("x-cdn") ?? headers.get("x-cache");
-  const akamai =
-    headers.get("x-akamai-transformed") ?? headers.get("akamai-grn");
-  const fastly =
-    headers.get("x-served-by") ?? headers.get("fastly-debug-digest");
-  if (cfRay || cf) hints.push("cloudflare");
-  if (akamai) hints.push("akamai");
-  if (fastly || via.includes("fastly")) hints.push("fastly");
-  if (server.includes("cloudflare")) hints.push("cloudflare");
-  if (server.includes("amazons3") || headers.get("x-amz-request-id")) {
-    hints.push("aws");
-  }
-  if (xcdn) hints.push(`header:${xcdn.slice(0, 64)}`);
+  const hints = CDN_HINT_RULES.flatMap((rule) => {
+    const hint = rule(headers);
+    return hint ? [hint] : [];
+  });
   return [...new Set(hints)];
 }
 
@@ -85,41 +107,102 @@ async function fetchHeadOrGet(
   finalUrl: string;
   error?: string;
 }> {
-  try {
-    const head = await fetch(url, {
-      method: "HEAD",
+  const getFallback = async () =>
+    fetch(url, {
+      method: "GET",
       redirect: "follow",
       signal,
-      headers: { "User-Agent": userAgent, Accept: "*/*" },
-    });
-    // Some hosts reject HEAD — fall through to GET for headers only.
-    if (head.status !== 405 && head.status !== 501) {
-      return {
-        ok: head.ok,
-        status: head.status,
-        headers: head.headers,
-        finalUrl: head.url || url,
-      };
-    }
-  } catch {
-    // fall through to GET
-  }
-  const get = await fetch(url, {
-    method: "GET",
+      headers: {
+        "User-Agent": userAgent,
+        Accept: "*/*",
+        Range: "bytes=0-0",
+      },
+    }).then((get) => ({
+      ok: get.ok,
+      status: get.status,
+      headers: get.headers,
+      finalUrl: get.url || url,
+    }));
+
+  return fetch(url, {
+    method: "HEAD",
     redirect: "follow",
     signal,
-    headers: {
-      "User-Agent": userAgent,
-      Accept: "*/*",
-      Range: "bytes=0-0",
+    headers: { "User-Agent": userAgent, Accept: "*/*" },
+  })
+    .then((head) => {
+      if (head.status !== 405 && head.status !== 501) {
+        return {
+          ok: head.ok,
+          status: head.status,
+          headers: head.headers,
+          finalUrl: head.url || url,
+        };
+      }
+      return getFallback();
+    })
+    .catch(async () => getFallback());
+}
+
+function failedProbeSnapshot(
+  host: string,
+  origins: string[],
+  lastError: string | undefined
+): HttpProbeSnapshot {
+  return httpProbeSnapshotSchema.parse({
+    host,
+    queriedAt: new Date().toISOString(),
+    finalUrl: origins[0],
+    status: 0,
+    ok: false,
+    securityHeaders: {},
+    server: null,
+    via: null,
+    cdnHints: [],
+    securityTxt: {
+      url: new URL("/.well-known/security.txt", origins[0]).href,
+      status: 0,
+      present: false,
+      bodyPreview: null,
     },
+    favicon: {
+      url: new URL("/favicon.ico", origins[0]).href,
+      status: 0,
+      sha256: null,
+      contentType: null,
+    },
+    error: lastError ?? "HTTP probe failed",
   });
-  return {
-    ok: get.ok,
-    status: get.status,
-    headers: get.headers,
-    finalUrl: get.url || url,
+}
+
+async function probePrimaryOrigin(
+  origins: string[],
+  signal: AbortSignal,
+  userAgent: string
+): Promise<{
+  primary: Awaited<ReturnType<typeof fetchHeadOrGet>> | null;
+  originBase: string;
+  lastError: string | undefined;
+}> {
+  let lastError: string | undefined;
+  let primary: Awaited<ReturnType<typeof fetchHeadOrGet>> | null = null;
+  let originBase = origins[0];
+
+  const tryOrigin = async (index: number): Promise<void> => {
+    if (index >= origins.length) return;
+    const origin = origins[index];
+    try {
+      const res = await fetchHeadOrGet(origin, signal, userAgent);
+      primary = res;
+      originBase = `${new URL(res.finalUrl).origin}/`;
+      if (res.status > 0) return;
+    } catch (error) {
+      lastError = errorMessage(error);
+    }
+    await tryOrigin(index + 1);
   };
+
+  return tryOrigin(0).then(() => ({ primary, originBase, lastError }));
 }
 
 /**
@@ -136,95 +219,61 @@ export async function fetchHttpProbe(
     ? [`https://${host}/`, `http://${host}/`]
     : [`http://${host}/`, `https://${host}/`];
 
-  let lastError: string | undefined;
-  let primary: Awaited<ReturnType<typeof fetchHeadOrGet>> | null = null;
-  let originBase = origins[0];
+  return probePrimaryOrigin(origins, signal, options.userAgent).then(
+    ({ primary, originBase, lastError }) => {
+      if (!primary) {
+        return failedProbeSnapshot(host, origins, lastError);
+      }
 
-  for (const origin of origins) {
-    try {
-      // oxlint-disable-next-line no-await-in-loop -- ordered fallback (https then http); stops at first reachable origin, must stay sequential
-      const res = await fetchHeadOrGet(origin, signal, options.userAgent);
-      primary = res;
-      originBase = `${new URL(res.finalUrl).origin}/`;
-      if (res.status > 0) break;
-    } catch (error) {
-      lastError = error instanceof Error ? error.message : String(error);
+      const securityTxtUrl = new URL("/.well-known/security.txt", originBase)
+        .href;
+      const faviconUrl = new URL("/favicon.ico", originBase).href;
+
+      return Promise.all([
+        fetchBytes(securityTxtUrl, signal, {
+          userAgent: options.userAgent,
+          maxBytes: 16_384,
+          accept: "text/plain,*/*",
+        }),
+        fetchBytes(faviconUrl, signal, {
+          userAgent: options.userAgent,
+          maxBytes: 65_536,
+          accept: "image/*,*/*",
+        }),
+      ]).then(([secTxt, favicon]) => {
+        const bodyPreview =
+          secTxt.ok && secTxt.bytes.byteLength > 0
+            ? new TextDecoder().decode(secTxt.bytes).slice(0, 2000)
+            : null;
+
+        return httpProbeSnapshotSchema.parse({
+          host,
+          queriedAt: new Date().toISOString(),
+          finalUrl: primary.finalUrl,
+          status: primary.status,
+          ok: primary.ok,
+          securityHeaders: pickHeaders(primary.headers),
+          server: primary.headers.get("server"),
+          via: primary.headers.get("via"),
+          cdnHints: detectCdnHints(primary.headers),
+          securityTxt: {
+            url: securityTxtUrl,
+            status: secTxt.status,
+            present: secTxt.ok && Boolean(bodyPreview?.includes("Contact:")),
+            bodyPreview,
+          },
+          favicon: {
+            url: faviconUrl,
+            status: favicon.status,
+            sha256:
+              favicon.ok && favicon.bytes.byteLength > 0
+                ? createHash("sha256").update(favicon.bytes).digest("hex")
+                : null,
+            contentType: favicon.contentType,
+          },
+          ...(primary.ok ? {} : { error: `HTTP ${primary.status}` }),
+        });
+      });
     }
-  }
-
-  if (!primary) {
-    return httpProbeSnapshotSchema.parse({
-      host,
-      queriedAt: new Date().toISOString(),
-      finalUrl: origins[0],
-      status: 0,
-      ok: false,
-      securityHeaders: {},
-      server: null,
-      via: null,
-      cdnHints: [],
-      securityTxt: {
-        url: new URL("/.well-known/security.txt", origins[0]).href,
-        status: 0,
-        present: false,
-        bodyPreview: null,
-      },
-      favicon: {
-        url: new URL("/favicon.ico", origins[0]).href,
-        status: 0,
-        sha256: null,
-        contentType: null,
-      },
-      error: lastError ?? "HTTP probe failed",
-    });
-  }
-
-  const securityTxtUrl = new URL("/.well-known/security.txt", originBase).href;
-  const faviconUrl = new URL("/favicon.ico", originBase).href;
-
-  const [secTxt, favicon] = await Promise.all([
-    fetchBytes(securityTxtUrl, signal, {
-      userAgent: options.userAgent,
-      maxBytes: 16_384,
-      accept: "text/plain,*/*",
-    }),
-    fetchBytes(faviconUrl, signal, {
-      userAgent: options.userAgent,
-      maxBytes: 65_536,
-      accept: "image/*,*/*",
-    }),
-  ]);
-
-  const bodyPreview =
-    secTxt.ok && secTxt.bytes.byteLength > 0
-      ? new TextDecoder().decode(secTxt.bytes).slice(0, 2000)
-      : null;
-
-  return httpProbeSnapshotSchema.parse({
-    host,
-    queriedAt: new Date().toISOString(),
-    finalUrl: primary.finalUrl,
-    status: primary.status,
-    ok: primary.ok,
-    securityHeaders: pickHeaders(primary.headers),
-    server: primary.headers.get("server"),
-    via: primary.headers.get("via"),
-    cdnHints: detectCdnHints(primary.headers),
-    securityTxt: {
-      url: securityTxtUrl,
-      status: secTxt.status,
-      present: secTxt.ok && Boolean(bodyPreview?.includes("Contact:")),
-      bodyPreview,
-    },
-    favicon: {
-      url: faviconUrl,
-      status: favicon.status,
-      sha256:
-        favicon.ok && favicon.bytes.byteLength > 0
-          ? createHash("sha256").update(favicon.bytes).digest("hex")
-          : null,
-      contentType: favicon.contentType,
-    },
-    ...(primary.ok ? {} : { error: `HTTP ${primary.status}` }),
-  });
+  );
 }

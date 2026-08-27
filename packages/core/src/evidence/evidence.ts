@@ -8,7 +8,7 @@ import {
 import type { EvidenceKind } from "@watchdog/schemas";
 import { normalizeIdList, trimmedOrUndefined } from "@watchdog/schemas";
 
-import { assertCaseExists, assertEntityInCase } from "../graph/guards";
+import { assertCaseExists, assertEntityInCase } from "../graph/patch/guards";
 import {
   assertUploadedObject,
   createPresignedGet,
@@ -94,23 +94,31 @@ export interface CreateAttestationInput {
   tx?: DbTx;
 }
 
+function optionalIso(value: Date | null | undefined): string | null {
+  return value?.toISOString() ?? null;
+}
+
+function nullToUndefined<T>(value: T | null | undefined): T | null {
+  return value ?? null;
+}
+
 function toRecord(row: EvidenceRow): EvidenceRecord {
   return {
     id: row.id,
     caseId: row.caseId,
-    entityId: row.entityId ?? null,
+    entityId: nullToUndefined(row.entityId),
     kind: row.kind,
-    label: row.label ?? null,
-    notes: row.notes ?? null,
-    mime: row.mime ?? null,
-    uri: row.uri ?? null,
-    sha256: row.sha256 ?? null,
-    text: row.text ?? null,
-    sourceUrl: row.sourceUrl ?? null,
+    label: nullToUndefined(row.label),
+    notes: nullToUndefined(row.notes),
+    mime: nullToUndefined(row.mime),
+    uri: nullToUndefined(row.uri),
+    sha256: nullToUndefined(row.sha256),
+    text: nullToUndefined(row.text),
+    sourceUrl: nullToUndefined(row.sourceUrl),
     actorId: row.actorId,
     capturedAt: row.capturedAt.toISOString(),
-    processedAt: row.processedAt?.toISOString() ?? null,
-    deletedAt: row.deletedAt?.toISOString() ?? null,
+    processedAt: optionalIso(row.processedAt),
+    deletedAt: optionalIso(row.deletedAt),
   };
 }
 
@@ -152,7 +160,7 @@ export async function dumpPaste(
     sourceUrl: input.sourceUrl ?? null,
     actorId: input.actorId,
   });
-  if (!row) throw new Error("Failed to create Evidence");
+  if (!row) throw new DomainError("invalid", "Failed to create Evidence");
   return toRecord(row);
 }
 
@@ -171,7 +179,7 @@ export async function dumpUrl(input: DumpUrlInput): Promise<EvidenceRecord> {
     text: input.sourceUrl,
     actorId: input.actorId,
   });
-  if (!row) throw new Error("Failed to create Evidence");
+  if (!row) throw new DomainError("invalid", "Failed to create Evidence");
   return toRecord(row);
 }
 
@@ -193,20 +201,21 @@ export async function attachEvidenceEntity(input: {
   evidenceId: string;
   entityId: string | null;
 }): Promise<EvidenceRecord> {
-  await assertCaseExists(input.caseId);
-  const entityId =
-    input.entityId === null || input.entityId === "" ? null : input.entityId;
-  if (entityId !== null) {
-    await assertEntityInCase(input.caseId, entityId);
-  }
-  const row = await evidenceRepo.setEntityInCase(
-    db,
-    input.caseId,
-    input.evidenceId,
-    entityId
-  );
-  if (!row) throw new DomainError("not_found", "Evidence not found");
-  return toRecord(row);
+  return assertCaseExists(input.caseId).then(async () => {
+    const entityId =
+      input.entityId === null || input.entityId === "" ? null : input.entityId;
+    if (entityId !== null) {
+      await assertEntityInCase(input.caseId, entityId);
+    }
+    const row = await evidenceRepo.setEntityInCase(
+      db,
+      input.caseId,
+      input.evidenceId,
+      entityId
+    );
+    if (!row) throw new DomainError("not_found", "Evidence not found");
+    return toRecord(row);
+  });
 }
 
 export async function presignUpload(
@@ -251,7 +260,7 @@ export async function confirmFileUpload(
     sha256: input.sha256,
     actorId,
   });
-  if (!row) throw new Error("Failed to create Evidence");
+  if (!row) throw new DomainError("invalid", "Failed to create Evidence");
   return toRecord(row);
 }
 
@@ -259,15 +268,16 @@ export async function getEvidenceDownloadUrl(
   caseId: string,
   evidenceId: string
 ): Promise<{ url: string | null }> {
-  await assertCaseExists(caseId);
-  const row = await evidenceRepo.getUriInCaseIncludingDeleted(
-    db,
-    caseId,
-    evidenceId
-  );
-  if (row === null || row.uri === null || row.uri === "") return { url: null };
-  const url = await createPresignedGet(row.uri);
-  return { url };
+  return assertCaseExists(caseId)
+    .then(async () =>
+      evidenceRepo.getUriInCaseIncludingDeleted(db, caseId, evidenceId)
+    )
+    .then((row) => {
+      if (row === null || row.uri === null || row.uri === "") {
+        return { url: null };
+      }
+      return createPresignedGet(row.uri).then((url) => ({ url }));
+    });
 }
 
 /**

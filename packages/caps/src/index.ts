@@ -1,3 +1,4 @@
+/** Cap SPI re-export for catalog implementations; runtime services should import `@watchdog/cap-sdk` directly. */
 export {
   defineCapability,
   DEFAULT_CAP_TIMEOUT_MS,
@@ -21,7 +22,7 @@ export {
 } from "@watchdog/cap-sdk";
 export {
   CAPABILITIES,
-  getCapability,
+  requireCapability,
   listCapabilities,
   capTimeoutCeilingMs,
 } from "./registry";
@@ -29,10 +30,11 @@ export {
   PLAYBOOKS,
   listPlaybooks,
   listPlaybookDescriptors,
-  getPlaybook,
+  requirePlaybook,
   planPlaybook,
   toPlaybookDescriptor,
   checkPlaybookAvailability,
+  checkCapabilityAvailability,
   formatPlanError,
   derivePlaybookRequires,
   type PlaybookDef,
@@ -43,6 +45,7 @@ export {
   type PlaybookSeedKind,
   type SeedValues,
   type PlaybookRequires,
+  type CapabilityRequires,
   type AvailabilityError,
   type AvailabilityResult,
   hostFromUrl,

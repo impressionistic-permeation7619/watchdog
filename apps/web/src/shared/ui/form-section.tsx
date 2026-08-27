@@ -9,9 +9,6 @@ type FormSectionTone = "default" | "error" | "warning";
 export const ACCENT_CARD_SURFACE =
   "bg-accent/8 ring-accent/25 dark:bg-accent/12 dark:ring-accent/30";
 
-/** Alias kept for existing Settings call sites. */
-export const SETTINGS_CARD_SURFACE = ACCENT_CARD_SURFACE;
-
 /**
  * Settings fieldset-card chrome: title, optional subtitle, body, footer.
  * Presentational only — no I/O. Do not confuse with FieldSet (a11y grouping).

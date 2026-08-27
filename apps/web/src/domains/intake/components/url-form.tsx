@@ -54,7 +54,7 @@ export function UrlForm({
             <Field>
               <FieldLabel>URL</FieldLabel>
               <Input
-                placeholder="https://…"
+                placeholder="Link or hostname"
                 value={field.state.value}
                 onBlur={field.handleBlur}
                 onChange={(e) => {

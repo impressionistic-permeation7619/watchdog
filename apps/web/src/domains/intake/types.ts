@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import type { EvidenceRecord as CoreEvidenceRecord } from "@watchdog/core";
 import {
   httpUrlSchema,
   nonEmptyTrimmed,
@@ -7,26 +8,9 @@ import {
   sha256HexSchema,
   trimmedOrUndefined,
   uuidSchema,
-  type EvidenceKind,
 } from "@watchdog/schemas";
 
-export interface EvidenceRecord {
-  id: string;
-  caseId: string;
-  entityId: string | null;
-  kind: EvidenceKind;
-  label: string | null;
-  notes: string | null;
-  mime: string | null;
-  uri: string | null;
-  sha256: string | null;
-  text: string | null;
-  sourceUrl: string | null;
-  actorId: string;
-  capturedAt: string;
-  processedAt: string | null;
-  deletedAt: string | null;
-}
+export type EvidenceRecord = CoreEvidenceRecord;
 
 export interface PresignedUpload {
   url: string;

@@ -38,40 +38,55 @@ import {
 import { Skeleton } from "@/shared/ui/shadcn/skeleton";
 import { trimmedOrUndefined } from "@watchdog/schemas";
 
-function NavUser() {
-  const navigate = useNavigate();
-  // BA UI Query cache — seeded by `_protected` ensureAppSession (no second fetch flash).
-  const { data, isPending } = useSession(authClient);
-  const user = data?.user;
-  const name =
-    trimmedOrUndefined(user?.name) ??
-    trimmedOrUndefined(user?.email) ??
-    "Investigator";
-  const email = user?.email ?? "";
-  const initials = name
+function userDisplayName(user: {
+  name?: string | null;
+  email?: string | null;
+}) {
+  return (
+    trimmedOrUndefined(user.name) ??
+    trimmedOrUndefined(user.email) ??
+    "Investigator"
+  );
+}
+
+function userInitials(name: string): string {
+  return name
     .split(/\s+/)
     .filter(Boolean)
     .slice(0, 2)
-    .map((p) => p[0]?.toUpperCase() ?? "")
+    .map((part) => part[0]?.toUpperCase() ?? "")
     .join("");
+}
+
+function NavUserSkeleton() {
+  return (
+    <SidebarMenu>
+      <SidebarMenuItem>
+        <SidebarMenuButton
+          size="lg"
+          className="pointer-events-none border-0 bg-transparent shadow-none"
+        >
+          <Skeleton className="size-8 rounded-full" />
+          <div className="grid flex-1 gap-1.5 text-left">
+            <Skeleton className="h-3.5 w-24" />
+            <Skeleton className="h-3 w-32" />
+          </div>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    </SidebarMenu>
+  );
+}
+
+function NavUser() {
+  const navigate = useNavigate();
+  const { data, isPending } = useSession(authClient);
+  const user = data?.user;
+  const name = user ? userDisplayName(user) : "Investigator";
+  const email = user?.email ?? "";
+  const initials = userInitials(name);
 
   if (isPending && !user) {
-    return (
-      <SidebarMenu>
-        <SidebarMenuItem>
-          <SidebarMenuButton
-            size="lg"
-            className="pointer-events-none border-0 bg-transparent shadow-none"
-          >
-            <Skeleton className="size-8 rounded-full" />
-            <div className="grid flex-1 gap-1.5 text-left">
-              <Skeleton className="h-3.5 w-24" />
-              <Skeleton className="h-3 w-32" />
-            </div>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      </SidebarMenu>
-    );
+    return <NavUserSkeleton />;
   }
 
   return (
@@ -141,7 +156,6 @@ function NavUser() {
             <DropdownMenuGroup>
               <DropdownMenuItem
                 onClick={() => {
-                  // BA UI SignOut view: clears cookie + removes auth query cache.
                   void navigate({
                     to: "/auth/$path",
                     params: { path: "sign-out" },

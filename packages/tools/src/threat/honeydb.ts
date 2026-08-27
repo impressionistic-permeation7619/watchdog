@@ -7,6 +7,7 @@ import {
   rateLimitedToolsError,
   validationToolsError,
 } from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
 import { asString, isRecord } from "../parse/coerce";
 
 export const honeydbLookupSnapshotSchema = z.object({
@@ -62,8 +63,7 @@ export async function fetchHoneydbLookup(
     throw validationToolsError("HONEYDB_API_ID and HONEYDB_API_KEY required");
   }
 
-  const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+threat.honeydb.lookup; OSINT)";
+  const ua = options?.userAgent ?? watchdogUserAgent("threat.honeydb.lookup");
   const res = await fetch(
     `https://honeydb.io/api/ip-context/${encodeURIComponent(ip)}`,
     {

@@ -8,30 +8,54 @@ import type { IpctlLookupSnapshot } from "./report-schema";
 
 type IpctlInput = z.infer<typeof ipctlLookupInput>;
 
+interface SummaryPart {
+  when: (report: IpctlLookupSnapshot) => boolean;
+  format: (report: IpctlLookupSnapshot) => string;
+}
+
+const SUMMARY_PARTS: SummaryPart[] = [
+  { when: (r) => r.asn !== null, format: (r) => `ASN=${r.asn}` },
+  { when: (r) => Boolean(r.asName), format: (r) => `asName=${r.asName}` },
+  {
+    when: (r) => Boolean(r.bgpPrefix),
+    format: (r) => `prefix=${r.bgpPrefix}`,
+  },
+  {
+    when: (r) => Boolean(r.rirCountryCode),
+    format: (r) => `RIR CC=${r.rirCountryCode}`,
+  },
+  { when: (r) => Boolean(r.rir), format: (r) => `registry=${r.rir}` },
+  {
+    when: (r) => Boolean(r.rpkiStatus),
+    format: (r) => `RPKI=${r.rpkiStatus}`,
+  },
+  {
+    when: (r) => Boolean(r.reverseDns),
+    format: (r) => `PTR=${r.reverseDns}`,
+  },
+  {
+    when: (r) => Boolean(r.geoCountryCode ?? r.geoCity ?? r.geoCountryName),
+    format: (r) => {
+      const geo = [r.geoCity, r.geoRegion, r.geoCountryName ?? r.geoCountryCode]
+        .filter(Boolean)
+        .join(", ");
+      return `GeoIP≈${geo}`;
+    },
+  },
+  {
+    when: (r) => r.tags.length > 0,
+    format: (r) => `tags=${r.tags.slice(0, 8).join(",")}`,
+  },
+  {
+    when: (r) => r.threatScore !== null,
+    format: (r) => `threat_score=${r.threatScore}`,
+  },
+];
+
 function summarize(report: IpctlLookupSnapshot): string {
-  const parts: string[] = [`IP ${report.ip}`];
-  if (report.asn !== null) parts.push(`ASN=${report.asn}`);
-  if (report.asName) parts.push(`asName=${report.asName}`);
-  if (report.bgpPrefix) parts.push(`prefix=${report.bgpPrefix}`);
-  if (report.rirCountryCode) parts.push(`RIR CC=${report.rirCountryCode}`);
-  if (report.rir) parts.push(`registry=${report.rir}`);
-  if (report.rpkiStatus) parts.push(`RPKI=${report.rpkiStatus}`);
-  if (report.reverseDns) parts.push(`PTR=${report.reverseDns}`);
-  if (report.geoCountryCode || report.geoCity || report.geoCountryName) {
-    const geo = [
-      report.geoCity,
-      report.geoRegion,
-      report.geoCountryName ?? report.geoCountryCode,
-    ]
-      .filter(Boolean)
-      .join(", ");
-    parts.push(`GeoIP≈${geo}`);
-  }
-  if (report.tags.length > 0) {
-    parts.push(`tags=${report.tags.slice(0, 8).join(",")}`);
-  }
-  if (report.threatScore !== null) {
-    parts.push(`threat_score=${report.threatScore}`);
+  const parts = [`IP ${report.ip}`];
+  for (const part of SUMMARY_PARTS) {
+    if (part.when(report)) parts.push(part.format(report));
   }
   if (parts.length === 1) return `IP ${report.ip}: no ipctl BGP data`;
   return parts.join("; ");

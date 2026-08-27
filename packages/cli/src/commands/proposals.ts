@@ -12,6 +12,7 @@ import {
   defineNounCommand,
   dryRunArg,
   pickDefined,
+  requiredCaseArg,
 } from "../noun";
 
 const LIST_COLUMNS = ["id", "status", "summary", "created"];
@@ -65,12 +66,7 @@ export const proposalsCmd = defineNounCommand({
         ]),
       },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
+        ...requiredCaseArg,
         patch: {
           type: "string",
           description: "Patch JSON array string ('-' or omit for stdin)",
@@ -104,12 +100,7 @@ export const proposalsCmd = defineNounCommand({
     accept: defineCommand({
       meta: { name: "accept", description: "Accept a proposal" },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
+        ...requiredCaseArg,
         proposal: {
           type: "positional",
           description: "Proposal ID",
@@ -136,12 +127,7 @@ export const proposalsCmd = defineNounCommand({
     reject: defineCommand({
       meta: { name: "reject", description: "Reject a proposal" },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
+        ...requiredCaseArg,
         proposal: {
           type: "positional",
           description: "Proposal ID",

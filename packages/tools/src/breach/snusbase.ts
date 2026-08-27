@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+import { missingApiKey } from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
+import { fetchJsonObject } from "../http/fetch-json";
 import { classifyBreachQuery } from "../parse/classify-breach-query";
 import { asString, isRecord } from "../parse/coerce";
 
@@ -100,42 +103,39 @@ function flattenSearchResults(results: unknown): {
  * POST https://api.snusbase.com/data/search — header `Auth`.
  * @see https://docs.snusbase.com/
  */
+
+interface SnusbaseOptions {
+  userAgent?: string;
+}
 export async function fetchSnusbaseLookup(
   queryRaw: string,
   apiKey: string,
   signal: AbortSignal,
-  options?: { userAgent?: string }
+  options?: SnusbaseOptions
 ): Promise<SnusbaseLookupSnapshot> {
   const key = apiKey.trim();
-  if (!key) throw new Error("SNUSBASE_API_KEY required");
+  if (!key) throw missingApiKey("SNUSBASE_API_KEY");
 
   const { kind, value, type } = classifySnusbaseQuery(queryRaw);
-  const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+breach.snusbase.lookup; OSINT)";
+  const ua = options?.userAgent ?? watchdogUserAgent("breach.snusbase.lookup");
 
-  const res = await fetch("https://api.snusbase.com/data/search", {
-    method: "POST",
-    signal,
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      Auth: key,
-      "User-Agent": ua,
+  const body = await fetchJsonObject({
+    url: "https://api.snusbase.com/data/search",
+    init: {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Auth: key,
+        "User-Agent": ua,
+      },
+      body: JSON.stringify({ terms: [value], types: [type] }),
     },
-    body: JSON.stringify({ terms: [value], types: [type] }),
+    signal,
+    service: "Snusbase",
+    subject: value,
+    acceptStatus: (status) => status < 400,
   });
-
-  if (res.status === 429) {
-    throw new Error(`Snusbase rate-limited for ${value}`);
-  }
-  if (res.status >= 400) {
-    throw new Error(`Snusbase API ${res.status} for ${value}`);
-  }
-
-  const body: unknown = await res.json();
-  if (!isRecord(body)) {
-    throw new Error(`Snusbase response for ${value} was not a JSON object`);
-  }
   const { tables, entries } = flattenSearchResults(body.results);
   const total =
     typeof body.size === "number"

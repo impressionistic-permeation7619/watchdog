@@ -24,7 +24,7 @@ Thin Cap Job runner: pg-boss `work` → `executeJob`, cancel poll, export events
 
 - Imports `@watchdog/env/server` for boot validation.
 - Cap `timeoutMs` (from Caps) drives expire / graceful stop — do not hardcode elsewhere.
-- Use `getBossWorker()` (`supervise: true`) only — never a second boss; playbook chain is `advancePlaybookRun` in core (`enqueueCapJob` on the live worker boss). Do not call deleted `releasePlaybookDependents` / `abandonPlaybookOnFailure`.
+- Use `ensureBossWorker()` (`supervise: true`) only — never a second boss; playbook chain is `advancePlaybookRun` in core (`enqueueCapJob` on the live worker boss). Do not call deleted `releasePlaybookDependents` / `abandonPlaybookOnFailure`.
 - Cancel: poll product `jobs.status` (~2s) and abort Cap `AbortController`; do not bridge pg-boss `job.signal`.
 - Startup: `reconcileStaleJobs` fails stale `running` rows (per-Cap expire window); `reconcileStuckPlaybookRuns` re-advances playbook runs with no open Jobs (`queued`/`running`/`blocked`). All-`blocked` leftover recipes are not this path.
 - Export: call `scheduleCaseExport(caseId)` only — coalesced; no parallel `writeCaseExport`.

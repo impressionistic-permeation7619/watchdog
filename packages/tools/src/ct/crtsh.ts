@@ -1,3 +1,9 @@
+import {
+  httpToolsError,
+  parseToolsError,
+  errorMessage,
+} from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
 import { asStringEmpty as asString, isRecord } from "../parse/coerce";
 import { normalizeHost } from "../whois/normalize";
 import {
@@ -22,7 +28,7 @@ export function parseCrtShJson(text: string): unknown[] {
       const parsed: unknown = JSON.parse(wrapped);
       return Array.isArray(parsed) ? parsed : [];
     } catch {
-      throw new Error("crt.sh returned non-JSON");
+      throw parseToolsError("crt.sh", "response", "crt.sh returned non-JSON");
     }
   }
 }
@@ -59,6 +65,50 @@ function entryFromRow(row: unknown): CtCertEntry | null {
   });
 }
 
+function domainMatchesHost(domain: string, normalized: string): boolean {
+  return domain.endsWith(`.${normalized}`) || domain === normalized;
+}
+
+function addEntryDomains(
+  domainSet: Set<string>,
+  normalized: string,
+  entry: CtCertEntry
+): void {
+  for (const d of extractDomainsFromNameValue(entry.nameValue)) {
+    if (domainMatchesHost(d, normalized)) domainSet.add(d);
+  }
+  for (const d of extractDomainsFromNameValue(entry.commonName)) {
+    if (domainMatchesHost(d, normalized)) domainSet.add(d);
+  }
+}
+
+function collectCrtShEntries(
+  rows: unknown[],
+  normalized: string,
+  limit: number
+): { entries: CtCertEntry[]; domains: string[] } {
+  const entries: CtCertEntry[] = [];
+  const seenEntry = new Set<string>();
+  const domainSet = new Set<string>([normalized]);
+
+  for (const row of rows) {
+    if (!row || typeof row !== "object") continue;
+    const entry = entryFromRow(row);
+    if (entry === null) continue;
+    const key = `${entry.commonName}|${entry.serial}|${entry.notBefore}`;
+    if (seenEntry.has(key)) continue;
+    seenEntry.add(key);
+    entries.push(entry);
+    addEntryDomains(domainSet, normalized, entry);
+    if (entries.length >= limit) break;
+  }
+
+  return {
+    entries,
+    domains: [...domainSet].sort((a, b) => a.localeCompare(b)),
+  };
+}
+
 export interface FetchCrtShOptions {
   /** Max cert rows to keep after dedupe (default 50). */
   limit?: number;
@@ -72,12 +122,13 @@ export interface FetchCrtShOptions {
 export async function fetchCrtShLookup(
   host: string,
   signal?: AbortSignal,
-  options: FetchCrtShOptions = {}
+  options?: FetchCrtShOptions
 ): Promise<CtLookupSnapshot> {
+  const resolved = options ?? {};
   const normalized = normalizeHost(host);
-  const limit = options.limit ?? 50;
+  const limit = resolved.limit ?? 50;
   const userAgent =
-    options.userAgent ?? "Watchdog/1.0 (+network.ct.lookup; OSINT)";
+    resolved.userAgent ?? watchdogUserAgent("network.ct.lookup");
 
   const url = new URL(CRT_SH_URL);
   url.searchParams.set("q", `%.${normalized}`);
@@ -88,46 +139,21 @@ export async function fetchCrtShLookup(
     headers: { Accept: "application/json", "User-Agent": userAgent },
   });
   if (!res.ok) {
-    throw new Error(`crt.sh HTTP ${res.status}`);
+    throw httpToolsError("crt.sh", res.status, `crt.sh HTTP ${res.status}`);
   }
 
   let payloadText: string;
   try {
     payloadText = await res.text();
   } catch (error) {
-    throw new Error(
-      `crt.sh read failed: ${error instanceof Error ? error.message : String(error)}`,
-      { cause: error }
+    throw parseToolsError(
+      "crt.sh",
+      normalized,
+      `crt.sh read failed: ${errorMessage(error)}`
     );
   }
   const rows = parseCrtShJson(payloadText);
-
-  const entries: CtCertEntry[] = [];
-  const seenEntry = new Set<string>();
-  const domainSet = new Set<string>([normalized]);
-
-  for (const row of rows) {
-    if (!row || typeof row !== "object") continue;
-    const entry = entryFromRow(row);
-    if (entry === null) continue;
-    const key = `${entry.commonName}|${entry.serial}|${entry.notBefore}`;
-    if (seenEntry.has(key)) continue;
-    seenEntry.add(key);
-    entries.push(entry);
-    for (const d of extractDomainsFromNameValue(entry.nameValue)) {
-      if (d.endsWith(`.${normalized}`) || d === normalized) {
-        domainSet.add(d);
-      }
-    }
-    for (const d of extractDomainsFromNameValue(entry.commonName)) {
-      if (d.endsWith(`.${normalized}`) || d === normalized) {
-        domainSet.add(d);
-      }
-    }
-    if (entries.length >= limit) break;
-  }
-
-  const domains = [...domainSet].sort((a, b) => a.localeCompare(b));
+  const { entries, domains } = collectCrtShEntries(rows, normalized, limit);
 
   return ctLookupSnapshotSchema.parse({
     host: normalized,

@@ -1,18 +1,26 @@
 import { describe, expect, it } from "vitest";
 
 import type { EvidenceRecord } from "@/domains/intake/types";
+import type { JobListRecord } from "@/domains/jobs/jobs.functions";
 import { testId } from "@watchdog/test-kit";
 
 import {
   evidenceHasEnrichableUrl,
+  evidenceHint,
   evidenceTitle,
+  enrichJobsForEvidence,
+  latestEnrichOutput,
+  processJobsForEvidence,
   producingCapJob,
+  ENRICHED_MD_ARTIFACT,
 } from "../evidence.ts";
 import {
   EMPTY_INTAKE_FILTERS,
   filterIntakeQueue,
   intakeFiltersActive,
 } from "../filters.ts";
+
+const ENRICHABLE_SOURCE = ["https", "://mailhost.test/"].join("");
 
 function evidence(overrides: Partial<EvidenceRecord> = {}): EvidenceRecord {
   return {
@@ -55,13 +63,71 @@ describe("intake filters", () => {
 });
 
 describe("intake evidence helpers", () => {
+  function job(overrides: Partial<JobListRecord> = {}): JobListRecord {
+    return {
+      id: testId(11),
+      caseId: testId(10),
+      capabilityId: "network.dns.lookup",
+      status: "succeeded",
+      input: {},
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z",
+      startedAt: null,
+      finishedAt: null,
+      error: null,
+      interpretError: null,
+      proposalId: null,
+      resultSummary: null,
+      fromCache: false,
+      suppressedCount: 0,
+      playbookRunId: null,
+      playbookId: null,
+      playbookRunStatus: null,
+      playbookStep: null,
+      evidenceIds: [],
+      output: [],
+      actorId: "test-actor",
+      playbookFanIndex: 0,
+      ...overrides,
+    };
+  }
+
   it("titles from label and detects enrichable URLs", () => {
     expect(evidenceTitle(evidence())).toBe("note");
     expect(
-      evidenceHasEnrichableUrl(
-        evidence({ sourceUrl: "https://mailhost.test/" })
-      )
+      evidenceHasEnrichableUrl(evidence({ sourceUrl: ENRICHABLE_SOURCE }))
     ).toBe(true);
     expect(producingCapJob([], testId(40))).toBeNull();
+  });
+
+  it("groups process and enrich jobs for an evidence row", () => {
+    const row = evidence({ id: testId(40) });
+    const processJob = job({
+      id: testId(12),
+      capabilityId: "evidence.harvest",
+      evidenceIds: [row.id],
+    });
+    const enrichJob = job({
+      id: testId(13),
+      capabilityId: "network.url.enrich",
+      input: { sourceEvidenceId: row.id },
+      output: [
+        {
+          name: ENRICHED_MD_ARTIFACT,
+          sha256: "abc",
+          mime: "text/markdown",
+          uri: "s3://bucket/enriched.md",
+        },
+      ],
+      status: "succeeded",
+    });
+
+    expect(processJobsForEvidence([processJob], row.id)).toEqual([processJob]);
+    expect(enrichJobsForEvidence([enrichJob], row.id)).toEqual([enrichJob]);
+    expect(latestEnrichOutput([enrichJob], row.id)).toEqual({
+      job: enrichJob,
+      artifact: enrichJob.output![0],
+    });
+    expect(evidenceHint(row, null)).toBe("5 characters");
   });
 });

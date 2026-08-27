@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+import { validationToolsError } from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
+
 export const pgpKeySchema = z.object({
   /** Key id / fingerprint string from HKP index (may be short id). */
   fingerprint: z.string(),
@@ -63,14 +66,18 @@ export function parseHkpMrIndex(body: string): PgpKeyHit[] {
  * HKP lookup across public keyservers (keys.openpgp.org first).
  * Query: email, fingerprint, or key id.
  */
+
+interface PgpLookupOptions {
+  userAgent?: string;
+}
 export async function fetchPgpLookup(
   queryRaw: string,
   signal: AbortSignal,
-  options?: { userAgent?: string }
+  options?: PgpLookupOptions
 ): Promise<PgpLookupSnapshot> {
   const query = queryRaw.trim();
-  if (!query) throw new Error("PGP query required");
-  const ua = options?.userAgent ?? "Watchdog/1.0 (+identity.pgp.lookup; OSINT)";
+  if (!query) throw validationToolsError("PGP query required");
+  const ua = options?.userAgent ?? watchdogUserAgent("identity.pgp.lookup");
 
   let source: string | null = null;
   let keys: PgpKeyHit[] = [];

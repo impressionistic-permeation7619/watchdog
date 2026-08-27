@@ -32,12 +32,10 @@ function useEntityProseFields(caseId: string, entity: EntityRecord) {
       }),
     onSuccess: async (next) => {
       queryClient.setQueryData(entitiesKeys.detail(caseId, entity.slug), next);
-      await invalidateAfterEntityChanged(
-        queryClient,
-        caseId,
-        entity.id,
-        entity.slug
-      );
+      await invalidateAfterEntityChanged(queryClient, caseId, {
+        entityId: entity.id,
+        slug: entity.slug,
+      });
     },
     onError: (e) => {
       setError(errMessage(e, "Save failed"));

@@ -1,6 +1,6 @@
 import { defineCommand } from "citty";
 
-import { api, emit, emitList, emitOk, truncText } from "../client";
+import { api, emit, emitList, emitOk, fail, truncText } from "../client";
 import { requireUserOverride, userOverrideArg } from "../custody";
 import { resolveEntityId } from "../ids";
 import {
@@ -10,6 +10,8 @@ import {
   dryRunArg,
   entityArg,
   pickDefined,
+  requiredCaseArg,
+  requiredEntityArg,
 } from "../noun";
 
 const LIST_COLUMNS = ["id", "when", "what", "where"];
@@ -53,18 +55,8 @@ export const eventsCmd = defineNounCommand({
         description: "Create a timeline event (--user-override required)",
       },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
-        entity: {
-          type: "string",
-          alias: "e",
-          description: "Entity slug or UUID",
-          required: true,
-        },
+        ...requiredCaseArg,
+        ...requiredEntityArg,
         when: {
           type: "string",
           description: "When (freeform / ISO)",
@@ -86,6 +78,7 @@ export const eventsCmd = defineNounCommand({
           entityId,
           when: args.when,
           what: args.what,
+          userOverride: true,
           ...pickDefined({ where: args.where }),
         });
         emit(row);
@@ -95,41 +88,42 @@ export const eventsCmd = defineNounCommand({
       meta: {
         name: "update",
         description:
-          "Update a timeline event (requires --when and --what; --user-override)",
+          "Update a timeline event (partial patch; --user-override required)",
       },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
+        ...requiredCaseArg,
         event: {
           type: "positional",
           description: "Event ID",
           required: true,
         },
-        when: {
-          type: "string",
-          description: "When (required by API — both when+what)",
-          required: true,
-        },
-        what: {
-          type: "string",
-          description: "What (required by API — both when+what)",
-          required: true,
-        },
+        when: { type: "string", description: "When (freeform / ISO)" },
+        what: { type: "string", description: "What happened" },
         where: { type: "string", description: "Optional where" },
         ...userOverrideArg,
       },
       run: async ({ args }) => {
         requireUserOverride(args["user-override"]);
+        if (
+          args.when === undefined &&
+          args.what === undefined &&
+          args.where === undefined
+        ) {
+          fail("USAGE", "Provide at least one of --when, --what, or --where", {
+            help: [
+              `wd events update -c ${args.case} ${args.event} --when "…" --user-override`,
+            ],
+          });
+        }
         const row = await api().events.update({
           caseId: args.case,
           eventId: args.event,
-          when: args.when,
-          what: args.what,
-          ...pickDefined({ where: args.where }),
+          userOverride: true,
+          ...pickDefined({
+            when: args.when,
+            what: args.what,
+            where: args.where,
+          }),
         });
         emit(row);
       },
@@ -140,12 +134,7 @@ export const eventsCmd = defineNounCommand({
         description: "Delete a timeline event (--user-override required)",
       },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
+        ...requiredCaseArg,
         event: {
           type: "positional",
           description: "Event ID",
@@ -163,6 +152,7 @@ export const eventsCmd = defineNounCommand({
         await api().events.delete({
           caseId: args.case,
           eventId: args.event,
+          userOverride: true,
         });
         emitOk({ deleted: true, id: args.event });
       },

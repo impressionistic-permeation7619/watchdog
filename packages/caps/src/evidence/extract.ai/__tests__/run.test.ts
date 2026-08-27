@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { REPORT_JSON_ARTIFACT } from "@watchdog/schemas";
 import { createCapRunHarness, testId } from "@watchdog/test-kit";
 
-import { evidenceExtractAi } from "../cap.ts";
+import { extractAi } from "../cap.ts";
 
 describe("evidence.extract.ai run", () => {
   it("skips the LLM when Evidence text is empty", async () => {
@@ -17,7 +17,7 @@ describe("evidence.extract.ai run", () => {
         packerVersion: 1,
       },
     });
-    const result = await evidenceExtractAi.run({
+    const result = await extractAi.run({
       ...harness.ctx,
       input: { evidenceId: testId(40) },
     });
@@ -30,7 +30,7 @@ describe("evidence.extract.ai run", () => {
   it("throws when the snapshot is missing", async () => {
     const harness = createCapRunHarness();
     await expect(
-      evidenceExtractAi.run({
+      extractAi.run({
         ...harness.ctx,
         input: { evidenceId: testId(40) },
       })

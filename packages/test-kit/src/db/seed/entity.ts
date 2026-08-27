@@ -11,17 +11,18 @@ import { testId } from "../../fixtures/ids.ts";
 export async function seedEntity(
   exec: DbExec,
   caseId: string,
-  overrides: Partial<NewEntity> = {}
+  overrides?: Partial<NewEntity>
 ): Promise<EntityRow> {
-  const name = overrides.name ?? "Test Entity";
+  const overridesResolved = overrides ?? {};
+  const name = overridesResolved.name ?? "Test Entity";
   const created = await entitiesRepo.create(exec, {
-    id: overrides.id ?? testId(10),
+    id: overridesResolved.id ?? testId(10),
     caseId,
-    kind: overrides.kind ?? "person",
+    kind: overridesResolved.kind ?? "person",
     name,
-    slug: overrides.slug ?? (slugifyName(name) || "test-entity"),
-    summary: overrides.summary,
-    notes: overrides.notes,
+    slug: overridesResolved.slug ?? (slugifyName(name) || "test-entity"),
+    summary: overridesResolved.summary,
+    notes: overridesResolved.notes,
   });
   if (!created) {
     throw new Error("seedEntity failed");

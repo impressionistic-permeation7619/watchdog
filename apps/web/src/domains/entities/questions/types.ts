@@ -1,20 +1,14 @@
 import { z } from "zod";
 
+import type { QuestionRecord as CoreQuestionRecord } from "@watchdog/core";
 import {
   nonEmptyTrimmed,
   optionalTrimmedSchema,
   trimmedOrNull,
   uuidSchema,
-  type QuestionStatus,
 } from "@watchdog/schemas";
 
-export interface QuestionRecord {
-  id: string;
-  entityId: string;
-  text: string;
-  status: QuestionStatus;
-  resolvedNote: string | null;
-}
+export type QuestionRecord = CoreQuestionRecord;
 
 export const entityScopeInputSchema = z.object({
   caseId: uuidSchema,

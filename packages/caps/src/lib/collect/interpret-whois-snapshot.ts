@@ -9,12 +9,9 @@ import {
 } from "./interpret-identifier-batches";
 
 /** Alert when expiry is in the past or within this window. */
-export const WHOIS_EXPIRY_ALERT_MS = 90 * 24 * 60 * 60 * 1000;
+const WHOIS_EXPIRY_ALERT_MS = 90 * 24 * 60 * 60 * 1000;
 
-export function isWhoisExpirySoon(
-  expiresAt: string,
-  nowMs = Date.now()
-): boolean {
+function isWhoisExpirySoon(expiresAt: string, nowMs = Date.now()): boolean {
   const ms = Date.parse(expiresAt);
   if (Number.isNaN(ms)) return false;
   return ms <= nowMs + WHOIS_EXPIRY_ALERT_MS;

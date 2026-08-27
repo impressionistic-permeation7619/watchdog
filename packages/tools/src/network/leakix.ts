@@ -1,5 +1,12 @@
 import { z } from "zod";
 
+import {
+  httpToolsError,
+  missingApiKey,
+  parseToolsError,
+  rateLimitedToolsError,
+} from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
 import { classifyIpOrHost } from "../parse/classify-ip-or-host";
 import { asString, isRecord } from "../parse/coerce";
 
@@ -32,18 +39,21 @@ function firstArray(body: Record<string, unknown>, keys: string[]): unknown[] {
  * bodies. `/host/{ip}` for IPs, `/domain/{host}` for hostnames/domains.
  * @see https://docs.leakix.net/docs/api/hostdetails/
  */
+
+interface LeakixOptions {
+  userAgent?: string;
+}
 export async function fetchLeakixLookup(
   queryRaw: string,
   apiKey: string,
   signal: AbortSignal,
-  options?: { userAgent?: string }
+  options?: LeakixOptions
 ): Promise<LeakixLookupSnapshot> {
   const key = apiKey.trim();
-  if (!key) throw new Error("LEAKIX_API_KEY required");
+  if (!key) throw missingApiKey("LEAKIX_API_KEY");
 
   const { kind, value } = classifyIpOrHost(queryRaw);
-  const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+network.leakix.lookup; OSINT)";
+  const ua = options?.userAgent ?? watchdogUserAgent("network.leakix.lookup");
   const path = kind === "ip" ? "host" : "domain";
   const url = `https://leakix.net/${path}/${encodeURIComponent(value)}`;
 
@@ -71,18 +81,19 @@ export async function fetchLeakixLookup(
     });
   }
   if (res.status === 429) {
-    const waitFor = res.headers.get("x-limited-for");
-    throw new Error(
-      `LeakIX rate-limited for ${value}${waitFor ? ` (retry after ${waitFor})` : ""}`
-    );
+    throw rateLimitedToolsError("LeakIX", value);
   }
   if (!res.ok) {
-    throw new Error(`LeakIX API ${res.status} for ${value}`);
+    throw httpToolsError(
+      "LeakIX API",
+      res.status,
+      `LeakIX API ${res.status} for ${value}`
+    );
   }
 
   const body: unknown = await res.json();
   if (!isRecord(body)) {
-    throw new Error(`LeakIX response for ${value} was not a JSON object`);
+    throw parseToolsError("LeakIX", value);
   }
   const services = firstArray(body, ["Services", "services"]);
   const leaks = firstArray(body, ["Leaks", "leaks"]);

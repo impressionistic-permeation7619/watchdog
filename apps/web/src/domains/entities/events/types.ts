@@ -1,18 +1,13 @@
 import { z } from "zod";
 
+import type { EventRecord as CoreEventRecord } from "@watchdog/core";
 import {
   nonEmptyTrimmed,
   optionalTrimmedSchema,
   uuidSchema,
 } from "@watchdog/schemas";
 
-export interface EventRecord {
-  id: string;
-  entityId: string;
-  when: string;
-  what: string;
-  where: string | null;
-}
+export type EventRecord = CoreEventRecord;
 
 export const entityScopeInputSchema = z.object({
   caseId: uuidSchema,

@@ -142,12 +142,16 @@ export async function getCredential(
   return open(userKey(userId), Buffer.from(ciphertext));
 }
 
-export async function putCredential(input: {
+interface PutCredentialInput {
   userId: string;
   name: string;
   secret: string;
   label?: string | null;
-}): Promise<CredentialMeta> {
+}
+
+export async function putCredential(
+  input: PutCredentialInput
+): Promise<CredentialMeta> {
   const name = assertCredentialName(input.name);
   const secret = input.secret.trim();
   if (!secret) {
@@ -182,7 +186,10 @@ export async function putCredential(input: {
 export async function deleteCredential(
   userId: string,
   name: string
-): Promise<boolean> {
+): Promise<void> {
   const n = assertCredentialName(name);
-  return credentialsRepo.deleteByName(db, userId, n);
+  const deleted = await credentialsRepo.deleteByName(db, userId, n);
+  if (!deleted) {
+    throw new DomainError("not_found", "Credential not found");
+  }
 }

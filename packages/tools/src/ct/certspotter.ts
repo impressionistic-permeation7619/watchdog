@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { httpToolsError, rateLimitedToolsError } from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
 import { asStringEmpty as asString, isRecord } from "../parse/coerce";
 import { normalizeHost } from "../whois/normalize";
 
@@ -30,15 +32,87 @@ export type CertspotterLookupSnapshot = z.infer<
  * GET https://api.certspotter.com/v1/issuances?domain=&include_subdomains=true&expand=dns_names
  * @see https://sslmate.com/certspotter/api/
  */
+
+interface CertspotterOptions {
+  userAgent?: string;
+  limit?: number;
+}
+
+function parseIssuanceId(row: Record<string, unknown>): string | null {
+  const idRaw = row.id;
+  if (typeof idRaw === "number" && Number.isFinite(idRaw)) {
+    return String(idRaw);
+  }
+  const id = asString(idRaw);
+  return id || null;
+}
+
+function collectDnsNames(
+  row: Record<string, unknown>,
+  seen: Set<string>,
+  domains: string[]
+): string[] {
+  const dnsNamesRaw = Array.isArray(row.dns_names) ? row.dns_names : [];
+  const dnsNames: string[] = [];
+  for (const n of dnsNamesRaw) {
+    if (typeof n !== "string") continue;
+    try {
+      const d = normalizeHost(n.replace(/^\*\./, ""));
+      dnsNames.push(d);
+      if (!seen.has(d)) {
+        seen.add(d);
+        domains.push(d);
+      }
+    } catch {
+      /* skip */
+    }
+  }
+  return dnsNames;
+}
+
+function issuanceFromRow(
+  row: Record<string, unknown>,
+  seen: Set<string>,
+  domains: string[]
+): CertspotterIssuance | null {
+  const id = parseIssuanceId(row);
+  if (!id) return null;
+  return {
+    id,
+    dnsNames: collectDnsNames(row, seen, domains),
+    notBefore: asString(row.not_before) || null,
+    notAfter: asString(row.not_after) || null,
+    revoked: typeof row.revoked === "boolean" ? row.revoked : null,
+    certSha256: asString(row.cert_sha256) || null,
+  };
+}
+
+function collectIssuances(
+  rows: unknown[],
+  limit: number
+): { issuances: CertspotterIssuance[]; domains: string[] } {
+  const issuances: CertspotterIssuance[] = [];
+  const domains: string[] = [];
+  const seen = new Set<string>();
+  for (const row of rows) {
+    if (!isRecord(row)) continue;
+    const issuance = issuanceFromRow(row, seen, domains);
+    if (!issuance) continue;
+    issuances.push(issuance);
+    if (issuances.length >= limit) break;
+  }
+  return { issuances, domains };
+}
+
 export async function fetchCertspotterLookup(
   hostRaw: string,
   signal: AbortSignal,
-  options?: { userAgent?: string; limit?: number }
+  options?: CertspotterOptions
 ): Promise<CertspotterLookupSnapshot> {
   const host = normalizeHost(hostRaw);
   const limit = options?.limit ?? 100;
   const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+network.certspotter.lookup; OSINT)";
+    options?.userAgent ?? watchdogUserAgent("network.certspotter.lookup");
 
   const url = new URL("https://api.certspotter.com/v1/issuances");
   url.searchParams.set("domain", host);
@@ -52,54 +126,19 @@ export async function fetchCertspotterLookup(
   });
 
   if (res.status === 429) {
-    throw new Error(`Cert Spotter rate-limited for ${host}`);
+    throw rateLimitedToolsError("Cert Spotter", host);
   }
   if (!res.ok) {
-    throw new Error(`Cert Spotter API ${res.status} for ${host}`);
+    throw httpToolsError(
+      "Cert Spotter API",
+      res.status,
+      `Cert Spotter API ${res.status} for ${host}`
+    );
   }
 
   const body: unknown = await res.json();
   const rows = Array.isArray(body) ? body : [];
-  const issuances: CertspotterIssuance[] = [];
-  const domains: string[] = [];
-  const seen = new Set<string>();
-
-  for (const row of rows) {
-    if (!isRecord(row)) continue;
-    const idRaw = row.id;
-    const id =
-      typeof idRaw === "number" && Number.isFinite(idRaw)
-        ? String(idRaw)
-        : asString(idRaw);
-    if (!id) continue;
-
-    const dnsNamesRaw = Array.isArray(row.dns_names) ? row.dns_names : [];
-    const dnsNames: string[] = [];
-    for (const n of dnsNamesRaw) {
-      if (typeof n !== "string") continue;
-      try {
-        const d = normalizeHost(n.replace(/^\*\./, ""));
-        dnsNames.push(d);
-        if (!seen.has(d)) {
-          seen.add(d);
-          domains.push(d);
-        }
-      } catch {
-        /* skip */
-      }
-    }
-
-    issuances.push({
-      id,
-      dnsNames,
-      notBefore: asString(row.not_before) || null,
-      notAfter: asString(row.not_after) || null,
-      revoked: typeof row.revoked === "boolean" ? row.revoked : null,
-      certSha256: asString(row.cert_sha256) || null,
-    });
-
-    if (issuances.length >= limit) break;
-  }
+  const { issuances, domains } = collectIssuances(rows, limit);
 
   return certspotterLookupSnapshotSchema.parse({
     host,

@@ -117,18 +117,21 @@ function themeModeIcon(mode: ThemeMode) {
   }
 }
 
-function useThemeMode() {
-  const mode = useSyncExternalStore(
-    subscribeToThemeMode,
-    getStoredThemeMode,
-    getServerThemeMode
-  );
+function onAutoThemePreferenceChange(): void {
+  applyThemeMode("auto");
+}
 
-  // Sync the DOM (external system) whenever the resolved mode changes.
-  useEffect(() => {
-    applyThemeMode(mode);
-  }, [mode]);
+function subscribeAutoThemePreference(
+  media: MediaQueryList,
+  onChange: () => void
+): () => void {
+  media.addEventListener("change", onChange);
+  return () => {
+    media.removeEventListener("change", onChange);
+  };
+}
 
+function useAutoThemePreference(mode: ThemeMode): void {
   useEffect(() => {
     if (mode !== "auto") {
       // oxlint-disable-next-line unicorn/no-useless-undefined -- consistent-return requires an explicit value alongside the cleanup-returning branch below
@@ -136,15 +139,22 @@ function useThemeMode() {
     }
 
     const media = window.matchMedia("(prefers-color-scheme: dark)");
-    const onChange = () => {
-      applyThemeMode("auto");
-    };
-
-    media.addEventListener("change", onChange);
-    return () => {
-      media.removeEventListener("change", onChange);
-    };
+    return subscribeAutoThemePreference(media, onAutoThemePreferenceChange);
   }, [mode]);
+}
+
+function useThemeMode() {
+  const mode = useSyncExternalStore(
+    subscribeToThemeMode,
+    getStoredThemeMode,
+    getServerThemeMode
+  );
+
+  useEffect(() => {
+    applyThemeMode(mode);
+  }, [mode]);
+
+  useAutoThemePreference(mode);
 
   function toggleMode() {
     persistThemeMode(nextThemeMode(mode));

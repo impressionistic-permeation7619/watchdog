@@ -66,8 +66,8 @@ export function extractOutboundFromHtml(
     if (isUsefulHttpUrl(resolved)) urls.add(resolved);
   }
   return {
-    urls: [...urls].sort().slice(0, MAX_LINKS),
-    emails: [...emails].sort().slice(0, MAX_LINKS),
+    urls: [...urls].sort((a, b) => a.localeCompare(b)).slice(0, MAX_LINKS),
+    emails: [...emails].sort((a, b) => a.localeCompare(b)).slice(0, MAX_LINKS),
   };
 }
 
@@ -82,7 +82,7 @@ export function extractOutboundFromMarkdown(md: string): string[] {
     const u = m[0]?.replace(/[.,;:]+$/, "");
     if (u && isUsefulHttpUrl(u)) urls.add(u);
   }
-  return [...urls].sort().slice(0, MAX_LINKS);
+  return [...urls].sort((a, b) => a.localeCompare(b)).slice(0, MAX_LINKS);
 }
 
 export function formatLinksMarkdownSection(input: {

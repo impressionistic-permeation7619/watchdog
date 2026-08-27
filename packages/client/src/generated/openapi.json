@@ -1975,6 +1975,9 @@
                       "type": "string",
                       "format": "uuid"
                     }
+                  },
+                  "userOverride": {
+                    "const": true
                   }
                 },
                 "required": [
@@ -2158,6 +2161,9 @@
                       "type": "string",
                       "format": "uuid"
                     }
+                  },
+                  "userOverride": {
+                    "const": true
                   }
                 }
               }
@@ -2321,6 +2327,9 @@
                   "reason": {
                     "type": "string",
                     "minLength": 1
+                  },
+                  "userOverride": {
+                    "const": true
                   }
                 },
                 "required": [
@@ -2642,6 +2651,9 @@
                       "type": "string",
                       "format": "uuid"
                     }
+                  },
+                  "userOverride": {
+                    "const": true
                   }
                 },
                 "required": [
@@ -2949,6 +2961,9 @@
                       "type": "string",
                       "format": "uuid"
                     }
+                  },
+                  "userOverride": {
+                    "const": true
                   }
                 }
               }
@@ -3401,6 +3416,9 @@
                   "viewEntityId": {
                     "type": "string",
                     "format": "uuid"
+                  },
+                  "userOverride": {
+                    "const": true
                   }
                 },
                 "required": [
@@ -3555,13 +3573,13 @@
           }
         ],
         "requestBody": {
-          "required": true,
+          "required": false,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
                 "properties": {
-                  "entityId": {
+                  "viewEntityId": {
                     "type": "string",
                     "format": "uuid"
                   },
@@ -3612,11 +3630,11 @@
                       "type": "string",
                       "format": "uuid"
                     }
+                  },
+                  "userOverride": {
+                    "const": true
                   }
-                },
-                "required": [
-                  "entityId"
-                ]
+                }
               }
             }
           }
@@ -3760,19 +3778,35 @@
             }
           }
         ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userOverride": {
+                    "const": true
+                  }
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "OK",
             "content": {
               "application/json": {
                 "schema": {
-                  "anyOf": [
-                    {
-                      "not": {}
-                    },
-                    {
-                      "not": {}
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "const": true
                     }
+                  },
+                  "required": [
+                    "ok"
                   ]
                 }
               }
@@ -3900,6 +3934,9 @@
                   },
                   "where": {
                     "type": "string"
+                  },
+                  "userOverride": {
+                    "const": true
                   }
                 },
                 "required": [
@@ -3985,7 +4022,7 @@
           }
         ],
         "requestBody": {
-          "required": true,
+          "required": false,
           "content": {
             "application/json": {
               "schema": {
@@ -4001,12 +4038,11 @@
                   },
                   "where": {
                     "type": "string"
+                  },
+                  "userOverride": {
+                    "const": true
                   }
-                },
-                "required": [
-                  "when",
-                  "what"
-                ]
+                }
               }
             }
           }
@@ -4083,6 +4119,21 @@
             }
           }
         ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userOverride": {
+                    "const": true
+                  }
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "OK",
@@ -4221,6 +4272,9 @@
                   "text": {
                     "type": "string",
                     "minLength": 1
+                  },
+                  "userOverride": {
+                    "const": true
                   }
                 },
                 "required": [
@@ -4328,6 +4382,9 @@
                         "type": "null"
                       }
                     ]
+                  },
+                  "userOverride": {
+                    "const": true
                   }
                 }
               }
@@ -4421,6 +4478,9 @@
                 "properties": {
                   "resolvedNote": {
                     "type": "string"
+                  },
+                  "userOverride": {
+                    "const": true
                   }
                 }
               }
@@ -4505,6 +4565,21 @@
             }
           }
         ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userOverride": {
+                    "const": true
+                  }
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "OK",

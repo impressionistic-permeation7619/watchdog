@@ -1,5 +1,11 @@
 import { z } from "zod";
 
+import {
+  httpToolsError,
+  parseToolsError,
+  rateLimitedToolsError,
+} from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
 import { isRecord } from "../parse/coerce";
 import { normalizeHost } from "../whois/normalize";
 
@@ -43,15 +49,16 @@ function parseRanks(value: unknown): TrancoRankRow[] {
  * GET https://tranco-list.eu/api/ranks/domain/{domain} — rate limit 1 req/s.
  * @see https://tranco-list.eu/api_documentation
  */
-export async function fetchTrancoLookup(
-  domainRaw: string,
-  signal: AbortSignal,
-  options?: { userAgent?: string }
-): Promise<TrancoLookupSnapshot> {
-  const domain = normalizeHost(domainRaw);
-  const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+network.tranco.lookup; OSINT)";
 
+interface TrancoOptions {
+  userAgent?: string;
+}
+
+async function readTrancoBody(
+  domain: string,
+  signal: AbortSignal,
+  ua: string
+): Promise<Record<string, unknown>> {
   const res = await fetch(
     `https://tranco-list.eu/api/ranks/domain/${encodeURIComponent(domain)}`,
     {
@@ -62,19 +69,39 @@ export async function fetchTrancoLookup(
   );
 
   if (res.status === 429) {
-    throw new Error(`Tranco rate-limited for ${domain}`);
+    throw rateLimitedToolsError("Tranco", domain);
   }
   if (res.status === 403) {
-    throw new Error(`Tranco temporarily unavailable for ${domain}`);
+    throw httpToolsError(
+      "Tranco",
+      res.status,
+      `Tranco temporarily unavailable for ${domain}`
+    );
   }
   if (!res.ok) {
-    throw new Error(`Tranco API ${res.status} for ${domain}`);
+    throw httpToolsError(
+      "Tranco API",
+      res.status,
+      `Tranco API ${res.status} for ${domain}`
+    );
   }
 
   const body: unknown = await res.json();
   if (!isRecord(body)) {
-    throw new Error(`Tranco response for ${domain} was not a JSON object`);
+    throw parseToolsError("Tranco", domain);
   }
+  return body;
+}
+
+export async function fetchTrancoLookup(
+  domainRaw: string,
+  signal: AbortSignal,
+  options?: TrancoOptions
+): Promise<TrancoLookupSnapshot> {
+  const domain = normalizeHost(domainRaw);
+  const ua = options?.userAgent ?? watchdogUserAgent("network.tranco.lookup");
+
+  const body = await readTrancoBody(domain, signal, ua);
   const rows = parseRanks(body.ranks).sort((a, b) =>
     b.date.localeCompare(a.date)
   );

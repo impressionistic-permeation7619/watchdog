@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { parseJsonValue, REPORT_JSON_ARTIFACT } from "@watchdog/schemas";
 import { createCapRunHarness, testId } from "@watchdog/test-kit";
 
-import { evidenceHarvest } from "../cap.ts";
+import { harvest } from "../cap.ts";
 
 describe("evidence.harvest run", () => {
   it("uploads report.json from a snapshot with an email", async () => {
@@ -17,7 +17,7 @@ describe("evidence.harvest run", () => {
         packerVersion: 1,
       },
     });
-    const result = await evidenceHarvest.run({
+    const result = await harvest.run({
       ...harness.ctx,
       input: { evidenceId: testId(40) },
     });
@@ -38,7 +38,7 @@ describe("evidence.harvest run", () => {
   it("throws when the snapshot is missing", async () => {
     const harness = createCapRunHarness();
     await expect(
-      evidenceHarvest.run({
+      harvest.run({
         ...harness.ctx,
         input: { evidenceId: testId(40) },
       })

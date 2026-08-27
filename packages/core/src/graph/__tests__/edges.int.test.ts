@@ -93,7 +93,6 @@ describe("updateEdge", () => {
     await updateEdge({
       caseId: cased.id,
       edgeId: created.id,
-      entityId: from.id,
       evidenceIds: [second.id],
     });
     const links = await evidenceLinksRepo.listForEdges(db, [created.id]);

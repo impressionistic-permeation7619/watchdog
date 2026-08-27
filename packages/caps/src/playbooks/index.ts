@@ -63,7 +63,7 @@ export function listPlaybookDescriptors(): PlaybookDescriptor[] {
   return PLAYBOOKS.map(toPlaybookDescriptor);
 }
 
-export function getPlaybook(id: string): PlaybookDef {
+export function requirePlaybook(id: string): PlaybookDef {
   const found = PLAYBOOKS.find((p) => p.id === id);
   if (!found) throw new Error(`Unknown playbook: ${id}`);
   return found;
@@ -71,6 +71,7 @@ export function getPlaybook(id: string): PlaybookDef {
 
 export {
   checkPlaybookAvailability,
+  checkCapabilityAvailability,
   formatPlanError,
   hostFromUrl,
   isPlanError,
@@ -94,6 +95,7 @@ export {
   type PlaybookDescriptor,
   type PlaybookPlan,
   type PlaybookRequires,
+  type CapabilityRequires,
   type PlaybookSeedKind,
   type PlaybookStepDef,
   type PlanError,

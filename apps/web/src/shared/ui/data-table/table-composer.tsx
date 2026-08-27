@@ -1,13 +1,12 @@
-/* oxlint-disable react/only-export-components -- composer chrome + keydown helper */
 import { CheckIcon, PlusIcon, XIcon } from "lucide-react";
-import type { ComponentProps, KeyboardEvent, ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/shared/ui/shadcn/button";
 import { Input } from "@/shared/ui/shadcn/input";
 import { TableCell, TableRow } from "@/shared/ui/shadcn/table";
 
-export const TABLE_COMPOSER_INPUT_CLASS =
+const TABLE_COMPOSER_INPUT_CLASS =
   "h-7 w-full rounded-md border-transparent bg-transparent px-1.5 py-0 text-xs shadow-none focus-visible:bg-background/60 focus-visible:border-transparent focus-visible:!shadow-none focus-visible:!ring-0 focus-visible:outline-none";
 
 export function TableComposerInput({
@@ -92,22 +91,4 @@ export function DataTableComposerRow({ children }: { children: ReactNode }) {
       {children}
     </TableRow>
   );
-}
-
-export function tableComposerKeyDown(opts: {
-  busy: boolean;
-  canSubmit: boolean;
-  onSubmit: () => void;
-  onCancel: () => void;
-}) {
-  return (e: KeyboardEvent) => {
-    if (e.key === "Escape" && !opts.busy) {
-      e.preventDefault();
-      opts.onCancel();
-    }
-    if (e.key === "Enter" && !e.shiftKey && opts.canSubmit) {
-      e.preventDefault();
-      opts.onSubmit();
-    }
-  };
 }

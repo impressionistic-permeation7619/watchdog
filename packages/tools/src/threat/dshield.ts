@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { normalizeIp } from "../dns/reverse";
 import { httpToolsError, ToolsError } from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
 import { asString, isRecord } from "../parse/coerce";
 
 export const dshieldLookupSnapshotSchema = z.object({
@@ -79,15 +80,19 @@ export function parseDshieldBody(
  * GET https://isc.sans.edu/api/ip/{ip}?json
  * @see https://isc.sans.edu/api
  */
+
+interface DshieldOptions {
+  userAgent?: string;
+}
 export async function fetchDshieldLookup(
   ipRaw: string,
   signal: AbortSignal,
-  options?: { userAgent?: string }
+  options?: DshieldOptions
 ): Promise<DshieldLookupSnapshot> {
   const ip = normalizeIp(ipRaw);
   const ua =
     options?.userAgent ??
-    "Watchdog/1.0 (+threat.dshield.lookup; OSINT; contact: osint@watchdog.invalid)";
+    `${watchdogUserAgent("threat.dshield.lookup")}; contact: osint@watchdog.invalid)`;
 
   const res = await fetch(
     `https://isc.sans.edu/api/ip/${encodeURIComponent(ip)}?json`,

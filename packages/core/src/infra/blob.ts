@@ -13,6 +13,8 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { env } from "@watchdog/env/server";
 import { MAX_UPLOAD_BYTES, sha256HexSchema } from "@watchdog/schemas";
 
+import { DomainError } from "./domain-error";
+
 export { MAX_UPLOAD_BYTES } from "@watchdog/schemas";
 
 const PRESIGN_EXPIRES_IN = 900;
@@ -92,24 +94,21 @@ export async function uploadArtifact(input: {
   const cfg = s3Config();
   const sha256 = sha256Hex(input.bytes);
   const uri = artifactUri(input.caseId, sha256, input.name);
-
-  await getClient().send(
-    new PutObjectCommand({
-      Bucket: cfg.bucket,
-      Key: uri,
-      Body: input.bytes,
-      ContentType: input.mime,
-      ContentLength: input.bytes.byteLength,
-      Metadata: { sha256 },
-    })
-  );
-
-  return {
+  const s3 = getClient();
+  const command = new PutObjectCommand({
+    Bucket: cfg.bucket,
+    Key: uri,
+    Body: input.bytes,
+    ContentType: input.mime,
+    ContentLength: input.bytes.byteLength,
+    Metadata: { sha256 },
+  });
+  return s3.send(command).then(() => ({
     uri,
     sha256,
     mime: input.mime,
     byteLength: input.bytes.byteLength,
-  };
+  }));
 }
 
 export async function createPresignedPut(input: {
@@ -122,15 +121,17 @@ export async function createPresignedPut(input: {
   const sha256 = assertSha256Hex(input.sha256);
   const mime = input.mime.trim() || "application/octet-stream";
   if (!Number.isInteger(input.byteLength) || input.byteLength < 1) {
-    throw new Error("byteLength must be a positive integer");
+    throw new DomainError("invalid", "byteLength must be a positive integer");
   }
   if (input.byteLength > MAX_UPLOAD_BYTES) {
-    throw new Error(`File exceeds ${MAX_UPLOAD_BYTES} byte limit`);
+    throw new DomainError(
+      "invalid",
+      `File exceeds ${MAX_UPLOAD_BYTES} byte limit`
+    );
   }
 
   const cfg = s3Config();
   const uri = artifactUri(input.caseId, sha256, input.name);
-  // Metadata is query-signed; do not also send x-amz-meta-* as headers.
   const headers = { "Content-Type": mime };
 
   const command = new PutObjectCommand({
@@ -140,12 +141,11 @@ export async function createPresignedPut(input: {
     Metadata: { sha256 },
   });
 
-  const url = await getSignedUrl(getClient(), command, {
+  const s3 = getClient();
+  return getSignedUrl(s3, command, {
     expiresIn: PRESIGN_EXPIRES_IN,
     signableHeaders: new Set(["content-type"]),
-  });
-
-  return {
+  }).then((url) => ({
     url,
     uri,
     sha256,
@@ -153,7 +153,7 @@ export async function createPresignedPut(input: {
     byteLength: input.byteLength,
     expiresIn: PRESIGN_EXPIRES_IN,
     headers,
-  };
+  }));
 }
 
 export async function assertUploadedObject(input: {
@@ -164,28 +164,35 @@ export async function assertUploadedObject(input: {
 }): Promise<void> {
   const sha256 = assertSha256Hex(input.sha256);
   const cfg = s3Config();
-  const head = await getClient().send(
-    new HeadObjectCommand({ Bucket: cfg.bucket, Key: input.uri })
-  );
-
-  const metaSha = head.Metadata?.sha256?.toLowerCase();
-  if (metaSha !== sha256) {
-    throw new Error("Uploaded object sha256 metadata mismatch");
-  }
-  if (head.ContentLength !== input.byteLength) {
-    throw new Error("Uploaded object size mismatch");
-  }
-  const contentType = head.ContentType?.split(";")[0]?.trim().toLowerCase();
-  const expected = input.mime.split(";")[0]?.trim().toLowerCase();
-  if (
-    contentType !== undefined &&
-    contentType !== "" &&
-    expected !== undefined &&
-    expected !== "" &&
-    contentType !== expected
-  ) {
-    throw new Error("Uploaded object Content-Type mismatch");
-  }
+  const s3 = getClient();
+  return s3
+    .send(new HeadObjectCommand({ Bucket: cfg.bucket, Key: input.uri }))
+    .then((head) => {
+      const metaSha = head.Metadata?.sha256?.toLowerCase();
+      if (metaSha !== sha256) {
+        throw new DomainError(
+          "invalid",
+          "Uploaded object sha256 metadata mismatch"
+        );
+      }
+      if (head.ContentLength !== input.byteLength) {
+        throw new DomainError("invalid", "Uploaded object size mismatch");
+      }
+      const contentType = head.ContentType?.split(";")[0]?.trim().toLowerCase();
+      const expected = input.mime.split(";")[0]?.trim().toLowerCase();
+      if (
+        contentType !== undefined &&
+        contentType !== "" &&
+        expected !== undefined &&
+        expected !== "" &&
+        contentType !== expected
+      ) {
+        throw new DomainError(
+          "invalid",
+          "Uploaded object Content-Type mismatch"
+        );
+      }
+    });
 }
 
 export async function readArtifactBytes(uri: string): Promise<Uint8Array> {

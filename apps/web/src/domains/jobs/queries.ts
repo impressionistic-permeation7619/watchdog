@@ -1,5 +1,7 @@
 import { queryOptions } from "@tanstack/react-query";
+import type { QueryClient } from "@tanstack/react-query";
 
+import { jobsKeys } from "@/domains/jobs/jobs-keys";
 import {
   getArtifactContentFn,
   getJobFn,
@@ -7,6 +9,8 @@ import {
   listJobsFn,
   listPlaybooksFn,
 } from "@/domains/jobs/jobs.functions";
+import type { GetArtifactContentInput } from "@/domains/jobs/types";
+import { invalidateAfterJobMutation } from "@/shared/lib/query-invalidation";
 import {
   GC_DEFAULT,
   GC_REALTIME,
@@ -16,12 +20,7 @@ import {
   STALE_STABLE,
 } from "@/shared/lib/query-stale";
 
-export const jobsKeys = {
-  all: (caseId: string) => ["jobs", caseId] as const,
-  detail: (caseId: string, jobId: string) =>
-    ["jobs", caseId, "detail", jobId] as const,
-  artifact: (uri: string, mime: string) => ["artifact", uri, mime] as const,
-};
+export { jobsKeys } from "@/domains/jobs/jobs-keys";
 
 const capabilitiesKeys = {
   all: ["capabilities"] as const,
@@ -63,12 +62,36 @@ export const playbooksListQuery = () =>
     gcTime: GC_STABLE,
   });
 
-export const artifactContentQuery = (uri: string, mime: string) =>
-  queryOptions({
-    queryKey: jobsKeys.artifact(uri, mime),
-    queryFn: async () => getArtifactContentFn({ data: { uri, mime } }),
+export function artifactContentQuery(input: GetArtifactContentInput) {
+  const queryKey =
+    input.source === "job"
+      ? jobsKeys.jobArtifact(
+          input.caseId,
+          input.jobId,
+          input.sha256,
+          input.mime
+        )
+      : jobsKeys.evidenceArtifact(input.caseId, input.evidenceId, input.mime);
+
+  const enabled =
+    input.source === "job"
+      ? input.sha256.length > 0
+      : input.evidenceId.length > 0;
+
+  return queryOptions({
+    queryKey,
+    queryFn: async () => getArtifactContentFn({ data: input }),
     staleTime: STALE_DEFAULT,
     gcTime: GC_DEFAULT,
-    enabled: uri.length > 0,
+    enabled,
     meta: { silentError: true },
   });
+}
+
+/** Jobs workspace freshness — SSE `job_update` is the follow-up path; no timed retries. */
+export async function refreshJobsAfterMutation(
+  queryClient: QueryClient,
+  caseId: string
+): Promise<void> {
+  await invalidateAfterJobMutation(queryClient, caseId);
+}

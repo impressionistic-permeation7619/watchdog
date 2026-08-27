@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { listRecentActivity } from "@watchdog/core";
 
-import { mapDomainError } from "../map-domain-error";
+import { withDomainError } from "../map-domain-error";
 import { authed } from "../os";
 import { activityItemSchema } from "../schemas";
 
@@ -20,8 +20,8 @@ export const listRecent = authed
     })
   )
   .output(z.array(activityItemSchema))
-  .handler(async ({ input }) =>
-    mapDomainError(async () =>
+  .handler(
+    withDomainError(async ({ input }) =>
       listRecentActivity({
         caseId: input.caseId,
         limit: input.limit,

@@ -12,11 +12,7 @@ export interface StructuredExtractResult<T> {
   usage?: StructuredExtractUsage;
 }
 
-/**
- * Thin wrapper: generateText + Output.object.
- * Caps call this — do not import `ai` directly in Cap bodies beyond this package.
- */
-export async function structuredExtract<TSchema extends z.ZodType>(input: {
+interface StructuredExtractInput<TSchema extends z.ZodType> {
   model: LanguageModel;
   schema: TSchema;
   instructions?: string;
@@ -24,7 +20,15 @@ export async function structuredExtract<TSchema extends z.ZodType>(input: {
   abortSignal?: AbortSignal;
   temperature?: number;
   maxOutputTokens?: number;
-}): Promise<StructuredExtractResult<z.infer<TSchema>>> {
+}
+
+/**
+ * Thin wrapper: generateText + Output.object.
+ * Caps call this — do not import `ai` directly in Cap bodies beyond this package.
+ */
+export async function structuredExtract<TSchema extends z.ZodType>(
+  input: StructuredExtractInput<TSchema>
+): Promise<StructuredExtractResult<z.infer<TSchema>>> {
   const result = await generateText({
     model: input.model,
     instructions: input.instructions,

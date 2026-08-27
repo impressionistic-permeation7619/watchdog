@@ -3,6 +3,21 @@ import path from "node:path";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
 
+const webSrc = path.join(import.meta.dirname, "apps/web/src");
+
+/** Web tests that need a DOM (RTL hooks or browser globals) — excluded from web-unit. */
+const webDomTestGlobs = [
+  "apps/web/src/**/hooks/**/__tests__/**/*.test.ts",
+  "apps/web/src/shared/lib/__tests__/use-global-hotkeys.test.ts",
+  "apps/web/src/shared/lib/__tests__/hotkeys.test.ts",
+  "apps/web/src/shared/lib/__tests__/query-client.test.ts",
+  "apps/web/src/shared/lib/__tests__/query-invalidation.test.ts",
+  "apps/web/src/shared/layout/__tests__/use-page-trail.test.ts",
+  "apps/web/src/shared/hooks/**/__tests__/**/*.test.ts",
+  "apps/web/src/shared/ui/data-table/__tests__/use-data-table.test.ts",
+  "apps/web/src/domains/cases/lib/__tests__/active-case.test.ts",
+] as const;
+
 const unitExclude = [
   "**/node_modules/**",
   "**/dist/**",
@@ -11,8 +26,14 @@ const unitExclude = [
   "**/*.int.test.ts",
   "**/*.property.test.ts",
   "**/*.component.test.tsx",
+  "apps/web/src/**/__tests__/**/*.test.ts",
   "e2e/**",
 ];
+
+const webTestEnv = {
+  NODE_ENV: "test",
+  SKIP_ENV_VALIDATION: "1",
+} as const;
 
 const integrationEnv = {
   NODE_ENV: "test",
@@ -62,14 +83,32 @@ export default defineConfig({
           name: "unit",
           include: [
             "packages/*/src/**/__tests__/**/*.test.ts",
+            "packages/*/scripts/**/__tests__/**/*.test.ts",
             "apps/worker/src/**/__tests__/**/*.test.ts",
           ],
           exclude: unitExclude,
           environment: "node",
-          env: {
-            NODE_ENV: "test",
-            SKIP_ENV_VALIDATION: "1",
+          env: webTestEnv,
+        },
+      },
+      {
+        plugins: [react()],
+        resolve: {
+          alias: {
+            "@": webSrc,
           },
+        },
+        test: {
+          name: "web-unit",
+          include: ["apps/web/src/**/__tests__/**/*.test.ts"],
+          exclude: [
+            "**/node_modules/**",
+            "_legacy-v1/**",
+            "_legacy-v2/**",
+            ...webDomTestGlobs,
+          ],
+          environment: "node",
+          env: webTestEnv,
         },
       },
       {
@@ -81,31 +120,33 @@ export default defineConfig({
           ],
           exclude: ["**/node_modules/**", "_legacy-v1/**", "_legacy-v2/**"],
           environment: "node",
-          env: {
-            NODE_ENV: "test",
-            SKIP_ENV_VALIDATION: "1",
-          },
+          env: webTestEnv,
         },
       },
       {
         plugins: [react()],
         resolve: {
           alias: {
-            "@": path.join(import.meta.dirname, "apps/web/src"),
+            "@": webSrc,
           },
         },
         test: {
           name: "component",
           include: [
-            "apps/web/src/**/__tests__/**/*.test.ts",
             "apps/web/src/**/__tests__/**/*.component.test.tsx",
+            ...webDomTestGlobs,
           ],
-          environment: "jsdom",
+          environment: "happy-dom",
+          pool: "threads",
           setupFiles: ["apps/web/src/test-setup.ts"],
-          env: {
-            NODE_ENV: "test",
-            SKIP_ENV_VALIDATION: "1",
+          deps: {
+            optimizer: {
+              web: {
+                enabled: true,
+              },
+            },
           },
+          env: webTestEnv,
         },
       },
       {

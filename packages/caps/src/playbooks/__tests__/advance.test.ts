@@ -3,14 +3,14 @@ import { describe, expect, it } from "vitest";
 import "../../registry.ts";
 import {
   decidePlaybookAdvance,
-  getPlaybook,
+  requirePlaybook,
   predecessorFromJob,
 } from "../index.ts";
 
 describe("decidePlaybookAdvance", () => {
   it("waits while the current step is still open", () => {
     const decision = decidePlaybookAdvance(
-      getPlaybook("host-footprint"),
+      requirePlaybook("host-footprint"),
       { host: "example.com" },
       [{ step: 0, status: "running" }],
       []
@@ -20,7 +20,7 @@ describe("decidePlaybookAdvance", () => {
 
   it("waits while the current step is queued", () => {
     const decision = decidePlaybookAdvance(
-      getPlaybook("host-footprint"),
+      requirePlaybook("host-footprint"),
       { host: "example.com" },
       [{ step: 0, status: "queued" }],
       []
@@ -30,7 +30,7 @@ describe("decidePlaybookAdvance", () => {
 
   it("enqueues when a blocked sibling remains after another succeeded at the same step", () => {
     const decision = decidePlaybookAdvance(
-      getPlaybook("host-footprint"),
+      requirePlaybook("host-footprint"),
       { host: "example.com" },
       [
         { step: 0, status: "succeeded" },
@@ -46,7 +46,7 @@ describe("decidePlaybookAdvance", () => {
 
   it("waits while a blocked sibling still has a running peer at the same step", () => {
     const decision = decidePlaybookAdvance(
-      getPlaybook("host-footprint"),
+      requirePlaybook("host-footprint"),
       { host: "example.com" },
       [
         { step: 0, status: "succeeded" },
@@ -60,7 +60,7 @@ describe("decidePlaybookAdvance", () => {
 
   it("enqueues step 0 when the row is missing", () => {
     const decision = decidePlaybookAdvance(
-      getPlaybook("host-footprint"),
+      requirePlaybook("host-footprint"),
       { host: "example.com" },
       [],
       []
@@ -72,7 +72,7 @@ describe("decidePlaybookAdvance", () => {
 
   it("enqueues the next linear step after success", () => {
     const decision = decidePlaybookAdvance(
-      getPlaybook("host-footprint"),
+      requirePlaybook("host-footprint"),
       { host: "example.com" },
       [{ step: 0, status: "succeeded" }],
       []
@@ -86,7 +86,7 @@ describe("decidePlaybookAdvance", () => {
 
   it("enqueues (releases) when the next step already has blocked rows", () => {
     const decision = decidePlaybookAdvance(
-      getPlaybook("host-footprint"),
+      requirePlaybook("host-footprint"),
       { host: "example.com" },
       [
         { step: 0, status: "succeeded" },
@@ -102,7 +102,7 @@ describe("decidePlaybookAdvance", () => {
   it("enqueues a bind step after success", () => {
     const evidenceId = "00000000-0000-4000-8000-00000000aaa1";
     const decision = decidePlaybookAdvance(
-      getPlaybook("host-contacts"),
+      requirePlaybook("host-contacts"),
       { host: "example.com" },
       [{ step: 0, status: "succeeded" }],
       [
@@ -121,7 +121,7 @@ describe("decidePlaybookAdvance", () => {
 
   it("fans out DNS after CT succeeds with host handoff", () => {
     const decision = decidePlaybookAdvance(
-      getPlaybook("host-enumerate"),
+      requirePlaybook("host-enumerate"),
       { host: "example.com" },
       [{ step: 0, status: "succeeded" }],
       [
@@ -140,7 +140,7 @@ describe("decidePlaybookAdvance", () => {
 
   it("abandons when the prior step failed", () => {
     const decision = decidePlaybookAdvance(
-      getPlaybook("host-footprint"),
+      requirePlaybook("host-footprint"),
       { host: "example.com" },
       [{ step: 0, status: "failed" }],
       []
@@ -150,7 +150,7 @@ describe("decidePlaybookAdvance", () => {
 
   it("abandons when every sibling failed before a linear next step", () => {
     const decision = decidePlaybookAdvance(
-      getPlaybook("host-footprint"),
+      requirePlaybook("host-footprint"),
       { host: "example.com" },
       [
         { step: 0, status: "failed" },
@@ -163,7 +163,7 @@ describe("decidePlaybookAdvance", () => {
 
   it("abandons when fan-out input fails to parse", () => {
     const playbook = {
-      ...getPlaybook("host-enumerate"),
+      ...requirePlaybook("host-enumerate"),
       steps: [
         "network.ct.lookup",
         {
@@ -195,7 +195,7 @@ describe("decidePlaybookAdvance", () => {
 
   it("finishes when fan-out materializes an empty bag", () => {
     const decision = decidePlaybookAdvance(
-      getPlaybook("host-enumerate"),
+      requirePlaybook("host-enumerate"),
       { host: "example.com" },
       [{ step: 0, status: "succeeded" }],
       [
@@ -211,7 +211,7 @@ describe("decidePlaybookAdvance", () => {
 
   it("finishes when every step is terminal", () => {
     const decision = decidePlaybookAdvance(
-      getPlaybook("host-posture"),
+      requirePlaybook("host-posture"),
       { host: "example.com" },
       [
         { step: 0, status: "succeeded" },

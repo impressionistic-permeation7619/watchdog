@@ -1,4 +1,4 @@
-import { getCapability } from "@watchdog/caps";
+import { requireCapability } from "@watchdog/caps";
 import {
   db,
   jobsRepo,
@@ -13,8 +13,9 @@ import {
   type PlaybookRunStatus,
 } from "@watchdog/schemas";
 
-import { assertCaseExists, assertEntityInCase } from "../graph/guards";
-import { DomainError } from "../infra/domain-error";
+import { assertCaseExists, assertEntityInCase } from "../graph/patch/guards";
+import { DomainError, errorMessage } from "../infra/domain-error";
+import { logProcess } from "../infra/process-log";
 import { enqueueCapJob } from "./boss";
 import { assertCapAvailability } from "./cap-availability";
 import { setJobStatus } from "./set-job-status";
@@ -108,7 +109,13 @@ export function toJobRecord(
 
 export async function startJob(input: StartJobInput): Promise<JobRecord> {
   await assertCaseExists(input.caseId);
-  const cap = getCapability(input.capabilityId);
+  let cap;
+  try {
+    cap = requireCapability(input.capabilityId);
+  } catch (error) {
+    const msg = errorMessage(error);
+    throw new DomainError("not_found", msg);
+  }
   const parsed = cap.input.safeParse(input.input);
   if (!parsed.success) {
     throw new DomainError(
@@ -169,9 +176,14 @@ export async function getJobForCase(
   return toJobRecord(row.job, row.playbookId, row.playbookRunStatus);
 }
 
+interface EntityListOpts3 {
+  actorId?: string;
+}
+
 export async function cancelJob(
   caseId: string,
-  jobId: string
+  jobId: string,
+  opts?: EntityListOpts3
 ): Promise<JobRecord> {
   const row = await jobsRepo.getInCase(db, caseId, jobId);
   if (!row) throw new DomainError("not_found", "Job not found");
@@ -186,6 +198,13 @@ export async function cancelJob(
     finishedAt: new Date(),
   });
   if (!updated) throw new Error("Cancel failed");
+  if (opts?.actorId) {
+    logProcess("job.cancel", "Job cancelled", {
+      caseId,
+      jobId,
+      actorId: opts.actorId,
+    });
+  }
   return toJobRecord(updated, row.playbookId, row.playbookRunStatus);
 }
 

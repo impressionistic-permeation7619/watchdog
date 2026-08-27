@@ -2,6 +2,7 @@ import { ORPCError, os } from "@orpc/server";
 import { evlog } from "evlog/orpc";
 
 import type { ApiActor, ApiContext } from "./context";
+import { assertAgentChildWriteCustody } from "./custody";
 
 const ID_KEYS = [
   ["caseId", "case"],
@@ -49,6 +50,13 @@ export const authed = base.use(({ context, next }) => {
   return next({
     context: {
       actor: context.actor satisfies ApiActor,
+      authMethod: context.authMethod,
     },
   });
+});
+
+/** Child Graph writes — agent (API key) callers need userOverride and cannot set confirmed. */
+export const graphChildWrite = authed.use(({ context, next }, input) => {
+  assertAgentChildWriteCustody(input, context.authMethod);
+  return next();
 });

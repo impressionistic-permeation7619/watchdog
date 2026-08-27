@@ -3,18 +3,36 @@ import { rm } from "node:fs/promises";
 import { db, jobsRepo, type JobRow } from "@watchdog/db";
 
 import { logSwallowed } from "../infra/process-log";
+import {
+  getActiveJobAbortSignal,
+  unregisterActiveJobController,
+} from "./job-cancel-registry";
 import { runFailedPath, runSucceededPath } from "./run-paths";
 import { advancePlaybookRun } from "./stages/chain";
 import { collect, type CollectResult } from "./stages/collect";
 import { finish } from "./stages/finish";
-import { activeControllers, createJobLog } from "./stages/helpers";
-import { interpretStage, logInterpretFailure } from "./stages/interpret";
+import { createJobLog, type JobLog } from "./stages/helpers";
+import {
+  interpretStage,
+  logInterpretFailure,
+  type InterpretStageResult,
+} from "./stages/interpret";
 import { landEvidence } from "./stages/land-evidence";
-import { preflight, type PreflightStopReason } from "./stages/preflight";
+import {
+  preflight,
+  type PreflightState,
+  type PreflightStopReason,
+} from "./stages/preflight";
 import { proposeStage } from "./stages/propose";
 import { suppressStage } from "./stages/suppress";
 
-export { activeControllers } from "./stages/helpers";
+export {
+  abortActiveJob,
+  listActiveJobIds,
+  registerActiveJobController,
+  unregisterActiveJobController,
+  type ActiveJobAbortReason,
+} from "./job-cancel-registry";
 
 export type JobAbortReason = "timeout" | "cancel";
 
@@ -89,34 +107,113 @@ function outcomeFromStopStatus(
   }
 }
 
-/**
- * Cap Job orchestrator — preflight → collect → land-evidence → interpret →
- * suppress → propose → finish → cache.
- */
-export async function executeJob(jobId: string): Promise<JobRunOutcome> {
-  const started = Date.now();
-  const ready = await preflight(jobId);
-  if (ready.kind === "stop") {
-    const row = await jobsRepo.get(db, jobId);
-    if (row?.status === "failed" && row.playbookRunId !== null) {
-      await advancePlaybookRun({
-        playbookRunId: row.playbookRunId,
-        caseId: row.caseId,
-      }).catch((abandonError: unknown) => {
-        logSwallowed("playbook.abandon", abandonError, { jobId });
-      });
-    }
-    return {
-      outcome: outcomeFromStopStatus(row?.status),
-      stopReason: ready.reason,
-      durationMs: Date.now() - started,
-      caseId: row?.caseId,
-      capabilityId: row?.capabilityId,
-      playbookRunId: row?.playbookRunId ?? null,
-    };
+async function handlePreflightStop(
+  jobId: string,
+  reason: PreflightStopReason,
+  started: number
+): Promise<JobRunOutcome> {
+  const row = await jobsRepo.get(db, jobId);
+  if (row?.status === "failed" && row.playbookRunId !== null) {
+    await advancePlaybookRun({
+      playbookRunId: row.playbookRunId,
+      caseId: row.caseId,
+    }).catch((abandonError: unknown) => {
+      logSwallowed("playbook.abandon", abandonError, { jobId });
+    });
   }
-  const state = ready.state;
+  return {
+    outcome: outcomeFromStopStatus(row?.status),
+    stopReason: reason,
+    durationMs: Date.now() - started,
+    caseId: row?.caseId,
+    capabilityId: row?.capabilityId,
+    playbookRunId: row?.playbookRunId ?? null,
+  };
+}
 
+async function cleanupCollectedRun(
+  jobId: string,
+  collected: CollectResult | undefined
+): Promise<void> {
+  if (!collected) return;
+  clearTimeout(collected.runtime.timer);
+  await rm(collected.runtime.scratchDir, {
+    recursive: true,
+    force: true,
+  }).catch((cleanupError: unknown) => {
+    logSwallowed("job.scratch_cleanup", cleanupError, { jobId });
+  });
+}
+
+interface ProposePipelineResult {
+  proposalId: string | null;
+  suppressedCount: number;
+  interpreted: InterpretStageResult;
+}
+
+async function proposeFromInterpret(
+  state: PreflightState,
+  interpreted: InterpretStageResult,
+  attachEvidenceIds: string[],
+  jobLog: JobLog,
+  proposalId: string | null,
+  suppressedCount: number
+): Promise<ProposePipelineResult> {
+  if (
+    interpreted.interpretError !== null ||
+    interpreted.patch.length === 0 ||
+    proposalId !== null
+  ) {
+    return { proposalId, suppressedCount, interpreted };
+  }
+
+  const { kept, suppressed } = await suppressStage(
+    state.job.caseId,
+    interpreted.patch,
+    jobLog
+  );
+  const proposed = await proposeStage({
+    caseId: state.job.caseId,
+    jobId: state.jobId,
+    kept,
+    suppressed,
+    resultSummary: interpreted.resultSummary,
+    attachEvidenceIds,
+  });
+  return {
+    proposalId: proposed.proposalId,
+    suppressedCount: proposed.suppressedCount,
+    interpreted: {
+      ...interpreted,
+      resultSummary: proposed.resultSummary,
+    },
+  };
+}
+
+function finalizeResultSummary(
+  interpreted: InterpretStageResult,
+  collected: CollectResult,
+  jobLog: JobLog
+): string | null {
+  let resultSummary = interpreted.resultSummary;
+  if (interpreted.interpretError !== null) {
+    resultSummary = logInterpretFailure(
+      jobLog,
+      interpreted.interpretError,
+      resultSummary
+    );
+  }
+  if (collected.fromCache && (resultSummary === null || resultSummary === "")) {
+    return "Reused prior Cap artifacts";
+  }
+  return resultSummary;
+}
+
+async function runReadyJob(
+  jobId: string,
+  state: PreflightState,
+  started: number
+): Promise<JobRunOutcome> {
   const jobLog = createJobLog(state.job.logs ?? []);
   let collected: CollectResult | undefined;
   let runOutcome: JobRunOutcomeName = "succeeded";
@@ -129,8 +226,6 @@ export async function executeJob(jobId: string): Promise<JobRunOutcome> {
     fromCache = collected.fromCache;
     reclaim = collected.reclaim;
 
-    // landEvidence already unions linkedSource for fresh runs;
-    // reclaim/cache paths already include it in evidenceIds.
     const attachEvidenceIds = await landEvidence(state, collected);
 
     let proposalId: string | null = state.job.proposalId ?? null;
@@ -145,46 +240,19 @@ export async function executeJob(jobId: string): Promise<JobRunOutcome> {
       }
     );
 
-    if (
-      interpreted.interpretError === null &&
-      interpreted.patch.length > 0 &&
-      proposalId === null
-    ) {
-      const { kept, suppressed } = await suppressStage(
-        state.job.caseId,
-        interpreted.patch,
-        jobLog
-      );
-      const proposed = await proposeStage({
-        caseId: state.job.caseId,
-        jobId: state.jobId,
-        kept,
-        suppressed,
-        resultSummary: interpreted.resultSummary,
-        attachEvidenceIds,
-      });
-      proposalId = proposed.proposalId;
-      suppressedCount = proposed.suppressedCount;
-      interpreted = {
-        ...interpreted,
-        resultSummary: proposed.resultSummary,
-      };
-    }
+    const proposed = await proposeFromInterpret(
+      state,
+      interpreted,
+      attachEvidenceIds,
+      jobLog,
+      proposalId,
+      suppressedCount
+    );
+    proposalId = proposed.proposalId;
+    suppressedCount = proposed.suppressedCount;
+    interpreted = proposed.interpreted;
 
-    let resultSummary = interpreted.resultSummary;
-    if (interpreted.interpretError !== null) {
-      resultSummary = logInterpretFailure(
-        jobLog,
-        interpreted.interpretError,
-        resultSummary
-      );
-    }
-    if (
-      collected.fromCache &&
-      (resultSummary === null || resultSummary === "")
-    ) {
-      resultSummary = "Reused prior Cap artifacts";
-    }
+    const resultSummary = finalizeResultSummary(interpreted, collected, jobLog);
 
     const finishOutcome = await finish({
       state,
@@ -218,8 +286,7 @@ export async function executeJob(jobId: string): Promise<JobRunOutcome> {
     }
   } catch (error: unknown) {
     const signal =
-      collected?.runtime.controller.signal ??
-      activeControllers.get(jobId)?.signal;
+      collected?.runtime.controller.signal ?? getActiveJobAbortSignal(jobId);
     const classified = classifyRun({ signal, threw: true });
     abortReason = classified.abortReason;
     runOutcome = classified.outcome;
@@ -232,16 +299,8 @@ export async function executeJob(jobId: string): Promise<JobRunOutcome> {
       caseId: state.job.caseId,
     });
   } finally {
-    if (collected) {
-      clearTimeout(collected.runtime.timer);
-      await rm(collected.runtime.scratchDir, {
-        recursive: true,
-        force: true,
-      }).catch((cleanupError: unknown) => {
-        logSwallowed("job.scratch_cleanup", cleanupError, { jobId });
-      });
-    }
-    activeControllers.delete(jobId);
+    await cleanupCollectedRun(jobId, collected);
+    unregisterActiveJobController(jobId);
   }
 
   return {
@@ -254,4 +313,17 @@ export async function executeJob(jobId: string): Promise<JobRunOutcome> {
     capabilityId: state.job.capabilityId,
     playbookRunId: state.job.playbookRunId ?? null,
   };
+}
+
+/**
+ * Cap Job orchestrator — preflight → collect → land-evidence → interpret →
+ * suppress → propose → finish → cache.
+ */
+export async function executeJob(jobId: string): Promise<JobRunOutcome> {
+  const started = Date.now();
+  const ready = await preflight(jobId);
+  if (ready.kind === "stop") {
+    return handlePreflightStop(jobId, ready.reason, started);
+  }
+  return runReadyJob(jobId, ready.state, started);
 }

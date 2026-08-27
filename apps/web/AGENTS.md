@@ -25,8 +25,8 @@ TanStack Start UI for Watchdog. Web UI contracts live in [`docs/`](docs/README.m
 | Dev | `pnpm dev:web` |
 | Typecheck | `pnpm --filter @watchdog/web typecheck` |
 | DS bans | `pnpm --filter @watchdog/web ds:check` |
-| Unit tests | `pnpm test:unit` (packages + worker; web libs are **not** in this project) |
-| Component tests | `pnpm test:component` (`apps/web/src/**/__tests__/**`, including `*.test.ts`) |
+| Unit tests | `pnpm test:unit` (packages + worker + web `*.test.ts`) |
+| Component tests | `pnpm test:component` (`*.component.test.tsx` + hook RTL tests) |
 | E2E | `pnpm test:e2e` |
 | Generate routes | `pnpm generate-routes` |
 | Build | `pnpm build` |
@@ -53,6 +53,7 @@ TanStack Start UI for Watchdog. Web UI contracts live in [`docs/`](docs/README.m
 - CSRF: keep `createCsrfMiddleware({ filter: serverFn })` in `requestMiddleware` after evlog (`[evlogRequestMiddleware, csrfMiddleware]` — logger outermost). ServerFn paths skip the `/api/**` request logger; CSRF 403s on `/_serverFn` still emit a warn (`auth.reason: "csrf"`). Custom `start.ts` disables Start’s auto-install.
 - ServerFn auth is global: `functionMiddleware: [evlogFunctionMiddleware, requireAuth]` (logger outermost so `UnauthorizedError` still emits). Do not re-add per-fn `.middleware([requireAuth])`. No per-fn opt-out — public endpoints = HTTP `routes/api/*`, never an unauthenticated ServerFn. Expected denials (`UnauthorizedError` from `requireSession`) log `level: "warn"` + `auth: { denied, reason: "no_session" }`; unexpected throws use `log.error`.
 - Auth layers stay separate: BA UI / `_protected` = UX redirect; Start `requireAuth` = data gate (throw `UnauthorizedError`); `/api/auth` = cookies.
+- Better Auth API keys inherit full account authority (same as session). Default expiry is 90 days with rate limiting enabled in `auth/server.ts`.
 
 ## See also / External References
 

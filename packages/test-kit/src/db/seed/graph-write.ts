@@ -7,17 +7,18 @@ export async function seedGraphWrite(
   exec: DbExec,
   caseId: string,
   patch: PatchOp[],
-  overrides: Partial<NewGraphWrite> = {}
+  overrides?: Partial<NewGraphWrite>
 ): Promise<{ id: string }> {
+  const overridesResolved = overrides ?? {};
   const created = await graphWritesRepo.create(exec, {
     caseId,
-    actorId: overrides.actorId ?? TEST_ACTOR_ID,
-    channel: overrides.channel ?? "agent_write",
-    userOverridden: overrides.userOverridden ?? true,
-    confidence: overrides.confidence ?? "unverified",
-    summary: overrides.summary ?? null,
+    actorId: overridesResolved.actorId ?? TEST_ACTOR_ID,
+    channel: overridesResolved.channel ?? "agent_write",
+    userOverridden: overridesResolved.userOverridden ?? true,
+    confidence: overridesResolved.confidence ?? "unverified",
+    summary: overridesResolved.summary ?? null,
     patch,
-    idempotencyKey: overrides.idempotencyKey ?? null,
+    idempotencyKey: overridesResolved.idempotencyKey ?? null,
   });
   if (!created) {
     throw new Error("seedGraphWrite failed");

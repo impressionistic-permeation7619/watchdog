@@ -1,1 +1,1 @@
-export { oembedSnapshotSchema, type OembedSnapshot } from "@watchdog/tools";
+export { oembedSnapshotSchema } from "@watchdog/tools";

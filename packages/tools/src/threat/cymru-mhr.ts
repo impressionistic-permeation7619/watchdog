@@ -1,11 +1,10 @@
-import { Resolver } from "node:dns/promises";
-
 import { z } from "zod";
 
 import {
-  abortedToolsError,
-  validationToolsError,
-} from "../errors/tools-error";
+  assertNotAborted,
+  withAbortableResolver,
+} from "../dns/abortable-resolver";
+import { validationToolsError } from "../errors/tools-error";
 
 export const cymruMhrLookupSnapshotSchema = z.object({
   hash: z.string().min(1),
@@ -80,25 +79,16 @@ export async function fetchCymruMhrLookup(
   const hash = normalizeCymruMhrHash(hashRaw);
   const domain = `${labelsForHash(hash)}.hash.cymru.com`;
 
-  const resolver = new Resolver();
-  const onAbort = () => {
-    try {
-      resolver.cancel();
-    } catch {
-      // already cancelled / idle
-    }
-  };
-  if (signal.aborted) {
-    onAbort();
-    throw abortedToolsError("Team Cymru MHR lookup aborted");
-  }
-  signal.addEventListener("abort", onAbort, { once: true });
+  const { resolver, cleanup } = withAbortableResolver(
+    signal,
+    "Team Cymru MHR lookup aborted"
+  );
 
   try {
     const answers = await resolver
       .resolveTxt(domain)
       .catch(() => [] as string[][]);
-    if (signal.aborted) throw abortedToolsError("Team Cymru MHR lookup aborted");
+    assertNotAborted(signal, "Team Cymru MHR lookup aborted");
 
     const { lastSeenEpoch, detectionPct } = parseTxtAnswer(answers);
     return cymruMhrLookupSnapshotSchema.parse({
@@ -110,6 +100,6 @@ export async function fetchCymruMhrLookup(
       detectionPct,
     });
   } finally {
-    signal.removeEventListener("abort", onAbort);
+    cleanup();
   }
 }

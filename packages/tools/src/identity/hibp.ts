@@ -1,5 +1,11 @@
 import { z } from "zod";
 
+import {
+  httpToolsError,
+  missingApiKey,
+  validationToolsError,
+} from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
 import { recordRows } from "../parse/coerce";
 
 export const hibpBreachSchema = z.object({
@@ -27,18 +33,24 @@ export type HibpLookupSnapshot = z.infer<typeof hibpLookupSnapshotSchema>;
  * HIBP breachedaccount (metadata only — no plaintext passwords).
  * Requires API key. Truncated list (max 40) for Proposal hygiene.
  */
+
+interface HibpOptions {
+  userAgent?: string;
+  truncate?: number;
+}
 export async function fetchHibpBreachedAccount(
   email: string,
   apiKey: string,
   signal: AbortSignal,
-  options?: { userAgent?: string; truncate?: number }
+  options?: HibpOptions
 ): Promise<HibpLookupSnapshot> {
   const normalized = email.trim().toLowerCase();
-  if (!normalized.includes("@")) throw new Error(`Invalid email: ${email}`);
+  if (!normalized.includes("@"))
+    throw validationToolsError(`Invalid email: ${email}`);
   const key = apiKey.trim();
-  if (!key) throw new Error("HIBP_API_KEY required");
+  if (!key) throw missingApiKey("HIBP_API_KEY");
 
-  const ua = options?.userAgent ?? "Watchdog/1.0 (+breach.hibp.lookup; OSINT)";
+  const ua = options?.userAgent ?? watchdogUserAgent("breach.hibp.lookup");
   const truncate = options?.truncate ?? 40;
   const url = `https://haveibeenpwned.com/api/v3/breachedaccount/${encodeURIComponent(normalized)}?truncateResponse=false`;
 
@@ -64,7 +76,11 @@ export async function fetchHibpBreachedAccount(
   }
 
   if (!res.ok) {
-    throw new Error(`HIBP API ${res.status} for ${normalized}`);
+    throw httpToolsError(
+      "HIBP API",
+      res.status,
+      `HIBP API ${res.status} for ${normalized}`
+    );
   }
 
   const raw: unknown = await res.json();

@@ -60,3 +60,7 @@ export function validationToolsError(message: string): ToolsError {
 export function abortedToolsError(message: string): ToolsError {
   return new ToolsError(message, { code: "aborted" });
 }
+
+export function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}

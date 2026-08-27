@@ -16,44 +16,111 @@ export const fileAnalyzeSnapshotSchema = z.object({
 
 export type FileAnalyzeSnapshot = z.infer<typeof fileAnalyzeSnapshotSchema>;
 
+const EXIF_HINT_KEYS = [
+  "Make",
+  "Model",
+  "DateTimeOriginal",
+  "GPSLatitude",
+  "Software",
+  "Artist",
+  "Copyright",
+] as const;
+
+const PDF_HINT_KEYS = [
+  "/Author",
+  "/Creator",
+  "/Producer",
+  "/Title",
+  "/ModDate",
+  "/CreationDate",
+] as const;
+
+interface MagicSignature {
+  magic: string;
+  mime: string;
+  matchesBytes: (bytes: Uint8Array) => boolean;
+}
+
+const MAGIC_SIGNATURES: MagicSignature[] = [
+  {
+    magic: "JPEG",
+    mime: "image/jpeg",
+    matchesBytes: (b) =>
+      b.length >= 3 && b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff,
+  },
+  {
+    magic: "PNG",
+    mime: "image/png",
+    matchesBytes: (b) =>
+      b.length >= 8 &&
+      b[0] === 0x89 &&
+      b[1] === 0x50 &&
+      b[2] === 0x4e &&
+      b[3] === 0x47,
+  },
+  {
+    magic: "PDF",
+    mime: "application/pdf",
+    matchesBytes: (b) =>
+      b.length >= 4 &&
+      b[0] === 0x25 &&
+      b[1] === 0x50 &&
+      b[2] === 0x44 &&
+      b[3] === 0x46,
+  },
+  {
+    magic: "ZIP",
+    mime: "application/zip",
+    matchesBytes: (b) =>
+      b.length >= 4 &&
+      b[0] === 0x50 &&
+      b[1] === 0x4b &&
+      (b[2] === 0x03 || b[2] === 0x05 || b[2] === 0x07),
+  },
+];
+
 function detectMagic(
   bytes: Uint8Array
 ): { magic: string; mime: string } | null {
-  if (
-    bytes.length >= 3 &&
-    bytes[0] === 0xff &&
-    bytes[1] === 0xd8 &&
-    bytes[2] === 0xff
-  ) {
-    return { magic: "JPEG", mime: "image/jpeg" };
-  }
-  if (
-    bytes.length >= 8 &&
-    bytes[0] === 0x89 &&
-    bytes[1] === 0x50 &&
-    bytes[2] === 0x4e &&
-    bytes[3] === 0x47
-  ) {
-    return { magic: "PNG", mime: "image/png" };
-  }
-  if (
-    bytes.length >= 4 &&
-    bytes[0] === 0x25 &&
-    bytes[1] === 0x50 &&
-    bytes[2] === 0x44 &&
-    bytes[3] === 0x46
-  ) {
-    return { magic: "PDF", mime: "application/pdf" };
-  }
-  if (
-    bytes.length >= 4 &&
-    bytes[0] === 0x50 &&
-    bytes[1] === 0x4b &&
-    (bytes[2] === 0x03 || bytes[2] === 0x05 || bytes[2] === 0x07)
-  ) {
-    return { magic: "ZIP", mime: "application/zip" };
+  for (const sig of MAGIC_SIGNATURES) {
+    if (sig.matchesBytes(bytes)) return { magic: sig.magic, mime: sig.mime };
   }
   return null;
+}
+
+function collectExifHints(asLatin: string): string[] {
+  return EXIF_HINT_KEYS.filter((key) => asLatin.includes(key));
+}
+
+function collectPdfHints(
+  asLatin: string,
+  magic: { magic: string; mime: string } | null
+): string[] {
+  if (magic?.magic !== "PDF" && !asLatin.startsWith("%PDF")) return [];
+  const hints: string[] = [];
+  for (const key of PDF_HINT_KEYS) {
+    const idx = asLatin.indexOf(key);
+    if (idx === -1) continue;
+    const slice = asLatin
+      .slice(idx, idx + 80)
+      .replaceAll(/[^\u0020-\u007E]/g, " ");
+    hints.push(slice.trim());
+  }
+  return hints;
+}
+
+function buildTextPreview(
+  bytes: Uint8Array,
+  magic: { magic: string; mime: string } | null
+): string | null {
+  if (magic && !magic.mime.startsWith("text/") && magic.magic !== "PDF") {
+    return null;
+  }
+  const utf = new TextDecoder().decode(bytes.slice(0, 4000));
+  if (!/^[\t\n\r\u0020-\u007E\u00A0-\uFFFF]*$/u.test(utf.slice(0, 200))) {
+    return null;
+  }
+  return utf.slice(0, 2000);
 }
 
 /** Lightweight EXIF/PDF string harvesting — no native deps. */
@@ -65,46 +132,6 @@ export function analyzeFileBytes(
   const asLatin = new TextDecoder("latin1").decode(
     bytes.slice(0, Math.min(bytes.length, 256_000))
   );
-  const exifHints: string[] = [];
-  for (const key of [
-    "Make",
-    "Model",
-    "DateTimeOriginal",
-    "GPSLatitude",
-    "Software",
-    "Artist",
-    "Copyright",
-  ]) {
-    if (asLatin.includes(key)) exifHints.push(key);
-  }
-
-  const pdfHints: string[] = [];
-  if (magic?.magic === "PDF" || asLatin.startsWith("%PDF")) {
-    for (const key of [
-      "/Author",
-      "/Creator",
-      "/Producer",
-      "/Title",
-      "/ModDate",
-      "/CreationDate",
-    ]) {
-      const idx = asLatin.indexOf(key);
-      if (idx !== -1) {
-        const slice = asLatin
-          .slice(idx, idx + 80)
-          .replaceAll(/[^\u0020-\u007E]/g, " ");
-        pdfHints.push(slice.trim());
-      }
-    }
-  }
-
-  let textPreview: string | null = null;
-  if (!magic || magic.mime.startsWith("text/") || magic.magic === "PDF") {
-    const utf = new TextDecoder().decode(bytes.slice(0, 4000));
-    if (/^[\t\n\r\u0020-\u007E\u00A0-\uFFFF]*$/u.test(utf.slice(0, 200))) {
-      textPreview = utf.slice(0, 2000);
-    }
-  }
 
   return fileAnalyzeSnapshotSchema.parse({
     evidenceId,
@@ -113,8 +140,8 @@ export function analyzeFileBytes(
     sha256: createHash("sha256").update(bytes).digest("hex"),
     magic: magic?.magic ?? null,
     mimeGuess: magic?.mime ?? null,
-    exifHints,
-    pdfHints,
-    textPreview,
+    exifHints: collectExifHints(asLatin),
+    pdfHints: collectPdfHints(asLatin, magic),
+    textPreview: buildTextPreview(bytes, magic),
   });
 }

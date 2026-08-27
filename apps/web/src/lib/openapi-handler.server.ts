@@ -1,14 +1,14 @@
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
-import { CORSPlugin } from "@orpc/server/plugins";
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
 
 import { createApiContext } from "@/auth/api-context.server";
+import { watchdogCorsPlugin } from "@/lib/api-cors.server";
 import { router } from "@watchdog/api";
 
 const openApiHandler = new OpenAPIHandler(router, {
   plugins: [
-    new CORSPlugin(),
+    watchdogCorsPlugin,
     new OpenAPIReferencePlugin({
       schemaConverters: [new ZodToJsonSchemaConverter()],
       specGenerateOptions: {

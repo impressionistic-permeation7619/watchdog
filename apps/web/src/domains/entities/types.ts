@@ -1,25 +1,15 @@
 import { z } from "zod";
 
 import { slugifyName } from "@/lib/utils";
+import type { EntityRecord as CoreEntityRecord } from "@watchdog/core";
 import {
   entityKindSchema,
   nonEmptyTrimmed,
   trimmedOrUndefined,
   uuidSchema,
-  type EntityKind,
 } from "@watchdog/schemas";
 
-export interface EntityRecord {
-  id: string;
-  caseId: string;
-  kind: EntityKind;
-  name: string;
-  slug: string;
-  summary: string | null;
-  notes: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
+export type EntityRecord = CoreEntityRecord;
 
 export const caseIdInputSchema = z.object({
   caseId: uuidSchema,

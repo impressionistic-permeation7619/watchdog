@@ -1,12 +1,9 @@
 import { z } from "zod";
 
+import { missingApiKey } from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
+import { fetchJsonObject } from "../http/fetch-json";
 import { classifyIpOrHost } from "../parse/classify-ip-or-host";
-import {
-  httpToolsError,
-  missingApiKey,
-  parseToolsError,
-  rateLimitedToolsError,
-} from "../errors/tools-error";
 import { asString, isRecord } from "../parse/coerce";
 
 export const urlhausLookupSnapshotSchema = z.object({
@@ -68,18 +65,21 @@ function emptyResult(
  * POST …/v1/{url,host,payload}/ with Auth-Key header. Never downloads samples.
  * @see https://urlhaus-api.abuse.ch/
  */
+
+interface UrlhausOptions {
+  userAgent?: string;
+}
 export async function fetchUrlhausLookup(
   queryRaw: string,
   apiKey: string,
   signal: AbortSignal,
-  options?: { userAgent?: string }
+  options?: UrlhausOptions
 ): Promise<UrlhausLookupSnapshot> {
   const { kind, value } = classifyQuery(queryRaw);
   const key = apiKey.trim();
   if (!key) throw missingApiKey("THREATFOX_API_KEY");
 
-  const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+threat.urlhaus.lookup; OSINT)";
+  const ua = options?.userAgent ?? watchdogUserAgent("threat.urlhaus.lookup");
 
   let endpoint: "url" | "payload" | "host";
   if (kind === "url") {
@@ -98,33 +98,22 @@ export async function fetchUrlhausLookup(
     body.set(value.length === 64 ? "sha256_hash" : "md5_hash", value);
   }
 
-  const res = await fetch(`https://urlhaus-api.abuse.ch/v1/${endpoint}/`, {
-    method: "POST",
-    signal,
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/x-www-form-urlencoded",
-      "Auth-Key": key,
-      "User-Agent": ua,
+  const raw = await fetchJsonObject({
+    url: `https://urlhaus-api.abuse.ch/v1/${endpoint}/`,
+    init: {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Auth-Key": key,
+        "User-Agent": ua,
+      },
+      body,
     },
-    body,
+    signal,
+    service: "URLhaus",
+    subject: value,
   });
-
-  if (res.status === 429) {
-    throw rateLimitedToolsError("URLhaus", value);
-  }
-  if (!res.ok) {
-    throw httpToolsError(
-      "URLhaus API",
-      res.status,
-      `URLhaus API ${res.status} for ${value}`
-    );
-  }
-
-  const raw: unknown = await res.json();
-  if (!isRecord(raw)) {
-    throw parseToolsError("URLhaus", value);
-  }
   const queryStatus = asString(raw.query_status) ?? "unknown";
 
   if (queryStatus !== "ok") {

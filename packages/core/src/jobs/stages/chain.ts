@@ -1,6 +1,6 @@
 import {
   decidePlaybookAdvance,
-  getPlaybook,
+  requirePlaybook,
   normalizePlaybookStep,
   predecessorFromJob,
   seedValuesFromJson,
@@ -26,20 +26,21 @@ async function maybeFinishPlaybookRun(
   exec: DbExec,
   playbookRunId: string
 ): Promise<void> {
-  const members = await jobsRepo.listStatusesForPlaybookRun(
-    exec,
-    playbookRunId
-  );
-  if (members.some((m) => isOpenJobStatus(m.status))) return;
-  await playbookRunsRepo.setStatus(
-    exec,
-    playbookRunId,
-    "finished",
-    new Date(),
-    {
-      onlyStatuses: ["running"],
-    }
-  );
+  return jobsRepo
+    .listStatusesForPlaybookRun(exec, playbookRunId)
+    .then((members) => {
+      if (members.some((m) => isOpenJobStatus(m.status))) return;
+      return playbookRunsRepo.setStatus(
+        exec,
+        playbookRunId,
+        "finished",
+        new Date(),
+        {
+          onlyStatuses: ["running"],
+        }
+      );
+    })
+    .then(() => {});
 }
 
 interface ReleasedJob {
@@ -52,26 +53,29 @@ async function enqueueReleased(
   playbookRunId: string,
   released: ReleasedJob[]
 ): Promise<void> {
-  if (released.length === 0) return;
-  await Promise.all(
+  if (released.length === 0) return Promise.resolve();
+  return Promise.all(
     released.map(async (row) => enqueueCapJob(row.id, row.capabilityId))
-  );
-  await Promise.all(
-    released.map(async (row) =>
-      notifyEvent({
-        type: "job_update",
-        caseId,
-        jobId: row.id,
-        status: "queued",
-      }).catch((notifyError: unknown) => {
-        logSwallowed("playbook.notify", notifyError, {
-          caseId,
-          playbookRunId,
-          jobId: row.id,
-        });
-      })
+  )
+    .then(async () =>
+      Promise.all(
+        released.map(async (row) =>
+          notifyEvent({
+            type: "job_update",
+            caseId,
+            jobId: row.id,
+            status: "queued",
+          }).catch((notifyError: unknown) => {
+            logSwallowed("playbook.notify", notifyError, {
+              caseId,
+              playbookRunId,
+              jobId: row.id,
+            });
+          })
+        )
+      )
     )
-  );
+    .then(() => {});
 }
 
 async function enqueueStepJobs(opts: {
@@ -86,44 +90,46 @@ async function enqueueStepJobs(opts: {
   capabilityId: string;
   inputs: JsonObject[];
 }): Promise<ReleasedJob[]> {
-  const { tx, run, playbookRunId, jobs, step, capabilityId, inputs } = opts;
-  const created: ReleasedJob[] = [];
-  for (let i = 0; i < inputs.length; i += 1) {
-    const existing = jobs.find(
-      (j) => j.playbookStep === step && j.playbookFanIndex === i
-    );
-    if (existing) {
-      if (existing.status === "blocked") {
-        // oxlint-disable-next-line no-await-in-loop -- same-tx ordered fan-index updates
-        await jobsRepo.update(tx, existing.id, {
-          input: inputs[i],
-          status: "queued",
-        });
-        created.push({
-          id: existing.id,
-          capabilityId: existing.capabilityId,
-        });
+  return (async () => {
+    const { tx, run, playbookRunId, jobs, step, capabilityId, inputs } = opts;
+    const created: ReleasedJob[] = [];
+    for (let i = 0; i < inputs.length; i += 1) {
+      const existing = jobs.find(
+        (j) => j.playbookStep === step && j.playbookFanIndex === i
+      );
+      if (existing) {
+        if (existing.status === "blocked") {
+          // oxlint-disable-next-line no-await-in-loop -- same-tx ordered fan-index updates
+          await jobsRepo.update(tx, existing.id, {
+            input: inputs[i],
+            status: "queued",
+          });
+          created.push({
+            id: existing.id,
+            capabilityId: existing.capabilityId,
+          });
+        }
+        continue;
       }
-      continue;
+      // oxlint-disable-next-line no-await-in-loop -- same-tx ordered fan-index inserts
+      const row = await jobsRepo.create(tx, {
+        caseId: run.caseId,
+        capabilityId,
+        input: inputs[i],
+        status: "queued",
+        actorId: run.actorId,
+        logs: [],
+        playbookRunId,
+        playbookStep: step,
+        playbookFanIndex: i,
+      });
+      if (!row) {
+        throw new Error(`Failed to create playbook Job at step ${step} · ${i}`);
+      }
+      created.push({ id: row.id, capabilityId: row.capabilityId });
     }
-    // oxlint-disable-next-line no-await-in-loop -- same-tx ordered fan-index inserts
-    const row = await jobsRepo.create(tx, {
-      caseId: run.caseId,
-      capabilityId,
-      input: inputs[i],
-      status: "queued",
-      actorId: run.actorId,
-      logs: [],
-      playbookRunId,
-      playbookStep: step,
-      playbookFanIndex: i,
-    });
-    if (!row) {
-      throw new Error(`Failed to create playbook Job at step ${step} · ${i}`);
-    }
-    created.push({ id: row.id, capabilityId: row.capabilityId });
-  }
-  return created;
+    return created;
+  })();
 }
 
 export async function advancePlaybookRun(input: {
@@ -131,60 +137,67 @@ export async function advancePlaybookRun(input: {
   caseId?: string;
 }): Promise<void> {
   const { playbookRunId } = input;
-  const outcome = await db.transaction(async (tx) => {
-    const run = await playbookRunsRepo.lock(tx, playbookRunId);
-    if (!run || run.status !== "running") {
-      return { jobs: [] as ReleasedJob[], caseId: input.caseId };
-    }
+  return db
+    .transaction(async (tx) => {
+      const run = await playbookRunsRepo.lock(tx, playbookRunId);
+      if (!run || run.status !== "running") {
+        return { jobs: [] as ReleasedJob[], caseId: input.caseId };
+      }
 
-    const playbook = getPlaybook(run.playbookId);
-    const seed = isJsonObject(run.seed) ? seedValuesFromJson(run.seed) : {};
-    const jobs = await jobsRepo.listForPlaybookRun(tx, playbookRunId);
-    const predecessors = jobs.map((row) => predecessorFromJob(row));
-    const views = jobs.map((row) => ({
-      step: row.playbookStep ?? 0,
-      status: row.status,
-    }));
-    const decision = decidePlaybookAdvance(playbook, seed, views, predecessors);
+      const playbook = requirePlaybook(run.playbookId);
+      const seed = isJsonObject(run.seed) ? seedValuesFromJson(run.seed) : {};
+      const jobs = await jobsRepo.listForPlaybookRun(tx, playbookRunId);
+      const predecessors = jobs.map((row) => predecessorFromJob(row));
+      const views = jobs.map((row) => ({
+        step: row.playbookStep ?? 0,
+        status: row.status,
+      }));
+      const decision = decidePlaybookAdvance(
+        playbook,
+        seed,
+        views,
+        predecessors
+      );
 
-    switch (decision.kind) {
-      case "wait": {
-        return { jobs: [], caseId: run.caseId };
+      switch (decision.kind) {
+        case "wait": {
+          return { jobs: [], caseId: run.caseId };
+        }
+        case "finish": {
+          await maybeFinishPlaybookRun(tx, playbookRunId);
+          return { jobs: [], caseId: run.caseId };
+        }
+        case "abandon": {
+          await jobsRepo.abandonBlockedForPlaybook(
+            tx,
+            playbookRunId,
+            decision.reason
+          );
+          await maybeFinishPlaybookRun(tx, playbookRunId);
+          return { jobs: [], caseId: run.caseId };
+        }
+        case "enqueue": {
+          const def = normalizePlaybookStep(playbook.steps[decision.step]);
+          const created = await enqueueStepJobs({
+            tx,
+            run,
+            playbookRunId,
+            jobs,
+            step: decision.step,
+            capabilityId: def.capabilityId,
+            inputs: decision.inputs,
+          });
+          return { jobs: created, caseId: run.caseId };
+        }
+        default: {
+          const _exhaustive: never = decision;
+          return _exhaustive;
+        }
       }
-      case "finish": {
-        await maybeFinishPlaybookRun(tx, playbookRunId);
-        return { jobs: [], caseId: run.caseId };
-      }
-      case "abandon": {
-        await jobsRepo.abandonBlockedForPlaybook(
-          tx,
-          playbookRunId,
-          decision.reason
-        );
-        await maybeFinishPlaybookRun(tx, playbookRunId);
-        return { jobs: [], caseId: run.caseId };
-      }
-      case "enqueue": {
-        const def = normalizePlaybookStep(playbook.steps[decision.step]);
-        const created = await enqueueStepJobs({
-          tx,
-          run,
-          playbookRunId,
-          jobs,
-          step: decision.step,
-          capabilityId: def.capabilityId,
-          inputs: decision.inputs,
-        });
-        return { jobs: created, caseId: run.caseId };
-      }
-      default: {
-        const _exhaustive: never = decision;
-        return _exhaustive;
-      }
-    }
-  });
-
-  const caseId = outcome.caseId ?? input.caseId;
-  if (caseId === undefined) return;
-  await enqueueReleased(caseId, playbookRunId, outcome.jobs);
+    })
+    .then((outcome) => {
+      const caseId = outcome.caseId ?? input.caseId;
+      if (caseId === undefined) return;
+      return enqueueReleased(caseId, playbookRunId, outcome.jobs);
+    });
 }

@@ -2,6 +2,8 @@ import { createHash } from "node:crypto";
 
 import { z } from "zod";
 
+import { httpToolsError } from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
 import { asString, isRecord, recordRows } from "../parse/coerce";
 import { normalizeEmail } from "./email-lookup";
 
@@ -113,15 +115,19 @@ export function parseGravatarBody(
  * GET https://secure.gravatar.com/{md5}.json — 404 = no public profile.
  * @see https://docs.gravatar.com/api/profiles/
  */
+
+interface GravatarOptions {
+  userAgent?: string;
+}
 export async function fetchGravatarLookup(
   emailRaw: string,
   signal: AbortSignal,
-  options?: { userAgent?: string }
+  options?: GravatarOptions
 ): Promise<GravatarLookupSnapshot> {
   const { email } = normalizeEmail(emailRaw);
   const hash = gravatarEmailHash(email);
   const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+identity.gravatar.lookup; OSINT)";
+    options?.userAgent ?? watchdogUserAgent("identity.gravatar.lookup");
 
   const url = `https://secure.gravatar.com/${hash}.json`;
   const res = await fetch(url, {
@@ -136,7 +142,11 @@ export async function fetchGravatarLookup(
   }
 
   if (!res.ok) {
-    throw new Error(`Gravatar API ${res.status} for ${hash}`);
+    throw httpToolsError(
+      "Gravatar API",
+      res.status,
+      `Gravatar API ${res.status} for ${hash}`
+    );
   }
 
   const body: unknown = await res.json();

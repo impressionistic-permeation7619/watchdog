@@ -25,7 +25,6 @@ export {
   type IdentifierPasteRowOverride,
   type IdentifierPasteTable,
   type IdentifierPasteTarget,
-  type PasteDelimiter,
 } from "./parse-identifier-paste.types";
 export {
   applyIdentifierPasteRowOverrides,
@@ -349,6 +348,30 @@ function tryParseJsonPaste(text: string): IdentifierPasteTable | null {
 
 const LABEL_LINE = /^([^:\n]{1,40})\s*:\s+(.+)$/;
 
+interface LabeledField {
+  label: string;
+  value: string;
+}
+
+function parseLabeledPasteLine(trimmed: string): LabeledField | "invalid" {
+  const match = LABEL_LINE.exec(trimmed);
+  if (match === null) return "invalid";
+  const label = match[1]?.trim() ?? "";
+  const value = match[2]?.trim() ?? "";
+  if (headerHint(label) === null) return "invalid";
+  return { label, value };
+}
+
+function pushLabeledRecord(
+  records: Record<string, string>[],
+  current: Record<string, string> | null
+): Record<string, string> | null {
+  if (current !== null && Object.keys(current).length > 0) {
+    records.push(current);
+  }
+  return null;
+}
+
 function tryParseLabeledPaste(
   lines: readonly string[]
 ): IdentifierPasteTable | null {
@@ -357,22 +380,15 @@ function tryParseLabeledPaste(
   for (const line of lines) {
     const trimmed = line.trim();
     if (trimmed === "") {
-      if (current !== null && Object.keys(current).length > 0) {
-        records.push(current);
-        current = null;
-      }
+      current = pushLabeledRecord(records, current);
       continue;
     }
-    const match = LABEL_LINE.exec(trimmed);
-    if (match === null) return null;
-    const label = match[1]?.trim() ?? "";
-    const value = match[2]?.trim() ?? "";
-    if (headerHint(label) === null) return null;
+    const parsed = parseLabeledPasteLine(trimmed);
+    if (parsed === "invalid") return null;
     current ??= {};
-    current[label] = value;
+    current[parsed.label] = parsed.value;
   }
-  if (current !== null && Object.keys(current).length > 0)
-    records.push(current);
+  pushLabeledRecord(records, current);
   if (records.length === 0) return null;
   return recordsToTable(records);
 }
@@ -420,15 +436,34 @@ function splitLooseIdentifierList(line: string): string[] {
     .map((part) => part.trim())
     .filter((part) => part !== "");
   if (parts.length < 2) return [line];
-  if (
-    parts.every((part) => {
-      const inferred = inferPasteIdentity(part);
-      return inferred.type !== null;
-    })
-  ) {
+  if (parts.every((part) => inferPasteIdentity(part).type !== null)) {
     return parts;
   }
   return [line];
+}
+
+function splitPasteRow(line: string, delimiter: PasteDelimiter): string[] {
+  return delimiter === "none"
+    ? splitLooseIdentifierList(line)
+    : splitRow(line, delimiter);
+}
+
+function parseDelimitedPaste(
+  nonempty: readonly string[]
+): IdentifierPasteTable {
+  const delimiter = detectDelimiter(nonempty);
+  const firstCells = splitPasteRow(nonempty[0] ?? "", delimiter);
+  const hasHeader = looksLikeHeader(firstCells);
+  const headerLine = hasHeader ? (nonempty[0] ?? null) : null;
+  const dataSource = hasHeader ? nonempty.slice(1) : [...nonempty];
+  const cells = dataSource.map((line) => splitPasteRow(line, delimiter));
+  return tableFromGrid({
+    delimiter,
+    headers: hasHeader ? firstCells : null,
+    headerLine,
+    dataLines: dataSource,
+    cells,
+  });
 }
 
 export function parseIdentifierPasteTable(text: string): IdentifierPasteTable {
@@ -446,26 +481,7 @@ export function parseIdentifierPasteTable(text: string): IdentifierPasteTable {
   const markdown = tryParseMarkdownTable(nonempty);
   if (markdown !== null) return markdown;
 
-  const delimiter = detectDelimiter(nonempty);
-  const firstCells =
-    delimiter === "none"
-      ? splitLooseIdentifierList(nonempty[0] ?? "")
-      : splitRow(nonempty[0] ?? "", delimiter);
-  const hasHeader = looksLikeHeader(firstCells);
-  const headerLine = hasHeader ? (nonempty[0] ?? null) : null;
-  const dataSource = hasHeader ? nonempty.slice(1) : nonempty;
-  const cells = dataSource.map((line) =>
-    delimiter === "none"
-      ? splitLooseIdentifierList(line)
-      : splitRow(line, delimiter)
-  );
-  return tableFromGrid({
-    delimiter,
-    headers: hasHeader ? firstCells : null,
-    headerLine,
-    dataLines: dataSource,
-    cells,
-  });
+  return parseDelimitedPaste(nonempty);
 }
 
 export function identifierPasteColumnSamples(

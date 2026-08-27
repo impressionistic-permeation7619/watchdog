@@ -1,5 +1,6 @@
-import { Resolver } from "node:dns/promises";
+import type { Resolver } from "node:dns/promises";
 
+import { assertNotAborted, withAbortableResolver } from "./abortable-resolver";
 import {
   mailConfigSnapshotSchema,
   type MailConfigSnapshot,
@@ -24,31 +25,6 @@ function flattenTxt(chunks: string[][]): string[] {
   return chunks.map((parts) => parts.join(""));
 }
 
-function withResolverAbort(signal: AbortSignal): {
-  resolver: Resolver;
-  cleanup: () => void;
-} {
-  const resolver = new Resolver();
-  const onAbort = () => {
-    try {
-      resolver.cancel();
-    } catch {
-      // already cancelled / idle
-    }
-  };
-  if (signal.aborted) {
-    onAbort();
-    throw new Error("Mail config lookup aborted");
-  }
-  signal.addEventListener("abort", onAbort, { once: true });
-  return {
-    resolver,
-    cleanup: () => {
-      signal.removeEventListener("abort", onAbort);
-    },
-  };
-}
-
 async function resolveTxtFlat(
   resolver: Resolver,
   name: string
@@ -61,12 +37,19 @@ async function resolveTxtFlat(
  * Collect MX + SPF/DMARC/DKIM posture via DNS only (passive).
  * DKIM uses a small fixed selector list — not a full selector hunt.
  */
+
+interface MailConfigOptions {
+  dkimSelectors?: readonly string[];
+}
 export async function fetchMailConfig(
   host: string,
   signal: AbortSignal,
-  options?: { dkimSelectors?: readonly string[] }
+  options?: MailConfigOptions
 ): Promise<MailConfigSnapshot> {
-  const { resolver, cleanup } = withResolverAbort(signal);
+  const { resolver, cleanup } = withAbortableResolver(
+    signal,
+    "Mail config lookup aborted"
+  );
   try {
     const selectors = options?.dkimSelectors ?? DEFAULT_DKIM_SELECTORS;
     const [mx, txtRoot, txtDmarc, ...dkimResults] = await Promise.all([
@@ -86,7 +69,7 @@ export async function fetchMailConfig(
       }),
     ]);
 
-    if (signal.aborted) throw new Error("Mail config lookup aborted");
+    assertNotAborted(signal, "Mail config lookup aborted");
 
     const spfRecords = txtRoot.filter((r) => /v=spf1/i.test(r));
     const dmarcRecords = txtDmarc.filter((r) => /v=DMARC1/i.test(r));

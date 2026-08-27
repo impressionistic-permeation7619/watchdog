@@ -71,9 +71,7 @@ export function createCapRunHarness<
     },
     hasCredential: async (name) => opts?.secrets?.[name] !== undefined,
     allowThirdPartyEgress: true,
-    log: (message: string) => {
-      void message;
-    },
+    log: (_message: string) => {},
     ...(opts?.evidenceSnapshot === undefined
       ? {}
       : { evidenceSnapshot: opts.evidenceSnapshot }),

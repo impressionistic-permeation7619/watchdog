@@ -1,4 +1,3 @@
-// @ts-nocheck — shadcn vendor; excluded from project checks
 import * as React from "react";
 
 const MOBILE_BREAKPOINT = 768;

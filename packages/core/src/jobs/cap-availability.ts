@@ -1,11 +1,11 @@
 import type { z } from "zod";
 
+import type { CapabilityDef } from "@watchdog/cap-sdk";
 import {
-  checkPlaybookAvailability,
+  checkCapabilityAvailability,
   toCapDescriptor,
   type AvailabilityError,
   type AvailabilityResult,
-  type CapabilityDef,
 } from "@watchdog/caps";
 import { casesRepo, db } from "@watchdog/db";
 
@@ -40,8 +40,8 @@ export function formatCapAvailabilityError(
         : `Missing credential — set one of ${err.names.join(" | ")} in Settings before running ${capabilityId}`;
     }
     default: {
-      const _exhaustive: never = err;
-      return _exhaustive;
+      err satisfies never;
+      return "Capability unavailable";
     }
   }
 }
@@ -58,30 +58,32 @@ export async function evaluateCapAvailability(input: {
   const specs = desc.credentials ?? [];
   const names = credentialNames(specs);
   const present = new Set<string>();
-  await Promise.all(
-    names.map(async (name) => {
-      if (await hasCredential(input.actorId, name)) present.add(name);
+  return Promise.all(
+    names.map(async (name) =>
+      hasCredential(input.actorId, name).then((ok) => {
+        if (ok) present.add(name);
+      })
+    )
+  ).then(async () =>
+    casesRepo.getById(db, input.caseId).then((caseRow) => {
+      const allowThirdPartyEgress = caseRow?.allowThirdPartyEgress ?? false;
+      return {
+        allowThirdPartyEgress,
+        result: checkCapabilityAvailability(
+          {
+            credentials: specs,
+            egress: desc.egress ?? "none",
+            flags: desc.flags ?? [],
+          },
+          {
+            hasCredential: (name) => present.has(name),
+            allowThirdPartyEgress,
+            thirdPartyCapabilityId: input.cap.id,
+          }
+        ),
+      };
     })
   );
-
-  const caseRow = await casesRepo.getById(db, input.caseId);
-  const allowThirdPartyEgress = caseRow?.allowThirdPartyEgress ?? false;
-
-  return {
-    allowThirdPartyEgress,
-    result: checkPlaybookAvailability(
-      {
-        credentials: specs,
-        egress: desc.egress ?? "none",
-        flags: desc.flags ?? [],
-      },
-      {
-        hasCredential: (name) => present.has(name),
-        allowThirdPartyEgress,
-        thirdPartyCapabilityId: input.cap.id,
-      }
-    ),
-  };
 }
 
 /** Fail closed before enqueue — same predicate as playbooks / worker preflight. */
@@ -90,10 +92,11 @@ export async function assertCapAvailability(input: {
   caseId: string;
   cap: CapabilityDef<z.ZodType>;
 }): Promise<void> {
-  const { result } = await evaluateCapAvailability(input);
-  if (result.ok) return;
-  throw new DomainError(
-    "forbidden",
-    formatCapAvailabilityError(result, input.cap.id)
-  );
+  return evaluateCapAvailability(input).then(({ result }) => {
+    if (result.ok) return;
+    throw new DomainError(
+      "forbidden",
+      formatCapAvailabilityError(result, input.cap.id)
+    );
+  });
 }

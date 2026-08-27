@@ -1,7 +1,9 @@
-import { Resolver } from "node:dns/promises";
 import { isIP } from "node:net";
 
 import { z } from "zod";
+
+import { validationToolsError } from "../errors/tools-error";
+import { assertNotAborted, withAbortableResolver } from "./abortable-resolver";
 
 export const dnsReverseSnapshotSchema = z.object({
   ip: z.string().min(1),
@@ -15,7 +17,7 @@ export type DnsReverseSnapshot = z.infer<typeof dnsReverseSnapshotSchema>;
 export function normalizeIp(raw: string): string {
   const trimmed = raw.trim();
   if (!isIP(trimmed)) {
-    throw new Error(`Invalid IP address: ${raw}`);
+    throw validationToolsError(`Invalid IP address: ${raw}`);
   }
   return trimmed;
 }
@@ -26,24 +28,15 @@ export async function fetchDnsReverse(
   signal: AbortSignal
 ): Promise<DnsReverseSnapshot> {
   const normalized = normalizeIp(ip);
-  const resolver = new Resolver();
-  const onAbort = () => {
-    try {
-      resolver.cancel();
-    } catch {
-      // already cancelled / idle
-    }
-  };
-  if (signal.aborted) {
-    onAbort();
-    throw new Error("DNS reverse aborted");
-  }
-  signal.addEventListener("abort", onAbort, { once: true });
+  const { resolver, cleanup } = withAbortableResolver(
+    signal,
+    "DNS reverse aborted"
+  );
   try {
     const hostnames = await resolver
       .reverse(normalized)
       .catch(() => [] as string[]);
-    if (signal.aborted) throw new Error("DNS reverse aborted");
+    assertNotAborted(signal, "DNS reverse aborted");
     const cleaned = [
       ...new Set(
         hostnames
@@ -57,6 +50,6 @@ export async function fetchDnsReverse(
       hostnames: cleaned,
     });
   } finally {
-    signal.removeEventListener("abort", onAbort);
+    cleanup();
   }
 }

@@ -1,5 +1,12 @@
 import { z } from "zod";
 
+import {
+  httpToolsError,
+  parseToolsError,
+  rateLimitedToolsError,
+  validationToolsError,
+} from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
 import { asBool, asNumber, asString, isRecord } from "../parse/coerce";
 
 export const emailrepLookupSnapshotSchema = z.object({
@@ -32,7 +39,7 @@ export function parseEmailrepBody(
   body: unknown
 ): EmailrepLookupSnapshot {
   if (!isRecord(body)) {
-    throw new Error(`EmailRep response for ${email} was not a JSON object`);
+    throw parseToolsError("EmailRep", email);
   }
   const details = isRecord(body.details) ? body.details : {};
   const references = asNumber(body.references);
@@ -83,16 +90,22 @@ async function emailrepFailReason(res: Response): Promise<string> {
  * GET https://emailrep.io/{email}
  * @see https://docs.sublime.security/reference/emailrep-introduction
  */
+
+interface EmailrepOptions {
+  apiKey?: string;
+  userAgent?: string;
+}
 export async function fetchEmailrepLookup(
   emailRaw: string,
   signal: AbortSignal,
-  options?: { apiKey?: string; userAgent?: string }
+  options?: EmailrepOptions
 ): Promise<EmailrepLookupSnapshot> {
   const email = emailRaw.trim().toLowerCase();
-  if (!email.includes("@")) throw new Error(`Invalid email: ${emailRaw}`);
+  if (!email.includes("@"))
+    throw validationToolsError(`Invalid email: ${emailRaw}`);
 
   const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+identity.emailrep.lookup; OSINT)";
+    options?.userAgent ?? watchdogUserAgent("identity.emailrep.lookup");
   const key = options?.apiKey?.trim() ?? "";
 
   const headers: Record<string, string> = {
@@ -112,26 +125,26 @@ export async function fetchEmailrepLookup(
     if (
       reason.toLowerCase().includes("unauthenticated api is currently disabled")
     ) {
-      throw new Error(
+      throw validationToolsError(
         `EmailRep requires an API key (unauthenticated API disabled) for ${email}`
       );
     }
-    throw new Error(
-      reason === ""
-        ? `EmailRep HTTP 429 for ${email}`
-        : `EmailRep HTTP 429 for ${email}: ${reason}`
-    );
+    throw rateLimitedToolsError("EmailRep", email);
   }
   if (res.status === 401) {
-    throw new Error(`EmailRep API key invalid for ${email}`);
+    throw validationToolsError(`EmailRep API key invalid for ${email}`);
   }
   if (res.status === 403) {
-    throw new Error(
+    throw validationToolsError(
       `EmailRep rejected request (missing User-Agent) for ${email}`
     );
   }
   if (!res.ok) {
-    throw new Error(`EmailRep API ${res.status} for ${email}`);
+    throw httpToolsError(
+      "EmailRep API",
+      res.status,
+      `EmailRep API ${res.status} for ${email}`
+    );
   }
 
   const body: unknown = await res.json();

@@ -18,7 +18,7 @@ import { startJob, type JobRecord, toJobRecord } from "../jobs/start-job";
 /**
  * Shared Intake glue: load Evidence, dedupe against active Cap Jobs, startJob.
  */
-async function startCapForEvidence(input: {
+function startCapForEvidence(input: {
   caseId: string;
   evidenceId: string;
   actorId: string;
@@ -28,34 +28,30 @@ async function startCapForEvidence(input: {
   /** Optional gate after Evidence load (e.g. require http(s) URL). */
   assertSeed?: (seed: EvidenceCapSeed) => void;
 }): Promise<JobRecord> {
-  const seed = await evidenceRepo.getCapSeedInCase(
-    db,
-    input.caseId,
-    input.evidenceId
-  );
-  if (!seed) throw new DomainError("not_found", "Evidence not found");
-  input.assertSeed?.(seed);
-
-  const active = await jobsRepo.listActiveForCapability(
-    db,
-    input.caseId,
-    input.capabilityId
-  );
-  for (const job of active) {
-    if (input.matchActive(job, seed)) {
-      return toJobRecord(job);
-    }
-  }
-
-  return startJob({
-    caseId: input.caseId,
-    capabilityId: input.capabilityId,
-    actorId: input.actorId,
-    input: input.buildInput(seed),
-  });
+  return evidenceRepo
+    .getCapSeedInCase(db, input.caseId, input.evidenceId)
+    .then((seed) => {
+      if (!seed) throw new DomainError("not_found", "Evidence not found");
+      input.assertSeed?.(seed);
+      return jobsRepo
+        .listActiveForCapability(db, input.caseId, input.capabilityId)
+        .then((active) => {
+          for (const job of active) {
+            if (input.matchActive(job, seed)) {
+              return toJobRecord(job);
+            }
+          }
+          return startJob({
+            caseId: input.caseId,
+            capabilityId: input.capabilityId,
+            actorId: input.actorId,
+            input: input.buildInput(seed),
+          });
+        });
+    });
 }
 
-export async function processEvidence(input: {
+export function processEvidence(input: {
   caseId: string;
   evidenceId: string;
   actorId: string;
@@ -88,14 +84,16 @@ export async function processEvidence(input: {
   });
 }
 
-export async function markEvidenceProcessed(input: {
+export function markEvidenceProcessed(input: {
   caseId: string;
   evidenceId: string;
 }): Promise<void> {
-  await evidenceRepo.markProcessed(db, input.caseId, input.evidenceId);
+  return evidenceRepo
+    .markProcessed(db, input.caseId, input.evidenceId)
+    .then(() => {});
 }
 
-export async function enrichUrlEvidence(input: {
+export function enrichUrlEvidence(input: {
   caseId: string;
   evidenceId: string;
   actorId: string;

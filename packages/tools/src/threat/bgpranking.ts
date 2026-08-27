@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { normalizeIp } from "../dns/reverse";
 import { httpToolsError, ToolsError } from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
 import { asString, isRecord } from "../parse/coerce";
 
 export const bgprankingLookupSnapshotSchema = z.object({
@@ -60,21 +61,25 @@ async function fetchLatestAsn(
     );
   }
   const entries = isRecord(body.response) ? body.response : {};
-  const latestTimestamp = Object.keys(entries).sort().at(-1);
+  const latestTimestamp = Object.keys(entries)
+    .sort((a, b) => a.localeCompare(b))
+    .at(-1);
   if (!latestTimestamp) return null;
   const entry = entries[latestTimestamp];
   return toAsnNumber(isRecord(entry) ? entry.asn : undefined);
+}
+
+interface AsnRankingResult {
+  asnDescription: string | null;
+  asnRank: number | null;
+  asnPosition: number | null;
 }
 
 async function fetchAsnRanking(
   asn: number,
   signal: AbortSignal,
   ua: string
-): Promise<{
-  asnDescription: string | null;
-  asnRank: number | null;
-  asnPosition: number | null;
-}> {
+): Promise<AsnRankingResult> {
   const res = await fetch("https://bgpranking-ng.circl.lu/json/asn", {
     method: "POST",
     signal,
@@ -117,14 +122,18 @@ async function fetchAsnRanking(
  * POST https://bgpranking-ng.circl.lu/json/asn {"asn": N}
  * @see https://github.com/D4-project/bgp-ranking
  */
+
+interface BgprankingOptions {
+  userAgent?: string;
+}
 export async function fetchBgprankingLookup(
   ipRaw: string,
   signal: AbortSignal,
-  options?: { userAgent?: string }
+  options?: BgprankingOptions
 ): Promise<BgprankingLookupSnapshot> {
   const ip = normalizeIp(ipRaw);
   const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+threat.bgpranking.lookup; OSINT)";
+    options?.userAgent ?? watchdogUserAgent("threat.bgpranking.lookup");
 
   const asn = await fetchLatestAsn(ip, signal, ua);
   if (asn === null) {

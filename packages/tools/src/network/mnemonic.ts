@@ -3,6 +3,8 @@ import { isIP } from "node:net";
 import { z } from "zod";
 
 import { normalizeIp } from "../dns/reverse";
+import { httpToolsError, parseToolsError } from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
 import { classifyIpOrHost } from "../parse/classify-ip-or-host";
 import { asNumber, asStringEmpty as asString, isRecord } from "../parse/coerce";
 import { normalizeHost } from "../whois/normalize";
@@ -54,21 +56,27 @@ export function parseMnemonicPdnsBody(
   body: unknown
 ): MnemonicLookupSnapshot {
   if (!isRecord(body)) {
-    throw new Error(
-      `Mnemonic PDNS response for ${query} was not a JSON object`
-    );
+    throw parseToolsError("Mnemonic PDNS", query);
   }
 
   const responseCode = body.responseCode;
   if (responseCode === 402) {
-    throw new Error(`Mnemonic PDNS resource limit exceeded for ${query}`);
+    throw httpToolsError(
+      "Mnemonic PDNS",
+      402,
+      `Mnemonic PDNS resource limit exceeded for ${query}`
+    );
   }
   if (responseCode !== 200 && responseCode !== undefined) {
     const label =
       typeof responseCode === "number" || typeof responseCode === "string"
         ? String(responseCode)
         : JSON.stringify(responseCode);
-    throw new Error(`Mnemonic PDNS responseCode=${label} for ${query}`);
+    throw httpToolsError(
+      "Mnemonic PDNS",
+      typeof responseCode === "number" ? responseCode : 400,
+      `Mnemonic PDNS responseCode=${label} for ${query}`
+    );
   }
 
   const rows = Array.isArray(body.data) ? body.data : [];
@@ -154,15 +162,19 @@ export function parseMnemonicPdnsBody(
  * GET https://api.mnemonic.no/pdns/v3/{query}?limit=
  * @see https://docs.mnemonic.no/display/public/API/PassiveDNS+Integration+Guide
  */
+
+interface MnemonicOptions {
+  userAgent?: string;
+  limit?: number;
+}
 export async function fetchMnemonicPdns(
   queryRaw: string,
   signal: AbortSignal,
-  options?: { userAgent?: string; limit?: number }
+  options?: MnemonicOptions
 ): Promise<MnemonicLookupSnapshot> {
   const { kind, value } = classifyIpOrHost(queryRaw);
   const limit = Math.min(Math.max(options?.limit ?? 50, 1), 500);
-  const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+network.mnemonic.lookup; OSINT)";
+  const ua = options?.userAgent ?? watchdogUserAgent("network.mnemonic.lookup");
 
   const url = new URL(
     `https://api.mnemonic.no/pdns/v3/${encodeURIComponent(value)}`
@@ -177,7 +189,11 @@ export async function fetchMnemonicPdns(
   });
 
   if (!res.ok) {
-    throw new Error(`Mnemonic PDNS ${res.status} for ${value}`);
+    throw httpToolsError(
+      "Mnemonic PDNS",
+      res.status,
+      `Mnemonic PDNS ${res.status} for ${value}`
+    );
   }
 
   const body: unknown = await res.json();

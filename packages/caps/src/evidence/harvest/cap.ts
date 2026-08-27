@@ -8,7 +8,7 @@ import {
 import { harvestDeterministic } from "./harvest";
 import { evidenceHarvestInput } from "./input";
 
-export const evidenceHarvest = defineCapability({
+export const harvest = defineCapability({
   id: EVIDENCE_HARVEST_CAPABILITY_ID,
   version: "1",
   title: "Harvest Evidence",

@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { DossierSection } from "@/domains/dossier/components/dossier-section";
 import { DossierSectionAddButton } from "@/domains/dossier/components/dossier-section-add-button";
 import { useDossierSectionEditor } from "@/domains/dossier/hooks/use-dossier-section-editor";
+import type { DossierSectionEditor } from "@/domains/dossier/hooks/use-dossier-section-editor";
 import { useInvalidateEntity } from "@/domains/dossier/hooks/use-invalidate-entity";
 import type { DossierSectionProps } from "@/domains/dossier/types";
 import { questionsListQuery } from "@/domains/entities/questions/queries";
@@ -352,29 +353,24 @@ function OpenQuestionRow({
   caseId,
   label,
   question,
-  editing,
-  resolving,
-  onError,
-  onCancelEdit,
+  editor,
+  resolvingId,
+  onResolvingChange,
   onSaveEdit,
-  onCancelResolve,
   onResolved,
-  onStartEdit,
-  onStartResolve,
 }: {
   caseId: string;
   label: string;
   question: QuestionRecord;
-  editing: boolean;
-  resolving: boolean;
-  onError: (message: string | null) => void;
-  onCancelEdit: () => void;
+  editor: DossierSectionEditor;
+  resolvingId: string | null;
+  onResolvingChange: (id: string | null) => void;
   onSaveEdit: (text: string) => Promise<void>;
-  onCancelResolve: () => void;
   onResolved: () => Promise<void>;
-  onStartEdit: () => void;
-  onStartResolve: () => void;
 }) {
+  const editing = editor.editId === question.id;
+  const resolving = resolvingId === question.id;
+
   if (editing) {
     return (
       <QuestionNode>
@@ -382,8 +378,8 @@ function OpenQuestionRow({
           key={question.id}
           defaultText={question.text}
           density="dense"
-          onCancel={onCancelEdit}
-          onError={onError}
+          onCancel={editor.handleCloseEdit}
+          onError={editor.handleError}
           onSubmit={async ({ text }) => {
             await onSaveEdit(text);
           }}
@@ -399,7 +395,10 @@ function OpenQuestionRow({
           <QuestionLine
             label={label}
             text={question.text}
-            onEdit={onStartEdit}
+            onEdit={() => {
+              onResolvingChange(null);
+              editor.handleOpenEdit(question.id);
+            }}
           />
           {question.resolvedNote ? (
             <QuestionNote note={question.resolvedNote} />
@@ -408,8 +407,10 @@ function OpenQuestionRow({
             <ResolveForm
               caseId={caseId}
               questionId={question.id}
-              onCancel={onCancelResolve}
-              onError={onError}
+              onCancel={() => {
+                onResolvingChange(null);
+              }}
+              onError={editor.handleError}
               onSaved={onResolved}
             />
           ) : null}
@@ -420,13 +421,28 @@ function OpenQuestionRow({
               type="button"
               title="Mark resolved"
               className="text-muted-foreground hover:text-foreground mt-0.5 rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
-              onClick={onStartResolve}
+              onClick={() => {
+                editor.handleCloseEdit();
+                onResolvingChange(question.id);
+              }}
             >
               <CheckIcon className="size-3.5" />
             </button>
             <RowActionsMenu label="Question actions">
-              <DropdownMenuItem onClick={onStartEdit}>Edit</DropdownMenuItem>
-              <DropdownMenuItem onClick={onStartResolve}>
+              <DropdownMenuItem
+                onClick={() => {
+                  onResolvingChange(null);
+                  editor.handleOpenEdit(question.id);
+                }}
+              >
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  editor.handleCloseEdit();
+                  onResolvingChange(question.id);
+                }}
+              >
                 Resolve
               </DropdownMenuItem>
             </RowActionsMenu>
@@ -440,25 +456,21 @@ function OpenQuestionRow({
 function ResolvedQuestionRow({
   label,
   question,
-  editing,
-  onError,
-  onCancelEdit,
+  editor,
   onSaveEdit,
-  onStartEdit,
   onReopen,
 }: {
   label: string;
   question: QuestionRecord;
-  editing: boolean;
-  onError: (message: string | null) => void;
-  onCancelEdit: () => void;
+  editor: DossierSectionEditor;
   onSaveEdit: (value: {
     text: string;
     resolvedNote: string | null;
   }) => Promise<void>;
-  onStartEdit: () => void;
   onReopen: () => void;
 }) {
+  const editing = editor.editId === question.id;
+
   if (editing) {
     return (
       <QuestionNode resolved dimmed={false}>
@@ -468,8 +480,8 @@ function ResolvedQuestionRow({
           defaultNote={question.resolvedNote ?? ""}
           density="dense"
           includeNote
-          onCancel={onCancelEdit}
-          onError={onError}
+          onCancel={editor.handleCloseEdit}
+          onError={editor.handleError}
           onSubmit={async ({ text, resolvedNote }) => {
             await onSaveEdit({ text, resolvedNote: resolvedNote ?? null });
           }}
@@ -486,14 +498,22 @@ function ResolvedQuestionRow({
             label={label}
             text={question.text}
             textClassName="line-through"
-            onEdit={onStartEdit}
+            onEdit={() => {
+              editor.handleOpenEdit(question.id);
+            }}
           />
           {question.resolvedNote ? (
             <QuestionNote note={question.resolvedNote} resolved />
           ) : null}
         </div>
         <RowActionsMenu label="Question actions">
-          <DropdownMenuItem onClick={onStartEdit}>Edit</DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => {
+              editor.handleOpenEdit(question.id);
+            }}
+          >
+            Edit
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={onReopen}>Reopen</DropdownMenuItem>
         </RowActionsMenu>
       </div>
@@ -563,26 +583,6 @@ export function QuestionsSection({
   const open = rows.filter((r) => r.status === "open");
   const resolved = rows.filter((r) => r.status === "resolved");
 
-  function handleStartEdit(id: string) {
-    setResolvingId(null);
-    editor.handleOpenEdit(id);
-  }
-
-  function handleStartResolve(id: string) {
-    editor.handleCloseEdit();
-    setResolvingId(id);
-  }
-
-  function handleStartAdding() {
-    setResolvingId(null);
-    editor.handleStartAdding();
-  }
-
-  function handleToggleAdding() {
-    setResolvingId(null);
-    editor.handleToggleAdding();
-  }
-
   return (
     <DossierSection
       title="Questions"
@@ -596,12 +596,21 @@ export function QuestionsSection({
           <DossierSectionAddButton
             variant="panel"
             noun="question"
-            onClick={handleStartAdding}
+            onClick={() => {
+              setResolvingId(null);
+              editor.handleStartAdding();
+            }}
           />
         ) : undefined
       }
       actions={
-        <DossierSectionAddButton variant="ghost" onClick={handleToggleAdding} />
+        <DossierSectionAddButton
+          variant="ghost"
+          onClick={() => {
+            setResolvingId(null);
+            editor.handleToggleAdding();
+          }}
+        />
       }
     >
       <FormInlineError>{editor.error}</FormInlineError>
@@ -625,28 +634,18 @@ export function QuestionsSection({
               caseId={caseId}
               label={qIndex(i)}
               question={row}
-              editing={editor.editId === row.id}
-              resolving={resolvingId === row.id}
-              onError={editor.handleError}
-              onCancelEdit={editor.handleCloseEdit}
+              editor={editor}
+              resolvingId={resolvingId}
+              onResolvingChange={setResolvingId}
               onSaveEdit={async (text) => {
                 await updateMutation.mutateAsync({
                   questionId: row.id,
                   text,
                 });
               }}
-              onCancelResolve={() => {
-                setResolvingId(null);
-              }}
               onResolved={async () => {
                 setResolvingId(null);
                 await invalidate();
-              }}
-              onStartEdit={() => {
-                handleStartEdit(row.id);
-              }}
-              onStartResolve={() => {
-                handleStartResolve(row.id);
               }}
             />
           ))}
@@ -667,18 +666,13 @@ export function QuestionsSection({
                 key={row.id}
                 label={qIndex(open.length + i)}
                 question={row}
-                editing={editor.editId === row.id}
-                onError={editor.handleError}
-                onCancelEdit={editor.handleCloseEdit}
+                editor={editor}
                 onSaveEdit={async (value) => {
                   await updateMutation.mutateAsync({
                     questionId: row.id,
                     text: value.text,
                     resolvedNote: value.resolvedNote,
                   });
-                }}
-                onStartEdit={() => {
-                  handleStartEdit(row.id);
                 }}
                 onReopen={() => {
                   void reopenMutation.mutateAsync(row.id);

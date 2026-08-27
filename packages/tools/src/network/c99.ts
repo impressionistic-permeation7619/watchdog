@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { httpToolsError, missingApiKey } from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
 import { asBool, isRecord } from "../parse/coerce";
 import { normalizeHost } from "../whois/normalize";
 
@@ -63,19 +65,25 @@ function parseHit(row: unknown): C99SubdomainHit | null {
  * Optional realtime=true for instant scan.
  * @see https://api.c99.nl/api_overview
  */
+
+interface C99Options {
+  userAgent?: string;
+  realtime?: boolean;
+  limit?: number;
+}
 export async function fetchC99Subdomains(
   hostRaw: string,
   apiKey: string,
   signal: AbortSignal,
-  options?: { userAgent?: string; realtime?: boolean; limit?: number }
+  options?: C99Options
 ): Promise<C99LookupSnapshot> {
   const host = normalizeHost(hostRaw);
   const key = apiKey.trim();
-  if (!key) throw new Error("C99_API_KEY required");
+  if (!key) throw missingApiKey("C99_API_KEY");
 
   const realtime = options?.realtime === true;
   const limit = options?.limit ?? 200;
-  const ua = options?.userAgent ?? "Watchdog/1.0 (+network.c99.lookup; OSINT)";
+  const ua = options?.userAgent ?? watchdogUserAgent("network.c99.lookup");
 
   const url = new URL("https://api.c99.nl/subdomainfinder");
   url.searchParams.set("key", key);
@@ -91,7 +99,11 @@ export async function fetchC99Subdomains(
   });
 
   if (!res.ok) {
-    throw new Error(`C99 API ${res.status} for ${host}`);
+    throw httpToolsError(
+      "C99 API",
+      res.status,
+      `C99 API ${res.status} for ${host}`
+    );
   }
 
   const body: unknown = await res.json();

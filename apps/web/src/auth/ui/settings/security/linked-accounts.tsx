@@ -4,7 +4,7 @@ import { useAuth, useListAccounts } from "@better-auth-ui/react"
 import { Card, CardContent } from "@/shared/ui/shadcn/card"
 import { Separator } from "@/shared/ui/shadcn/separator"
 import { Skeleton } from "@/shared/ui/shadcn/skeleton"
-import { SETTINGS_CARD_SURFACE } from "@/shared/ui/form-section"
+import { ACCENT_CARD_SURFACE } from "@/shared/ui/form-section"
 import { cn } from "@/lib/utils"
 import { LinkedAccount } from "./linked-account"
 
@@ -61,7 +61,7 @@ export function LinkedAccounts({ className }: LinkedAccountsProps) {
         {localization.settings.linkedAccounts}
       </h2>
 
-      <Card className={cn(SETTINGS_CARD_SURFACE, "gap-0 p-0 py-0", className)}>
+      <Card className={cn(ACCENT_CARD_SURFACE, "gap-0 p-0 py-0", className)}>
         <CardContent className="p-0">
           {isPending
             ? socialProviders?.map((provider, index) => (

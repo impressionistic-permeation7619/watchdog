@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { httpToolsError, validationToolsError } from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
 import { isRecord } from "../parse/coerce";
 import { normalizeHost } from "../whois/normalize";
 
@@ -32,29 +34,39 @@ export function parseCommoncrawlCdxText(
   const trimmed = text.trim();
   if (trimmed === "") return [];
   if (trimmed.startsWith("[")) {
-    try {
-      const parsed: unknown = JSON.parse(trimmed);
-      if (!Array.isArray(parsed)) return [];
-      return parsed.flatMap((row) => {
-        if (isRecord(row)) return [row];
-        if (Array.isArray(row) && typeof row[2] === "string") {
-          return [
-            {
-              url: row[2],
-              timestamp: typeof row[1] === "string" ? row[1] : null,
-              mime: typeof row[3] === "string" ? row[3] : null,
-              status: typeof row[4] === "string" ? row[4] : null,
-            },
-          ];
-        }
-        return [];
-      });
-    } catch {
-      return [];
-    }
+    return parseCommoncrawlCdxArray(trimmed);
   }
+  return parseCommoncrawlCdxLines(trimmed);
+}
+
+function parseCommoncrawlCdxArrayRow(row: unknown): Record<string, unknown>[] {
+  if (isRecord(row)) return [row];
+  if (Array.isArray(row) && typeof row[2] === "string") {
+    return [
+      {
+        url: row[2],
+        timestamp: typeof row[1] === "string" ? row[1] : null,
+        mime: typeof row[3] === "string" ? row[3] : null,
+        status: typeof row[4] === "string" ? row[4] : null,
+      },
+    ];
+  }
+  return [];
+}
+
+function parseCommoncrawlCdxArray(text: string): Record<string, unknown>[] {
+  try {
+    const parsed: unknown = JSON.parse(text);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.flatMap(parseCommoncrawlCdxArrayRow);
+  } catch {
+    return [];
+  }
+}
+
+function parseCommoncrawlCdxLines(text: string): Record<string, unknown>[] {
   const out: Record<string, unknown>[] = [];
-  for (const line of trimmed.split(/\r?\n/)) {
+  for (const line of text.split(/\r?\n/)) {
     const lineTrim = line.trim();
     if (!lineTrim) continue;
     try {
@@ -67,43 +79,20 @@ export function parseCommoncrawlCdxText(
   return out;
 }
 
-/**
- * Common Crawl CDX — recent crawl indexes for URLs under a host.
- * Resolves latest indexes via collinfo.json, then queries each CDX API.
- * @see https://index.commoncrawl.org/
- */
-export async function fetchCommoncrawlLookup(
-  hostRaw: string,
-  signal: AbortSignal,
-  options?: {
-    userAgent?: string;
-    /** How many newest indexes to query (default 2). */
-    indexes?: number;
-    /** Max hits to keep across indexes (default 40). */
-    limit?: number;
-  }
-): Promise<CommoncrawlLookupSnapshot> {
-  const host = normalizeHost(hostRaw);
-  const indexCount = Math.min(Math.max(options?.indexes ?? 2, 1), 6);
-  const limit = Math.min(Math.max(options?.limit ?? 40, 1), 200);
-  const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+archive.commoncrawl.lookup; OSINT)";
+interface CollinfoIndex {
+  id: string;
+  cdxApi: string;
+}
 
-  const collRes = await fetch("https://index.commoncrawl.org/collinfo.json", {
-    method: "GET",
-    signal,
-    headers: { Accept: "application/json", "User-Agent": ua },
-  });
-  if (!collRes.ok) {
-    throw new Error(`Common Crawl collinfo ${collRes.status}`);
-  }
-
-  const coll: unknown = await collRes.json();
+function parseCollinfoIndexes(
+  coll: unknown,
+  indexCount: number
+): CollinfoIndex[] {
   if (!Array.isArray(coll) || coll.length === 0) {
-    throw new Error("Common Crawl collinfo empty");
+    throw validationToolsError("Common Crawl collinfo empty");
   }
 
-  const indexes: { id: string; cdxApi: string }[] = [];
+  const indexes: CollinfoIndex[] = [];
   for (const row of coll) {
     if (!isRecord(row)) continue;
     const id = typeof row.id === "string" ? row.id : "";
@@ -114,8 +103,115 @@ export async function fetchCommoncrawlLookup(
   }
 
   if (indexes.length === 0) {
-    throw new Error("Common Crawl: no usable indexes");
+    throw validationToolsError("Common Crawl: no usable indexes");
   }
+  return indexes;
+}
+
+function cdxRowToHit(
+  row: Record<string, unknown>,
+  indexId: string
+): CommoncrawlHit | null {
+  const pageUrl = typeof row.url === "string" ? row.url : "";
+  if (!pageUrl) return null;
+  return {
+    url: pageUrl,
+    timestamp: typeof row.timestamp === "string" ? row.timestamp : null,
+    status: typeof row.status === "string" ? row.status : null,
+    mime: typeof row.mime === "string" ? row.mime : null,
+    indexId,
+  };
+}
+
+function collectCdxHits(
+  cdxRows: Record<string, unknown>[],
+  indexId: string,
+  limit: number,
+  hits: CommoncrawlHit[],
+  urls: string[],
+  seenUrl: Set<string>
+): void {
+  for (const row of cdxRows) {
+    const hit = cdxRowToHit(row, indexId);
+    if (!hit) continue;
+    hits.push(hit);
+    if (!seenUrl.has(hit.url)) {
+      seenUrl.add(hit.url);
+      urls.push(hit.url);
+    }
+    if (hits.length >= limit) break;
+  }
+}
+
+async function fetchCdxHitsForIndex(
+  index: CollinfoIndex,
+  host: string,
+  limit: number,
+  signal: AbortSignal,
+  ua: string
+): Promise<string> {
+  const url = new URL(index.cdxApi);
+  url.searchParams.set("url", `*.${host}/*`);
+  url.searchParams.set("output", "json");
+  url.searchParams.set("limit", String(Math.min(limit, 50)));
+
+  return fetch(url, {
+    method: "GET",
+    signal,
+    headers: { Accept: "application/json", "User-Agent": ua },
+  }).then(async (res) => {
+    if (res.status === 404) return "";
+    if (!res.ok) {
+      throw httpToolsError(
+        "Common Crawl CDX",
+        res.status,
+        `Common Crawl CDX ${res.status} (${index.id})`
+      );
+    }
+    return res.text();
+  });
+}
+
+interface CommoncrawlLookupOptions {
+  userAgent?: string;
+  /** How many newest indexes to query (default 2). */
+  indexes?: number;
+  /** Max hits to keep across indexes (default 40). */
+  limit?: number;
+}
+
+/**
+ * Common Crawl CDX — recent crawl indexes for URLs under a host.
+ * Resolves latest indexes via collinfo.json, then queries each CDX API.
+ * @see https://index.commoncrawl.org/
+ */
+export async function fetchCommoncrawlLookup(
+  hostRaw: string,
+  signal: AbortSignal,
+  options?: CommoncrawlLookupOptions
+): Promise<CommoncrawlLookupSnapshot> {
+  const resolved = options ?? {};
+  const host = normalizeHost(hostRaw);
+  const indexCount = Math.min(Math.max(resolved.indexes ?? 2, 1), 6);
+  const limit = Math.min(Math.max(resolved.limit ?? 40, 1), 200);
+  const ua =
+    resolved.userAgent ?? watchdogUserAgent("archive.commoncrawl.lookup");
+
+  const collRes = await fetch("https://index.commoncrawl.org/collinfo.json", {
+    method: "GET",
+    signal,
+    headers: { Accept: "application/json", "User-Agent": ua },
+  });
+  if (!collRes.ok) {
+    throw httpToolsError(
+      "Common Crawl collinfo",
+      collRes.status,
+      `Common Crawl collinfo ${collRes.status}`
+    );
+  }
+
+  const coll: unknown = await collRes.json();
+  const indexes = parseCollinfoIndexes(coll, indexCount);
 
   const hits: CommoncrawlHit[] = [];
   const urls: string[] = [];
@@ -123,42 +219,19 @@ export async function fetchCommoncrawlLookup(
 
   for (const index of indexes) {
     if (hits.length >= limit) break;
-    const url = new URL(index.cdxApi);
-    url.searchParams.set("url", `*.${host}/*`);
-    url.searchParams.set("output", "json");
-    url.searchParams.set("limit", String(Math.min(limit - hits.length, 50)));
 
     // oxlint-disable-next-line no-await-in-loop -- per-index limit depends on hits already collected, must stay sequential
-    const res = await fetch(url, {
-      method: "GET",
+    const text = await fetchCdxHitsForIndex(
+      index,
+      host,
+      limit - hits.length,
       signal,
-      headers: { Accept: "application/json", "User-Agent": ua },
-    });
+      ua
+    );
+    if (text === "") continue;
 
-    if (res.status === 404) continue;
-    if (!res.ok) {
-      throw new Error(`Common Crawl CDX ${res.status} (${index.id})`);
-    }
-
-    // oxlint-disable-next-line no-await-in-loop -- same ordered fan-out as above
-    const text = await res.text();
     const cdxRows = parseCommoncrawlCdxText(text);
-    for (const row of cdxRows) {
-      const pageUrl = typeof row.url === "string" ? row.url : "";
-      if (!pageUrl) continue;
-      hits.push({
-        url: pageUrl,
-        timestamp: typeof row.timestamp === "string" ? row.timestamp : null,
-        status: typeof row.status === "string" ? row.status : null,
-        mime: typeof row.mime === "string" ? row.mime : null,
-        indexId: index.id,
-      });
-      if (!seenUrl.has(pageUrl)) {
-        seenUrl.add(pageUrl);
-        urls.push(pageUrl);
-      }
-      if (hits.length >= limit) break;
-    }
+    collectCdxHits(cdxRows, index.id, limit, hits, urls, seenUrl);
   }
 
   return commoncrawlLookupSnapshotSchema.parse({

@@ -7,7 +7,7 @@ import { archiveSubmitSnapshotSchema } from "./report-schema";
 
 const UA = "Watchdog/1.0 (+archive.url.submit; OSINT)";
 
-export const archiveUrlSubmit = defineCollectCap({
+export const urlSubmit = defineCollectCap({
   id: "archive.url.submit",
   version: "1",
   title: "Submit to archives",

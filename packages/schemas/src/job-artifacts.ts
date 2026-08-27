@@ -15,17 +15,8 @@ export const PROCESS_CAPABILITY_IDS = [
   EVIDENCE_EXTRACT_AI_CAPABILITY_ID,
 ] as const;
 
-/** Pre-rename ids — still match historical Job rows until migration runs. */
-const LEGACY_PROCESS_CAPABILITY_IDS = [
-  "evidence.item.process",
-  "evidence.item.aiprocess",
-] as const;
-
 export function isProcessCapability(capabilityId: string): boolean {
-  return (
-    (PROCESS_CAPABILITY_IDS as readonly string[]).includes(capabilityId) ||
-    (LEGACY_PROCESS_CAPABILITY_IDS as readonly string[]).includes(capabilityId)
-  );
+  return (PROCESS_CAPABILITY_IDS as readonly string[]).includes(capabilityId);
 }
 
 /** Packed EvidenceSnapshot JSON uploaded by Process Caps. */

@@ -10,11 +10,9 @@ import {
   restoreEvidenceFn,
   softDeleteEvidenceFn,
 } from "@/domains/intake/intake.functions";
+import { refreshJobsAfterMutation } from "@/domains/jobs/queries";
 import { errMessage } from "@/lib/utils";
-import {
-  invalidateAfterJobMutation,
-  invalidateEvidence,
-} from "@/shared/lib/query-invalidation";
+import { invalidateAfterEvidenceMutation } from "@/shared/lib/query-invalidation";
 
 type IntakePending = null | {
   kind: "harvest" | "extract" | "enrich";
@@ -79,10 +77,8 @@ export function useIntakeActions({
       toast.success(
         input.ai === true ? "Extract (AI) job started" : "Harvest job started"
       );
-      await invalidateAfterJobMutation(queryClient, caseId, {
-        withRetry: true,
-      });
-      await invalidateEvidence(queryClient, caseId);
+      await refreshJobsAfterMutation(queryClient, caseId);
+      await invalidateAfterEvidenceMutation(queryClient, caseId);
     },
     onError: (e) => {
       setActionError(errMessage(e, "Harvest/Extract failed"));
@@ -98,10 +94,8 @@ export function useIntakeActions({
     onSuccess: async (_result, id) => {
       onEvidenceIdChange(id);
       toast.success("Enrich job started");
-      await invalidateAfterJobMutation(queryClient, caseId, {
-        withRetry: true,
-      });
-      await invalidateEvidence(queryClient, caseId);
+      await refreshJobsAfterMutation(queryClient, caseId);
+      await invalidateAfterEvidenceMutation(queryClient, caseId);
     },
     onError: (e) => {
       setActionError(errMessage(e, "Enrich failed"));
@@ -116,7 +110,7 @@ export function useIntakeActions({
       softDeleteEvidenceFn({ data: { caseId, evidenceId: id } }),
     onSuccess: async () => {
       toast.success("Evidence hidden — filter Hidden to restore");
-      await invalidateEvidence(queryClient, caseId);
+      await invalidateAfterEvidenceMutation(queryClient, caseId);
     },
     onError: (e) => {
       setActionError(errMessage(e, "Hide failed"));
@@ -130,7 +124,7 @@ export function useIntakeActions({
       toast.success("Evidence restored");
       onRestoreShowActiveQueue();
       onEvidenceIdChange(id);
-      await invalidateEvidence(queryClient, caseId);
+      await invalidateAfterEvidenceMutation(queryClient, caseId);
     },
     onError: (e) => {
       setActionError(errMessage(e, "Restore failed"));
@@ -148,7 +142,7 @@ export function useIntakeActions({
       }),
     onSuccess: async () => {
       toast.success("Entity updated");
-      await invalidateEvidence(queryClient, caseId);
+      await invalidateAfterEvidenceMutation(queryClient, caseId);
     },
     onError: (e) => {
       setActionError(errMessage(e, "Attach failed"));

@@ -21,6 +21,8 @@ import {
   dryRunArg,
   entityArg,
   pickDefined,
+  requiredCaseArg,
+  requiredEntityArg,
 } from "../noun";
 
 const LIST_COLUMNS = ["id", "confidence", "class", "text", "retracted"];
@@ -79,18 +81,8 @@ export const claimsCmd = defineNounCommand({
         ]),
       },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
-        entity: {
-          type: "string",
-          alias: "e",
-          description: "Entity slug or UUID",
-          required: true,
-        },
+        ...requiredCaseArg,
+        ...requiredEntityArg,
         text: { type: "string", description: "Claim text", required: true },
         confidence: {
           type: "string",
@@ -110,7 +102,7 @@ export const claimsCmd = defineNounCommand({
       },
       run: async ({ args }) => {
         requireUserOverride(args["user-override"]);
-        refuseConfirmed(args.confidence);
+        refuseConfirmed(confidenceTierSchema.parse(args.confidence));
         const entityId = await resolveEntityId(args.case, args.entity);
         const evidenceIds = parseIdList(args.evidence);
         const row = await api().claims.create({
@@ -119,6 +111,7 @@ export const claimsCmd = defineNounCommand({
           text: args.text,
           confidence: confidenceTierSchema.parse(args.confidence),
           class: claimClassSchema.parse(args.class),
+          userOverride: true,
           ...pickDefined({ evidenceIds }),
         });
         emit(row);
@@ -130,12 +123,7 @@ export const claimsCmd = defineNounCommand({
         description: "Update a claim (--user-override required)",
       },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
+        ...requiredCaseArg,
         claim: {
           type: "positional",
           description: "Claim ID",
@@ -155,7 +143,7 @@ export const claimsCmd = defineNounCommand({
       },
       run: async ({ args }) => {
         requireUserOverride(args["user-override"]);
-        refuseConfirmed(args.confidence);
+        refuseConfirmed(confidenceTierSchema.parse(args.confidence));
         const evidenceIds = parseIdList(args.evidence);
         const classValue =
           args.class !== undefined && args.class !== ""
@@ -168,6 +156,7 @@ export const claimsCmd = defineNounCommand({
         const row = await api().claims.update({
           caseId: args.case,
           claimId: args.claim,
+          userOverride: true,
           ...pickDefined({
             text: args.text,
             class: classValue,
@@ -184,12 +173,7 @@ export const claimsCmd = defineNounCommand({
         description: "Retract a claim (--user-override required)",
       },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
+        ...requiredCaseArg,
         claim: {
           type: "positional",
           description: "Claim ID",
@@ -220,6 +204,7 @@ export const claimsCmd = defineNounCommand({
           claimId: args.claim,
           kind,
           reason: args.reason,
+          userOverride: true,
         });
         emit(row);
       },

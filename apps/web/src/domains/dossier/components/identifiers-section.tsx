@@ -7,7 +7,7 @@ import { DossierSection } from "@/domains/dossier/components/dossier-section";
 import {
   HANDLE_REQUIRES_PLATFORM,
   isHandleWithoutPlatform,
-  createIdentifierColumns,
+  dossierIdentifierColumns,
   type IdentifierFieldUpdate,
   type IdentifierTableMeta,
 } from "@/domains/dossier/components/identifiers-section.cells";
@@ -160,11 +160,12 @@ export function IdentifiersSection({
     saveEvidence,
   };
 
-  const identifierColumns = createIdentifierColumns(tableMeta);
+  const identifierColumns = dossierIdentifierColumns;
 
   const { table } = useDataTable({
     data: rows,
     columns: identifierColumns,
+    meta: tableMeta,
     getRowId: (r) => r.id,
     initialSorting: [{ id: "type", desc: false }],
     pageSize: 50,

@@ -4,7 +4,12 @@ import { isJsonObject } from "@watchdog/schemas";
 
 import { api, emit, emitList, fail, truncText } from "../client";
 import { resolveEntityId } from "../ids";
-import { asBoolean, caseArg, defineNounCommand } from "../noun";
+import {
+  asBoolean,
+  caseArg,
+  defineNounCommand,
+  requiredCaseArg,
+} from "../noun";
 
 const LIST_COLUMNS = ["id", "cap", "status", "created"];
 
@@ -42,12 +47,7 @@ export const jobsCmd = defineNounCommand({
         description: "Get a job (logs truncated unless --full)",
       },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
+        ...requiredCaseArg,
         job: { type: "positional", description: "Job ID", required: true },
         full: {
           type: "boolean",
@@ -70,12 +70,7 @@ export const jobsCmd = defineNounCommand({
     start: defineCommand({
       meta: { name: "start", description: "Start a capability job" },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
+        ...requiredCaseArg,
         cap: { type: "string", description: "Capability ID", required: true },
         input: {
           type: "string",
@@ -110,12 +105,7 @@ export const jobsCmd = defineNounCommand({
     cancel: defineCommand({
       meta: { name: "cancel", description: "Cancel a queued/running job" },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
+        ...requiredCaseArg,
         job: { type: "positional", description: "Job ID", required: true },
       },
       run: async ({ args }) => {
@@ -132,12 +122,7 @@ export const jobsCmd = defineNounCommand({
         description: "Run a Cap playbook (sequential Jobs → Proposals)",
       },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
+        ...requiredCaseArg,
         id: {
           type: "string",
           description: "Playbook id (e.g. host-footprint)",
@@ -184,12 +169,7 @@ export const jobsCmd = defineNounCommand({
         description: "Cancel a running playbook run",
       },
       args: {
-        case: {
-          type: "string",
-          alias: "c",
-          description: "Case ID",
-          required: true,
-        },
+        ...requiredCaseArg,
         run: {
           type: "positional",
           description: "Playbook run ID",

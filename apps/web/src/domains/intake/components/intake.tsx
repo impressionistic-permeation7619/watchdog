@@ -27,7 +27,7 @@ import { PageHeader } from "@/shared/layout/page";
 import {
   bindCasesChangedInvalidation,
   invalidateAfterJobMutation,
-  invalidateEvidence,
+  invalidateAfterEvidenceMutation,
 } from "@/shared/lib/query-invalidation";
 import { resolveQueueSelection } from "@/shared/lib/queue-selection";
 import { EmptyState } from "@/shared/ui/empty-state";
@@ -214,7 +214,7 @@ function IntakeActive({
   useLiveEvents(active.id, (event) => {
     if (event.type === "job_update") {
       void invalidateAfterJobMutation(queryClient, active.id);
-      void invalidateEvidence(queryClient, active.id);
+      void invalidateAfterEvidenceMutation(queryClient, active.id);
     }
   });
 

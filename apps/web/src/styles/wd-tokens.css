@@ -1,0 +1,201 @@
+/*
+  Watchdog color system — OKLCH reference ramps → semantic roles.
+  Dark-first; cool charcoal surfaces (hue ~250) + steel-cyan accent (hue ~220).
+  Selection / triage signal is amber (hue ~75). No violet brand.
+*/
+
+:root {
+  color-scheme: light dark;
+
+  /* --- Reference: cool neutral --- */
+  --wd-neutral-50: oklch(0.985 0.004 250);
+  --wd-neutral-100: oklch(0.96 0.006 250);
+  --wd-neutral-200: oklch(0.91 0.01 250);
+  --wd-neutral-300: oklch(0.82 0.014 250);
+  --wd-neutral-400: oklch(0.68 0.018 250);
+  --wd-neutral-500: oklch(0.55 0.02 250);
+  --wd-neutral-600: oklch(0.42 0.018 250);
+  --wd-neutral-700: oklch(0.32 0.016 250);
+  --wd-neutral-800: oklch(0.24 0.014 250);
+  --wd-neutral-900: oklch(0.19 0.012 250);
+  --wd-neutral-950: oklch(0.14 0.01 250);
+
+  /* --- Reference: steel cyan accent --- */
+  --wd-accent-50: oklch(0.96 0.02 220);
+  --wd-accent-100: oklch(0.91 0.04 220);
+  --wd-accent-200: oklch(0.84 0.06 220);
+  --wd-accent-300: oklch(0.76 0.09 220);
+  --wd-accent-400: oklch(0.68 0.11 220);
+  --wd-accent-500: oklch(0.6 0.12 220);
+  --wd-accent-600: oklch(0.48 0.11 220);
+  --wd-accent-700: oklch(0.4 0.1 220);
+  --wd-accent-800: oklch(0.32 0.08 220);
+  --wd-accent-900: oklch(0.26 0.06 220);
+  --wd-accent-950: oklch(0.18 0.04 220);
+
+  /* --- Reference: amber signal (selection / possible) --- */
+  --wd-signal-50: oklch(0.97 0.02 75);
+  --wd-signal-100: oklch(0.93 0.05 75);
+  --wd-signal-200: oklch(0.88 0.09 75);
+  --wd-signal-300: oklch(0.82 0.12 75);
+  --wd-signal-400: oklch(0.78 0.14 75);
+  --wd-signal-500: oklch(0.72 0.14 75);
+  --wd-signal-600: oklch(0.62 0.13 75);
+  --wd-signal-700: oklch(0.52 0.12 75);
+  --wd-signal-800: oklch(0.42 0.1 75);
+  --wd-signal-900: oklch(0.34 0.08 75);
+
+  /* --- Reference: success (confirmed / active) --- */
+  --wd-success-400: oklch(0.76 0.14 155);
+  --wd-success-500: oklch(0.68 0.14 155);
+  --wd-success-600: oklch(0.55 0.13 155);
+  --wd-success-700: oklch(0.45 0.11 155);
+
+  /* --- Reference: info --- */
+  --wd-info-400: oklch(0.76 0.1 230);
+  --wd-info-500: oklch(0.68 0.12 230);
+  --wd-info-600: oklch(0.55 0.12 230);
+  --wd-info-700: oklch(0.45 0.1 230);
+
+  /* --- Reference: danger --- */
+  --wd-danger-400: oklch(0.72 0.17 25);
+  --wd-danger-500: oklch(0.64 0.19 25);
+  --wd-danger-600: oklch(0.55 0.2 25);
+  --wd-danger-700: oklch(0.45 0.17 25);
+
+  /* --- Light semantic (shadcn) --- */
+  --background: var(--wd-neutral-50);
+  --foreground: var(--wd-neutral-950);
+  --card: oklch(1 0.002 250);
+  --card-foreground: var(--wd-neutral-950);
+  --popover: oklch(1 0.002 250);
+  --popover-foreground: var(--wd-neutral-950);
+  --primary: var(--wd-accent-600);
+  --primary-foreground: oklch(0.98 0.01 220);
+  --secondary: var(--wd-neutral-100);
+  --secondary-foreground: var(--wd-neutral-900);
+  --muted: var(--wd-neutral-100);
+  --muted-foreground: var(--wd-neutral-500);
+  --accent: var(--wd-accent-50);
+  --accent-foreground: var(--wd-accent-900);
+  --destructive: var(--wd-danger-600);
+  /* Resting strokes — same quiet mix SelectTrigger used to apply locally */
+  --border: color-mix(in oklab, var(--wd-neutral-200) 55%, transparent);
+  --input: var(--border);
+  --ring: var(--wd-accent-500);
+  --chart-1: var(--wd-accent-500);
+  --chart-2: var(--wd-success-500);
+  --chart-3: var(--wd-signal-500);
+  --chart-4: var(--wd-info-500);
+  --chart-5: var(--wd-danger-500);
+  --radius: 0.5rem;
+  --sidebar: var(--wd-neutral-100);
+  --sidebar-foreground: var(--wd-neutral-900);
+  --sidebar-primary: var(--wd-accent-600);
+  --sidebar-primary-foreground: oklch(0.98 0.01 220);
+  --sidebar-accent: var(--wd-neutral-200);
+  --sidebar-accent-foreground: var(--wd-neutral-900);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--wd-accent-500);
+
+  /* Domain: confidence */
+  --confidence-confirmed: var(--wd-success-600);
+  --confidence-confirmed-fg: var(--wd-success-700);
+  --confidence-confirmed-bg: oklch(0.68 0.14 155 / 15%);
+  --confidence-possible: var(--wd-signal-600);
+  --confidence-possible-fg: var(--wd-signal-700);
+  --confidence-possible-bg: oklch(0.72 0.14 75 / 15%);
+  --confidence-unverified: var(--wd-neutral-500);
+  --confidence-unverified-fg: var(--wd-neutral-500);
+  --confidence-unverified-bg: var(--wd-neutral-100);
+
+  /* Domain: identifier status + retract */
+  --status-disproved: var(--wd-danger-600);
+  --status-disproved-fg: var(--wd-danger-700);
+  --status-disproved-bg: oklch(0.64 0.19 25 / 15%);
+  --status-current: var(--wd-success-600);
+  --status-current-fg: var(--wd-success-700);
+  --status-current-bg: oklch(0.68 0.14 155 / 15%);
+  --status-former: var(--wd-signal-600);
+  --status-former-fg: var(--wd-signal-700);
+  --status-former-bg: oklch(0.72 0.14 75 / 15%);
+  --status-unknown: var(--wd-neutral-500);
+  --status-unknown-fg: var(--wd-neutral-600);
+  --status-unknown-bg: var(--wd-neutral-100);
+  --status-contested: var(--wd-signal-600);
+  --status-contested-fg: var(--wd-signal-700);
+  --status-contested-bg: oklch(0.72 0.14 75 / 15%);
+  --status-retracted: var(--wd-neutral-500);
+  --status-retracted-fg: var(--wd-neutral-600);
+  --status-retracted-bg: var(--wd-neutral-100);
+
+  /* Domain: job lifecycle status */
+  --status-queued: var(--wd-neutral-500);
+  --status-queued-fg: var(--wd-neutral-600);
+  --status-queued-bg: var(--wd-neutral-100);
+  --status-running: var(--wd-accent-600);
+  --status-running-fg: var(--wd-accent-700);
+  --status-running-bg: oklch(0.6 0.12 220 / 15%);
+  --status-succeeded: var(--wd-success-600);
+  --status-succeeded-fg: var(--wd-success-700);
+  --status-succeeded-bg: oklch(0.68 0.14 155 / 15%);
+  --status-failed: var(--wd-danger-600);
+  --status-failed-fg: var(--wd-danger-700);
+  --status-failed-bg: oklch(0.64 0.19 25 / 15%);
+  --status-cancelled: var(--wd-neutral-500);
+  --status-cancelled-fg: var(--wd-neutral-600);
+  --status-cancelled-bg: var(--wd-neutral-100);
+  --status-pending: var(--wd-signal-600);
+  --status-pending-fg: var(--wd-signal-700);
+  --status-pending-bg: oklch(0.72 0.14 75 / 15%);
+  --status-accepted: var(--wd-success-600);
+  --status-accepted-fg: var(--wd-success-700);
+  --status-accepted-bg: oklch(0.68 0.14 155 / 15%);
+  --status-rejected: var(--wd-danger-600);
+  --status-rejected-fg: var(--wd-danger-700);
+  --status-rejected-bg: oklch(0.64 0.19 25 / 15%);
+
+  /* Domain: signal (selection / triage) + success/warning shortcuts */
+  --signal: var(--wd-signal-500);
+  --signal-foreground: var(--wd-neutral-950);
+  --success: var(--wd-success-600);
+  --success-foreground: var(--wd-success-700);
+  --warning: var(--wd-signal-600);
+  --warning-foreground: var(--wd-signal-700);
+
+  /* Kind accents — EntityKind + EvidenceKind + IdentifierType + ClaimClass */
+  --kind-person: oklch(0.52 0.12 250);
+  --kind-org: oklch(0.5 0.1 230);
+  --kind-infra: oklch(0.5 0.09 200);
+  --kind-email: oklch(0.55 0.12 55);
+  --kind-handle: oklch(0.52 0.1 250);
+  --kind-phone: oklch(0.55 0.12 130);
+  --kind-crypto: oklch(0.55 0.12 75);
+  --kind-pgp: oklch(0.5 0.1 300);
+  --kind-url: oklch(0.5 0.1 280);
+  --kind-domain: oklch(0.5 0.09 200);
+  --kind-ip: oklch(0.5 0.1 190);
+  --kind-credential: oklch(0.52 0.14 15);
+  --kind-file: oklch(0.45 0.02 250);
+  --kind-url_archive: var(--kind-url);
+  --kind-attestation: oklch(0.52 0.1 55);
+  --kind-other: var(--wd-neutral-500);
+  --kind-observation: oklch(0.52 0.1 55);
+  --kind-assessment: oklch(0.52 0.1 220);
+  --kind-allegation: oklch(0.52 0.16 25);
+  --kind-unknown: var(--wd-neutral-500);
+
+  --graph-canvas-bg: oklch(0.985 0.008 250);
+  --graph-canvas-dot: oklch(0.86 0.012 250);
+
+  /* Motion tokens — Emil-first tool timing */
+  --duration-fast: 100ms;
+  --duration-panel: 180ms;
+  --ease-out-strong: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}

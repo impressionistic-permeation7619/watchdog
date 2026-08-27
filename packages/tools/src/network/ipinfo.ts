@@ -1,7 +1,10 @@
 import { z } from "zod";
 
 import { normalizeIp } from "../dns/reverse";
-import { asString, isRecord } from "../parse/coerce";
+import { missingApiKey } from "../errors/tools-error";
+import { watchdogUserAgent } from "../errors/user-agent";
+import { fetchJsonObject } from "../http/fetch-json";
+import { asString } from "../parse/coerce";
 
 export const ipinfoLookupSnapshotSchema = z.object({
   ip: z.string().min(1),
@@ -25,38 +28,34 @@ export type IpinfoLookupSnapshot = z.infer<typeof ipinfoLookupSnapshotSchema>;
  * GET https://ipinfo.io/{ip}/json?token=KEY
  * @see https://ipinfo.io/developers
  */
+
+interface IpinfoOptions {
+  userAgent?: string;
+}
 export async function fetchIpinfoLookup(
   ipRaw: string,
   apiToken: string,
   signal: AbortSignal,
-  options?: { userAgent?: string }
+  options?: IpinfoOptions
 ): Promise<IpinfoLookupSnapshot> {
   const token = apiToken.trim();
-  if (!token) throw new Error("IPINFO_API_TOKEN required");
+  if (!token) throw missingApiKey("IPINFO_API_TOKEN");
   const ip = normalizeIp(ipRaw);
-  const ua =
-    options?.userAgent ?? "Watchdog/1.0 (+network.ipinfo.lookup; OSINT)";
+  const ua = options?.userAgent ?? watchdogUserAgent("network.ipinfo.lookup");
 
   const url = new URL(`https://ipinfo.io/${ip}/json`);
   url.searchParams.set("token", token);
 
-  const res = await fetch(url, {
-    method: "GET",
+  const body = await fetchJsonObject({
+    url,
+    init: {
+      method: "GET",
+      headers: { Accept: "application/json", "User-Agent": ua },
+    },
     signal,
-    headers: { Accept: "application/json", "User-Agent": ua },
+    service: "IPinfo",
+    subject: ip,
   });
-
-  if (res.status === 429) {
-    throw new Error(`IPinfo rate-limited for ${ip}`);
-  }
-  if (!res.ok) {
-    throw new Error(`IPinfo API ${res.status} for ${ip}`);
-  }
-
-  const body: unknown = await res.json();
-  if (!isRecord(body)) {
-    throw new Error(`IPinfo response for ${ip} was not a JSON object`);
-  }
 
   return ipinfoLookupSnapshotSchema.parse({
     ip,

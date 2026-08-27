@@ -13,8 +13,8 @@ export {
 export type { UploadedArtifact, PresignedPut } from "./infra/blob";
 export {
   CAP_JOB_QUEUE,
-  getBossProducer,
-  getBossWorker,
+  ensureBossProducer,
+  ensureBossWorker,
   enqueueCapJob,
   isCapJobPayload,
   type CapJobPayload,
@@ -30,27 +30,31 @@ export {
   reconcileStaleJobs,
   reconcileStuckPlaybookRuns,
 } from "./jobs/reconcile-stale-jobs";
-export { parsePatch, tryParsePatch } from "./graph/patch";
+export { parsePatch, tryParsePatch } from "./graph/patch/patch";
 export {
   applyPatch,
   type ApplyPatchOpts,
   type ApplyPatchTx,
-} from "./graph/apply-patch";
+} from "./graph/patch/apply-patch";
 export {
   suppressKnownFindings,
   recordRejectedFingerprints,
-} from "./graph/finding-suppress";
-export { parseAgentPatch } from "./graph/parse-agent-patch";
+} from "./proposals/finding-suppress";
+export { parseAgentPatch } from "./graph/patch/parse-agent-patch";
 export {
   createAgentProposal,
   writeGraphFromAgent,
-} from "./graph/agent-ingress";
+} from "./proposals/agent-ingress";
 export {
   executeJob,
-  activeControllers,
+  abortActiveJob,
+  listActiveJobIds,
+  registerActiveJobController,
+  unregisterActiveJobController,
   type JobRunOutcome,
   type JobAbortReason,
   type JobRunOutcomeName,
+  type ActiveJobAbortReason,
 } from "./jobs/run-job";
 export { loadCapReport, artifactsHaveCapReport } from "./jobs/load-cap-report";
 export {
@@ -85,7 +89,7 @@ export {
   acceptProposal,
   rejectProposal,
   type ProposalRecord,
-} from "./graph/inbox";
+} from "./proposals/proposals";
 export type { IdentifierCollision } from "./graph/identifier-collisions";
 export {
   VaultError,
@@ -111,7 +115,7 @@ export {
   deleteCase,
   type CaseRecord,
   type CreateCaseInput,
-} from "./graph/cases";
+} from "./cases/cases";
 export {
   listClaimsForEntity,
   createClaim,
@@ -170,7 +174,7 @@ export {
   assertCaseExists,
   assertEntityInCase,
   assertConfidenceEvidence,
-} from "./graph/guards";
+} from "./graph/patch/guards";
 export {
   listEntitiesForCase,
   getEntityByCaseSlug,
@@ -204,6 +208,7 @@ export {
 export type { DbTx, DbExec } from "@watchdog/db";
 export {
   DomainError,
+  errorMessage,
   isUniqueViolation,
   type DomainErrorCode,
 } from "./infra/domain-error";
@@ -251,7 +256,6 @@ export {
 } from "./activity/recent-activity";
 export {
   searchCase,
-  SEARCH_CASE_MIN_QUERY_LENGTH,
   type SearchCaseOpts,
   type SearchCaseResult,
   type SearchCaseEntityHit,
