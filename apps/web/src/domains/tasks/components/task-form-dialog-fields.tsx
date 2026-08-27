@@ -84,7 +84,10 @@ export function TaskFormFields({
               <FieldLabel>Priority</FieldLabel>
               <FieldSelect
                 value={field.state.value}
-                options={[{ value: "", label: "None" }, ...TASK_PRIORITY_OPTIONS]}
+                options={[
+                  { value: "", label: "None" },
+                  ...TASK_PRIORITY_OPTIONS,
+                ]}
                 onValueChange={(next) => {
                   field.handleChange(
                     next === "" ? "" : taskPrioritySchema.parse(next)

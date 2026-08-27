@@ -1,6 +1,6 @@
+import { TaskFormFields } from "@/domains/tasks/components/task-form-dialog-fields";
 /* oxlint-disable react/only-export-components -- dialog + form helpers re-export */
 import { TaskFormDialogFooter } from "@/domains/tasks/components/task-form-dialog-footer";
-import { TaskFormFields } from "@/domains/tasks/components/task-form-dialog-fields";
 import { useTaskFormDialog } from "@/domains/tasks/components/use-task-form-dialog";
 import type { TaskFormValues } from "@/domains/tasks/lib/task-form";
 import type { TaskRecord } from "@/domains/tasks/types";

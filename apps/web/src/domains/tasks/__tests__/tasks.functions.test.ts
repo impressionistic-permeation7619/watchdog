@@ -30,7 +30,10 @@ import {
   reorderTasksFn,
 } from "@/domains/tasks/tasks.functions";
 
-type ServerDataContext<T> = { data: T; context: Record<string, never> };
+interface ServerDataContext<T> {
+  data: T;
+  context: Record<string, never>;
+}
 
 const TASK = {
   id: "550e8400-e29b-41d4-a716-446655440000",
@@ -51,9 +54,11 @@ describe("tasks.functions", () => {
     tasksApi.list.mockResolvedValue([TASK]);
 
     await expect(
-      (listTasksFn as unknown as (
-        input: ServerDataContext<{ caseId: string }>
-      ) => Promise<unknown>)({
+      (
+        listTasksFn as unknown as (
+          input: ServerDataContext<{ caseId: string }>
+        ) => Promise<unknown>
+      )({
         data: { caseId: TASK.caseId },
         context: {},
       })
@@ -66,22 +71,26 @@ describe("tasks.functions", () => {
     tasksApi.remove.mockResolvedValue({ ok: true });
 
     await expect(
-      (createTaskFn as unknown as (
-        input: ServerDataContext<{ caseId: string; title: string }>
-      ) => Promise<unknown>)({
+      (
+        createTaskFn as unknown as (
+          input: ServerDataContext<{ caseId: string; title: string }>
+        ) => Promise<unknown>
+      )({
         data: { caseId: TASK.caseId, title: "Follow up" },
         context: {},
       })
     ).resolves.toEqual(TASK);
 
     await expect(
-      (reorderTasksFn as unknown as (
-        input: ServerDataContext<{
-          caseId: string;
-          status: typeof TASK.status;
-          orderedIds: string[];
-        }>
-      ) => Promise<unknown>)({
+      (
+        reorderTasksFn as unknown as (
+          input: ServerDataContext<{
+            caseId: string;
+            status: typeof TASK.status;
+            orderedIds: string[];
+          }>
+        ) => Promise<unknown>
+      )({
         data: {
           caseId: TASK.caseId,
           status: "backlog",
@@ -92,9 +101,11 @@ describe("tasks.functions", () => {
     ).resolves.toEqual([TASK]);
 
     await expect(
-      (deleteTaskFn as unknown as (
-        input: ServerDataContext<{ caseId: string; taskId: string }>
-      ) => Promise<{ ok: true }>)({
+      (
+        deleteTaskFn as unknown as (
+          input: ServerDataContext<{ caseId: string; taskId: string }>
+        ) => Promise<{ ok: true }>
+      )({
         data: { caseId: TASK.caseId, taskId: TASK.id },
         context: {},
       })

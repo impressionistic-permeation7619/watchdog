@@ -19,7 +19,10 @@ vi.mock("@/lib/orpc.server", () => ({
 
 import { searchCaseFn } from "@/domains/search/search.functions";
 
-type ServerDataContext<T> = { data: T; context: Record<string, never> };
+interface ServerDataContext<T> {
+  data: T;
+  context: Record<string, never>;
+}
 
 describe("search.functions", () => {
   it("delegates case search to the ORPC search endpoint", async () => {
@@ -38,9 +41,11 @@ describe("search.functions", () => {
     };
     searchCaseMock.mockResolvedValue(hits);
 
-    const result = await (searchCaseFn as unknown as (
-      input: ServerDataContext<typeof payload>
-    ) => Promise<typeof hits>)({
+    const result = await (
+      searchCaseFn as unknown as (
+        input: ServerDataContext<typeof payload>
+      ) => Promise<typeof hits>
+    )({
       data: payload,
       context: {},
     });

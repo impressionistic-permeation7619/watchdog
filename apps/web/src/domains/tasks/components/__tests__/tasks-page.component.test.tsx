@@ -2,9 +2,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { Suspense } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { testId } from "@watchdog/test-kit";
 
 import type { CaseRecord } from "@/domains/cases/types";
+import { testId } from "@watchdog/test-kit";
 
 vi.mock("@/auth/server", () => ({
   auth: {},
@@ -21,7 +21,7 @@ vi.mock("@/shared/layout/page", () => ({
   }) => (
     <div>
       <div>Tasks page header</div>
-      {count !== undefined ? <div>{count} tasks</div> : null}
+      {count === undefined ? null : <div>{count} tasks</div>}
       {actions}
     </div>
   ),

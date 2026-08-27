@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+
 import { testId } from "@watchdog/test-kit";
 
 vi.mock("@tanstack/react-router", () => ({
@@ -39,6 +40,8 @@ describe("PatchOpList", () => {
 
     expect(screen.getByText("Changes")).toBeInTheDocument();
     expect(screen.getByText("Observed alias")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Open in Jobs" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Open in Jobs" })
+    ).toBeInTheDocument();
   });
 });

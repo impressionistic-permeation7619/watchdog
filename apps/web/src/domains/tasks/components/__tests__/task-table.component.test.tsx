@@ -1,8 +1,8 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import { testId } from "@watchdog/test-kit";
 
 import type { TaskEntityLabel, TaskRecord } from "@/domains/tasks/types";
+import { testId } from "@watchdog/test-kit";
 
 class ResizeObserverMock {
   observe() {}
@@ -67,11 +67,7 @@ describe("TaskTable", () => {
     const entityById = new Map([[ENTITY_ID, ENTITY]]);
 
     render(
-      <TaskTable
-        tasks={tasks}
-        entityById={entityById}
-        onSelect={onSelect}
-      />
+      <TaskTable tasks={tasks} entityById={entityById} onSelect={onSelect} />
     );
 
     expect(screen.getByText("Follow WHOIS")).toBeInTheDocument();
@@ -114,9 +110,7 @@ describe("TaskTable", () => {
   it("shows an add row and empty message when onAdd is provided", () => {
     const onAdd = vi.fn();
 
-    render(
-      <TaskTable tasks={[]} onSelect={vi.fn()} onAdd={onAdd} />
-    );
+    render(<TaskTable tasks={[]} onSelect={vi.fn()} onAdd={onAdd} />);
 
     expect(screen.getByText("No tasks yet")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("row", { name: "Add task" }));

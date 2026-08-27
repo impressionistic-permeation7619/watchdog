@@ -1,6 +1,6 @@
 import { useForm } from "@tanstack/react-form";
 import { Eye, EyeOff, KeyRoundIcon } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import { useState, type SyntheticEvent } from "react";
 
 import { putCredentialFn } from "@/domains/settings/settings.functions";
 import { errMessage } from "@/lib/utils";
@@ -78,7 +78,7 @@ export function ConfigureCredentialDialog({
     onOpenChange(next);
   }
 
-  function handleFormSubmit(e: FormEvent<HTMLFormElement>) {
+  function handleFormSubmit(e: SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
     void form.handleSubmit();
   }
@@ -152,7 +152,9 @@ export function ConfigureCredentialDialog({
                     placeholder={configured ? "••••••••" : "Paste secret…"}
                     value={field.state.value}
                     onBlur={field.handleBlur}
-                    onChange={(e) => handleSecretChange(e.target.value)}
+                    onChange={(e) => {
+                      handleSecretChange(e.target.value);
+                    }}
                     disabled={form.state.isSubmitting}
                     aria-invalid={!!field.state.meta.errors[0]}
                   />

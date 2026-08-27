@@ -23,8 +23,8 @@ describe("settings credential schemas", () => {
   });
 
   it("rejects empty credential names", () => {
-    expect(
-      deleteCredentialInputSchema.safeParse({ name: "   " }).success
-    ).toBe(false);
+    expect(deleteCredentialInputSchema.safeParse({ name: "   " }).success).toBe(
+      false
+    );
   });
 });

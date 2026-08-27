@@ -2,9 +2,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook } from "@testing-library/react";
 import { createElement, type ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { testId } from "@watchdog/test-kit";
 
 import type { TaskRecord } from "@/domains/tasks/types";
+import { testId } from "@watchdog/test-kit";
 
 vi.mock("@/auth/server", () => ({
   auth: {},
@@ -45,21 +45,20 @@ vi.mock("@tanstack/react-query", async (importOriginal) => {
     }) => {
       useMutationMock(options);
       return {
-        mutateAsync: (...args: unknown[]) => options.mutationFn(...args),
+        mutateAsync: async (...args: unknown[]) => options.mutationFn(...args),
         isPending: false,
       };
     },
   };
 });
 
+import { useTaskWorkspace } from "@/domains/tasks/hooks/use-task-workspace";
 import {
   createTaskFn,
   reorderTasksFn,
   updateTaskFn,
 } from "@/domains/tasks/tasks.functions";
 import { useLiveEvents } from "@/shared/hooks/use-live-events";
-
-import { useTaskWorkspace } from "@/domains/tasks/hooks/use-task-workspace";
 
 const CASE_ID = testId(10);
 const ENTITY_ID = testId(30);
@@ -172,7 +171,10 @@ describe("useTaskWorkspace", () => {
 
   it("commits drops by updating status then reordering", async () => {
     mockQueries();
-    vi.mocked(updateTaskFn).mockResolvedValue({ ...TASK, status: "in_progress" });
+    vi.mocked(updateTaskFn).mockResolvedValue({
+      ...TASK,
+      status: "in_progress",
+    });
     vi.mocked(reorderTasksFn).mockResolvedValue([TASK]);
 
     const { result } = renderHook(() => useTaskWorkspace(CASE_ID), { wrapper });

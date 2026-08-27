@@ -25,8 +25,13 @@ import {
   putCredentialFn,
 } from "@/domains/settings/settings.functions";
 
-type ServerContext = { context: Record<string, never> };
-type ServerDataContext<T> = { data: T; context: Record<string, never> };
+interface ServerContext {
+  context: Record<string, never>;
+}
+interface ServerDataContext<T> {
+  data: T;
+  context: Record<string, never>;
+}
 
 describe("settings.functions", () => {
   it("lists credentials through oRPC", async () => {
@@ -34,9 +39,11 @@ describe("settings.functions", () => {
     credentialsApi.list.mockResolvedValue(slots);
 
     await expect(
-      (listCredentialsFn as unknown as (
-        input: ServerContext
-      ) => Promise<unknown>)({ context: {} })
+      (
+        listCredentialsFn as unknown as (
+          input: ServerContext
+        ) => Promise<unknown>
+      )({ context: {} })
     ).resolves.toEqual(slots);
   });
 
@@ -46,22 +53,26 @@ describe("settings.functions", () => {
     credentialsApi.delete.mockResolvedValue(undefined);
 
     await expect(
-      (putCredentialFn as unknown as (
-        input: ServerDataContext<{
-          name: string;
-          secret: string;
-          label: string;
-        }>
-      ) => Promise<unknown>)({
+      (
+        putCredentialFn as unknown as (
+          input: ServerDataContext<{
+            name: string;
+            secret: string;
+            label: string;
+          }>
+        ) => Promise<unknown>
+      )({
         data: { name: "shodan", secret: "abc", label: "Primary" },
         context: {},
       })
     ).resolves.toEqual(slot);
 
     await expect(
-      (deleteCredentialFn as unknown as (
-        input: ServerDataContext<{ name: string }>
-      ) => Promise<{ ok: true }>)({ data: { name: "shodan" }, context: {} })
+      (
+        deleteCredentialFn as unknown as (
+          input: ServerDataContext<{ name: string }>
+        ) => Promise<{ ok: true }>
+      )({ data: { name: "shodan" }, context: {} })
     ).resolves.toEqual({ ok: true });
     expect(credentialsApi.delete).toHaveBeenCalledWith({ name: "shodan" });
   });

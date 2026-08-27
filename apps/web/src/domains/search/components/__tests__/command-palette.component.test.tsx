@@ -2,9 +2,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { Suspense } from "react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import { testId } from "@watchdog/test-kit";
 
 import type { CaseRecord } from "@/domains/cases/types";
+import { testId } from "@watchdog/test-kit";
 
 class ResizeObserverMock {
   observe() {}

@@ -22,9 +22,7 @@ export const getTaskFn = createServerFn({ method: "GET" })
   .validator(taskIdInputSchema)
   .handler(
     async ({ data, context }): Promise<TaskRecord | null> =>
-      orpcNullIfNotFound(
-        orpcFromContext(context).tasks.get(data)
-      )
+      orpcNullIfNotFound(orpcFromContext(context).tasks.get(data))
   );
 
 export const createTaskFn = createServerFn({ method: "POST" })

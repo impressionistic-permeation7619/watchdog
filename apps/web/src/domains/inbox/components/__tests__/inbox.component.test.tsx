@@ -1,9 +1,9 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { testId } from "@watchdog/test-kit";
 
 import type { CaseRecord } from "@/domains/cases/types";
+import { testId } from "@watchdog/test-kit";
 
 vi.mock("@/auth/server", () => ({
   auth: {},
@@ -37,7 +37,13 @@ vi.mock("@/domains/inbox/components/inbox-queue-toolbar", () => ({
 }));
 
 vi.mock("@/shared/ui/split-view", () => ({
-  SplitView: ({ list, detail }: { list: React.ReactNode; detail: React.ReactNode }) => (
+  SplitView: ({
+    list,
+    detail,
+  }: {
+    list: React.ReactNode;
+    detail: React.ReactNode;
+  }) => (
     <div>
       <div data-testid="split-list">{list}</div>
       <div data-testid="split-detail">{detail}</div>

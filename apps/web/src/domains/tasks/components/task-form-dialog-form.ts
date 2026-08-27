@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import type { TaskFormValues } from "@/domains/tasks/lib/task-form";
 
 /** Minimal surface used by task dialog field/footer helpers. */
-export type TaskDialogForm = {
+export interface TaskDialogForm {
   Field: (props: {
     name: keyof TaskFormValues;
     children: (field: {
@@ -24,4 +24,4 @@ export type TaskDialogForm = {
   }) => ReactNode;
   handleSubmit: () => void | Promise<void>;
   reset: (values?: TaskFormValues) => void;
-};
+}

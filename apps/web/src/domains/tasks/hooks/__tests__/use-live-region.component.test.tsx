@@ -7,7 +7,12 @@ function LiveRegionProbe() {
   const { announce, liveRegion } = useLiveRegion();
   return (
     <div>
-      <button type="button" onClick={() => announce("Saved task")}>
+      <button
+        type="button"
+        onClick={() => {
+          announce("Saved task");
+        }}
+      >
         Announce
       </button>
       {liveRegion}
@@ -25,7 +30,10 @@ describe("useLiveRegion", () => {
     await act(async () => {
       await vi.runOnlyPendingTimersAsync();
     });
-    expect(screen.getByText("Saved task")).toHaveAttribute("aria-live", "polite");
+    expect(screen.getByText("Saved task")).toHaveAttribute(
+      "aria-live",
+      "polite"
+    );
     vi.useRealTimers();
   });
 });

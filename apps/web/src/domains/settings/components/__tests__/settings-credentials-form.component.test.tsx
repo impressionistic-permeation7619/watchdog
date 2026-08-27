@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { Suspense } from "react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
+
 import type { CredentialSlot } from "@watchdog/core";
 
 class ResizeObserverMock {
@@ -34,7 +35,8 @@ vi.mock("@tanstack/react-query", async (importOriginal) => {
       onError?: (error: unknown) => void;
     }) => ({
       mutate: (name: string) => {
-        void options.mutationFn(name)
+        void options
+          .mutationFn(name)
           .then(() => options.onSuccess?.())
           .catch((error) => options.onError?.(error));
         deleteMutateMock(name);
@@ -60,11 +62,11 @@ vi.mock("sonner", () => ({
   },
 }));
 
+import { SettingsCredentialsForm } from "@/domains/settings/components/settings-credentials-form";
 import {
   deleteCredentialFn,
   putCredentialFn,
 } from "@/domains/settings/settings.functions";
-import { SettingsCredentialsForm } from "@/domains/settings/components/settings-credentials-form";
 
 const CONNECTED: CredentialSlot = {
   name: "shodan",

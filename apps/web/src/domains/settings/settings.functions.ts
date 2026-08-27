@@ -1,24 +1,24 @@
 import { createServerFn } from "@tanstack/react-start";
 
-import { orpcFromContext } from "@/lib/orpc.server";
 import {
   deleteCredentialInputSchema,
   putCredentialInputSchema,
   type CredentialSlot,
 } from "@/domains/settings/types";
+import { orpcFromContext } from "@/lib/orpc.server";
 
 export { type CredentialSlot } from "@/domains/settings/types";
 
 export const listCredentialsFn = createServerFn({ method: "GET" }).handler(
   async ({ context }): Promise<CredentialSlot[]> =>
-    await orpcFromContext(context).credentials.list()
+    orpcFromContext(context).credentials.list()
 );
 
 export const putCredentialFn = createServerFn({ method: "POST" })
   .validator(putCredentialInputSchema)
   .handler(
     async ({ data, context }): Promise<CredentialSlot> =>
-      await orpcFromContext(context).credentials.put({
+      orpcFromContext(context).credentials.put({
         name: data.name,
         secret: data.secret,
         label: data.label,

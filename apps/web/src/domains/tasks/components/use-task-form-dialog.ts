@@ -1,6 +1,7 @@
 import { useForm } from "@tanstack/react-form";
 import { useEffect, type SubmitEvent } from "react";
 
+import type { TaskDialogForm } from "@/domains/tasks/components/task-form-dialog-form";
 import {
   EMPTY_TASK_FORM,
   defaultsFromTask,
@@ -8,7 +9,6 @@ import {
   taskFormIssues,
   type TaskFormValues,
 } from "@/domains/tasks/lib/task-form";
-import type { TaskDialogForm } from "@/domains/tasks/components/task-form-dialog-form";
 import type { TaskRecord } from "@/domains/tasks/types";
 import type { TaskStatus } from "@watchdog/schemas";
 
@@ -91,8 +91,9 @@ export function useTaskFormDialog(props: TaskFormDialogCoreProps) {
     });
   }, [open, mode, task, defaultEntityId, defaultStatus, form, onSubmit]);
 
-  const handleSubmit = (event: SubmitEvent) =>
+  const handleSubmit = (event: SubmitEvent) => {
     preventTaskFormDefault(form as TaskDialogForm, event);
+  };
 
   return { form: form as TaskDialogForm, handleSubmit };
 }

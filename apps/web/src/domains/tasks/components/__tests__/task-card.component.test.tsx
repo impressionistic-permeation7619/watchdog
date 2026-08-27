@@ -1,8 +1,8 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { testId } from "@watchdog/test-kit";
 
 import type { TaskEntityLabel, TaskRecord } from "@/domains/tasks/types";
+import { testId } from "@watchdog/test-kit";
 
 vi.mock("@dnd-kit/sortable", () => ({
   useSortable: () => ({
@@ -18,12 +18,15 @@ vi.mock("@dnd-kit/sortable", () => ({
 vi.mock("@dnd-kit/utilities", () => ({
   CSS: {
     Transform: {
-      toString: () => undefined,
+      toString: () => {},
     },
   },
 }));
 
-import { TaskCard, TaskCardPreview } from "@/domains/tasks/components/task-card";
+import {
+  TaskCard,
+  TaskCardPreview,
+} from "@/domains/tasks/components/task-card";
 
 const TASK: TaskRecord = {
   id: testId(20),
@@ -51,11 +54,7 @@ describe("TaskCard", () => {
     const entityById = new Map([[ENTITY.id, ENTITY]]);
 
     render(
-      <TaskCard
-        task={TASK}
-        onSelect={onSelect}
-        entityById={entityById}
-      />
+      <TaskCard task={TASK} onSelect={onSelect} entityById={entityById} />
     );
 
     expect(screen.getByText("Verify alias")).toBeInTheDocument();
@@ -67,12 +66,7 @@ describe("TaskCard", () => {
   });
 
   it("strikes through done tasks", () => {
-    render(
-      <TaskCard
-        task={{ ...TASK, status: "done" }}
-        onSelect={vi.fn()}
-      />
-    );
+    render(<TaskCard task={{ ...TASK, status: "done" }} onSelect={vi.fn()} />);
 
     expect(screen.getByText("Verify alias")).toHaveClass("line-through");
   });

@@ -1,9 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import type { ProposalRecord } from "@watchdog/core";
-import { testId } from "@watchdog/test-kit";
 
 import { InboxQueueList } from "@/domains/inbox/components/inbox-queue-list";
+import type { ProposalRecord } from "@watchdog/core";
+import { testId } from "@watchdog/test-kit";
 
 const PROPOSAL: ProposalRecord = {
   id: testId(50),
@@ -47,7 +47,9 @@ describe("InboxQueueList", () => {
       />
     );
 
-    expect(screen.getByRole("listbox", { name: "Proposals" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("listbox", { name: "Proposals" })
+    ).toBeInTheDocument();
     expect(screen.getByRole("option", { selected: true })).toBeInTheDocument();
     expect(screen.getByText(/1 claim · 1 ev/)).toBeInTheDocument();
   });

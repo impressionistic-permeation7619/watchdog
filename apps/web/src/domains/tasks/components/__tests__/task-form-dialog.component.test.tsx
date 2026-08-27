@@ -1,8 +1,8 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import { testId } from "@watchdog/test-kit";
 
 import type { TaskRecord } from "@/domains/tasks/types";
+import { testId } from "@watchdog/test-kit";
 
 class ResizeObserverMock {
   observe() {}
@@ -24,7 +24,7 @@ vi.mock("@/shared/ui/entity-combobox", () => ({
     onValueChange,
     "aria-label": ariaLabel,
   }: {
-    entities: Array<{ id: string; name: string }>;
+    entities: { id: string; name: string }[];
     value: string;
     onValueChange: (id: string) => void;
     "aria-label"?: string;
@@ -32,7 +32,9 @@ vi.mock("@/shared/ui/entity-combobox", () => ({
     <select
       aria-label={ariaLabel}
       value={value}
-      onChange={(event) => onValueChange(event.target.value)}
+      onChange={(event) => {
+        onValueChange(event.target.value);
+      }}
     >
       <option value="">No entity</option>
       {entities.map((entity) => (
@@ -52,14 +54,16 @@ vi.mock("@/shared/ui/field-select", () => ({
     "aria-label": ariaLabel,
   }: {
     value: string;
-    options: Array<{ value: string; label: string }>;
+    options: { value: string; label: string }[];
     onValueChange: (value: string) => void;
     "aria-label"?: string;
   }) => (
     <select
       aria-label={ariaLabel}
       value={value}
-      onChange={(event) => onValueChange(event.target.value)}
+      onChange={(event) => {
+        onValueChange(event.target.value);
+      }}
     >
       {options.map((option) => (
         <option key={option.value} value={option.value}>
@@ -104,7 +108,9 @@ describe("TaskFormDialog", () => {
       />
     );
 
-    expect(screen.getByRole("heading", { name: "New task" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "New task" })
+    ).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText("Task title"), {
       target: { value: "New follow up" },
@@ -138,7 +144,9 @@ describe("TaskFormDialog", () => {
       />
     );
 
-    expect(screen.getByRole("heading", { name: "Edit task" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Edit task" })
+    ).toBeInTheDocument();
     expect(screen.getByDisplayValue("Verify alias")).toBeInTheDocument();
     expect(screen.getByText("Save failed")).toBeInTheDocument();
 

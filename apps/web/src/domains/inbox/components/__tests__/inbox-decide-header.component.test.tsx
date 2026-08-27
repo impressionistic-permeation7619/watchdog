@@ -1,14 +1,11 @@
 import { useForm } from "@tanstack/react-form";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import type { ProposalRecord } from "@watchdog/core";
-import { testId } from "@watchdog/test-kit";
 
 import { InboxDecideHeader } from "@/domains/inbox/components/inbox-decide-header";
-import type {
-  InboxAcceptForm,
-  InboxRejectForm,
-} from "@/domains/inbox/hooks/use-inbox-detail-forms";
+import type { InboxAcceptForm } from "@/domains/inbox/hooks/use-inbox-detail-forms";
+import type { ProposalRecord } from "@watchdog/core";
+import { testId } from "@watchdog/test-kit";
 
 vi.mock("@/domains/dossier/components/evidence-picker", () => ({
   EvidencePicker: () => <div>Evidence picker</div>,
@@ -77,7 +74,7 @@ function HeaderHarness({
     <InboxDecideHeader
       proposal={proposal}
       acceptForm={acceptForm as unknown as InboxAcceptForm}
-      rejectForm={rejectForm as unknown as InboxRejectForm}
+      rejectForm={rejectForm}
       linkedIds={[]}
       caseEvidence={[]}
       missingJobEvidenceCount={0}
@@ -93,9 +90,9 @@ describe("InboxDecideHeader", () => {
   it("renders pending proposal identity and accept controls", () => {
     render(<HeaderHarness proposal={pendingProposal()} />);
 
-    expect(screen.getByRole("navigation", { name: "Proposal path" })).toHaveTextContent(
-      "Alpha"
-    );
+    expect(
+      screen.getByRole("navigation", { name: "Proposal path" })
+    ).toHaveTextContent("Alpha");
     expect(screen.getByText("Pending")).toBeInTheDocument();
     expect(screen.getByText("Evidence picker")).toBeInTheDocument();
     expect(
@@ -110,7 +107,9 @@ describe("InboxDecideHeader", () => {
     expect(
       screen.getByPlaceholderText("Reject reason (optional)")
     ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Confirm Reject" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Confirm Reject" })
+    ).toBeInTheDocument();
 
     rerender(
       <HeaderHarness

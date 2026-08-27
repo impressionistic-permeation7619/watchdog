@@ -1,9 +1,9 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import { TASK_STATUSES } from "@watchdog/schemas";
-import { testId } from "@watchdog/test-kit";
 
 import type { TaskRecord } from "@/domains/tasks/types";
+import { TASK_STATUSES } from "@watchdog/schemas";
+import { testId } from "@watchdog/test-kit";
 
 class ResizeObserverMock {
   observe() {}
@@ -63,7 +63,9 @@ vi.mock("@/domains/tasks/components/task-board-column", () => ({
         <button
           key={item.id}
           type="button"
-          onClick={() => onSelect(item)}
+          onClick={() => {
+            onSelect(item);
+          }}
         >
           {item.title}
         </button>
@@ -71,7 +73,9 @@ vi.mock("@/domains/tasks/components/task-board-column", () => ({
       {onQuickCreate ? (
         <button
           type="button"
-          onClick={() => onQuickCreate(column as TaskRecord["status"], "Quick")}
+          onClick={() => {
+            onQuickCreate(column as TaskRecord["status"], "Quick");
+          }}
         >
           Quick add
         </button>
@@ -112,11 +116,7 @@ describe("TaskBoard", () => {
     ];
 
     render(
-      <TaskBoard
-        items={items}
-        onSelect={vi.fn()}
-        onCommitDrop={vi.fn()}
-      />
+      <TaskBoard items={items} onSelect={vi.fn()} onCommitDrop={vi.fn()} />
     );
 
     expect(screen.getByTestId("dnd-context")).toBeInTheDocument();
@@ -128,8 +128,12 @@ describe("TaskBoard", () => {
 
     expect(screen.getByText("backlog (1)")).toBeInTheDocument();
     expect(screen.getByText("in_progress (1)")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Backlog task" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Active task" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Backlog task" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Active task" })
+    ).toBeInTheDocument();
   });
 
   it("forwards selection and quick-create callbacks to columns", () => {

@@ -25,16 +25,14 @@ const ITEMS: SettingsNavItem[] = [
 describe("SettingsShell", () => {
   it("renders the active section heading and child content", () => {
     render(
-      <SettingsShell
-        items={ITEMS}
-        activeTab="account"
-        onTabChange={vi.fn()}
-      >
+      <SettingsShell items={ITEMS} activeTab="account" onTabChange={vi.fn()}>
         <div>Account panel</div>
       </SettingsShell>
     );
 
-    expect(screen.getByRole("heading", { name: "Account" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Account" })
+    ).toBeInTheDocument();
     expect(
       screen.getByText("Profile and identity settings.")
     ).toBeInTheDocument();

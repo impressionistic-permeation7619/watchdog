@@ -1,9 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { HOTKEYS } from "@/shared/lib/hotkeys";
-
 import { ShortcutsSheet } from "@/domains/search/components/shortcuts-sheet";
+import { HOTKEYS } from "@/shared/lib/hotkeys";
 
 describe("ShortcutsSheet", () => {
   it("lists keyboard shortcut catalog entries when open", () => {
@@ -13,7 +12,9 @@ describe("ShortcutsSheet", () => {
       screen.getByRole("heading", { name: "Keyboard shortcuts" })
     ).toBeInTheDocument();
     expect(
-      screen.getByText("Mod+K then type to search the Active Case or jump to a page.")
+      screen.getByText(
+        "Mod+K then type to search the Active Case or jump to a page."
+      )
     ).toBeInTheDocument();
 
     for (const entry of HOTKEYS) {

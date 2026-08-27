@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook } from "@testing-library/react";
 import { createElement, type ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
+
 import type { ProposalRecord } from "@watchdog/core";
 import { testId } from "@watchdog/test-kit";
 
@@ -91,13 +92,10 @@ function renderWorkspace(proposalId?: string) {
   });
 
   const client = new QueryClient();
-  return renderHook(
-    () => useInboxWorkspace(testId(10), { proposalId }),
-    {
-      wrapper: ({ children }: { children: ReactNode }) =>
-        createElement(QueryClientProvider, { client }, children),
-    }
-  );
+  return renderHook(() => useInboxWorkspace(testId(10), { proposalId }), {
+    wrapper: ({ children }: { children: ReactNode }) =>
+      createElement(QueryClientProvider, { client }, children),
+  });
 }
 
 describe("useInboxWorkspace", () => {

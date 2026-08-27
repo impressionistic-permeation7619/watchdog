@@ -1,7 +1,4 @@
-import {
-  useQuery,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 

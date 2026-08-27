@@ -1,8 +1,8 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import { testId } from "@watchdog/test-kit";
 
 import type { TaskRecord } from "@/domains/tasks/types";
+import { testId } from "@watchdog/test-kit";
 
 class ResizeObserverMock {
   observe() {}
@@ -37,7 +37,12 @@ vi.mock("@/domains/tasks/components/task-card", () => ({
     task: TaskRecord;
     onSelect: (task: TaskRecord) => void;
   }) => (
-    <button type="button" onClick={() => onSelect(task)}>
+    <button
+      type="button"
+      onClick={() => {
+        onSelect(task);
+      }}
+    >
       {task.title}
     </button>
   ),
@@ -67,14 +72,12 @@ describe("TaskBoardColumn", () => {
     const onSelect = vi.fn();
 
     render(
-      <TaskBoardColumn
-        column="backlog"
-        items={[TASK]}
-        onSelect={onSelect}
-      />
+      <TaskBoardColumn column="backlog" items={[TASK]} onSelect={onSelect} />
     );
 
-    expect(screen.getByRole("heading", { name: /Backlog/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /Backlog/i })
+    ).toBeInTheDocument();
     expect(screen.getByText("Follow up lead")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Follow up lead" }));
@@ -94,10 +97,9 @@ describe("TaskBoardColumn", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Add task" }));
-    fireEvent.change(
-      screen.getByLabelText("New In Progress task title"),
-      { target: { value: "  Verify alias  " } }
-    );
+    fireEvent.change(screen.getByLabelText("New In Progress task title"), {
+      target: { value: "  Verify alias  " },
+    });
     fireEvent.click(screen.getByRole("button", { name: "Add" }));
 
     await waitFor(() => {

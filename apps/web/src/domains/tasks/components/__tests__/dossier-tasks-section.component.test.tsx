@@ -1,8 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { testId } from "@watchdog/test-kit";
 
 import type { TaskRecord } from "@/domains/tasks/types";
+import { testId } from "@watchdog/test-kit";
 
 const useTaskWorkspaceMock = vi.hoisted(() => vi.fn());
 

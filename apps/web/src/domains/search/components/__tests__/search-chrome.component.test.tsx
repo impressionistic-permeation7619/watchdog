@@ -65,14 +65,13 @@ describe("SearchChrome", () => {
       </SearchChrome>
     );
 
-    const bindings = useGlobalHotkeysMock.mock.calls[0]?.[0] as Array<{
+    const bindings = useGlobalHotkeysMock.mock.calls[0]?.[0] as {
       id: string;
-    }>;
+    }[];
     expect(bindings.map((binding) => binding.id)).toEqual([
       "command-palette",
       "toggle-sidebar",
       "shortcuts",
     ]);
   });
-
 });
