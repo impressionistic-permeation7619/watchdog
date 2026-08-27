@@ -15,6 +15,8 @@ import { jobsKeys } from "@/domains/jobs/queries";
 import { credentialsKeys } from "@/domains/settings/queries";
 import { tasksKeys } from "@/domains/tasks/queries";
 
+type EntityChangedOpts = { entityId?: string; slug?: string };
+
 /** Soft settle: mark stale without flashing loading, then refetch active observers. */
 async function softInvalidate(
   client: QueryClient,
@@ -64,13 +66,12 @@ export async function invalidateAfterProposalQueueChange(
 export async function invalidateAfterEntityChanged(
   client: QueryClient,
   caseId: string,
-  opts?: { entityId?: string; slug?: string }
+  opts?: EntityChangedOpts
 ): Promise<void> {
   await softInvalidate(client, entitiesKeys.all(caseId));
   if (opts?.slug) {
     await softInvalidate(client, entitiesKeys.detail(caseId, opts.slug));
   }
-  // Case-wide lists denormalize entity labels (forCase + entity-scoped).
   await Promise.all([
     softInvalidate(client, edgesKeys.prefix(caseId)),
     softInvalidate(client, identifiersKeys.prefix(caseId)),
