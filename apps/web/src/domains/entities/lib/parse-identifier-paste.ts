@@ -453,7 +453,7 @@ function parseDelimitedPaste(
   const firstCells = splitPasteRow(nonempty[0] ?? "", delimiter);
   const hasHeader = looksLikeHeader(firstCells);
   const headerLine = hasHeader ? (nonempty[0] ?? null) : null;
-  const dataSource = hasHeader ? nonempty.slice(1) : nonempty;
+  const dataSource = hasHeader ? nonempty.slice(1) : [...nonempty];
   const cells = dataSource.map((line) => splitPasteRow(line, delimiter));
   return tableFromGrid({
     delimiter,

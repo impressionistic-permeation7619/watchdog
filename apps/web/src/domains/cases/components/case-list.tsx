@@ -1,26 +1,14 @@
 import { useForm } from "@tanstack/react-form";
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
 import { BriefcaseIcon, CheckIcon, DownloadIcon, PlusIcon } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
-import { toast } from "sonner";
+import { useRef } from "react";
 
-import {
-  createCaseFn,
-  setActiveCaseIdFn,
-} from "@/domains/cases/cases.functions";
+import { createCaseFn } from "@/domains/cases/cases.functions";
 import { DeleteCaseDialog } from "@/domains/cases/components/delete-case-dialog";
-import { notifyCasesChanged } from "@/domains/cases/lib/active-case";
-import { casesContextQuery } from "@/domains/cases/queries";
+import { useCaseList } from "@/domains/cases/hooks/use-case-list";
 import type { CaseRecord } from "@/domains/cases/types";
 import { cn, errMessage, nextAutoSlug, slugifyName } from "@/lib/utils";
 import { Page, PageHeader } from "@/shared/layout/page";
 import { PageToolbar } from "@/shared/layout/page-toolbar";
-import { invalidateAfterCaseSwitch } from "@/shared/lib/query-invalidation";
 import { DetailStatusChip } from "@/shared/ui/detail-status-chip";
 import { EmptyState } from "@/shared/ui/empty-state";
 import { FormInlineError } from "@/shared/ui/form-inline-message";
@@ -43,16 +31,6 @@ import { Field, FieldLabel } from "@/shared/ui/shadcn/field";
 import { Input } from "@/shared/ui/shadcn/input";
 import { Spinner } from "@/shared/ui/shadcn/spinner";
 import { Textarea } from "@/shared/ui/shadcn/textarea";
-
-function caseMatchesSearch(c: CaseRecord, query: string): boolean {
-  const q = query.toLowerCase().trim();
-  if (!q) return true;
-  return (
-    c.name.toLowerCase().includes(q) ||
-    c.slug.toLowerCase().includes(q) ||
-    (c.description ?? "").toLowerCase().includes(q)
-  );
-}
 
 function CaseCard({
   caseRow,
@@ -157,15 +135,6 @@ function CaseSlotGhost() {
       className="h-full min-h-36 rounded-lg bg-[color-mix(in_oklab,var(--muted)_3%,transparent)]"
     />
   );
-}
-
-function caseGridGhostCount(occupied: number, minRows = 4, cols = 3): number {
-  const minSlots = minRows * cols;
-  if (occupied >= minSlots) {
-    const rem = occupied % cols;
-    return rem === 0 ? cols : cols - rem;
-  }
-  return minSlots - occupied;
 }
 
 function CreateCaseDialog({
@@ -427,67 +396,28 @@ function CaseListGrid({
 }
 
 export function CaseList() {
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const { data: casesCtx } = useSuspenseQuery(casesContextQuery());
-  const cases = casesCtx.cases;
-  const activeId = casesCtx.active?.id ?? "";
-
-  const [search, setSearch] = useState("");
-  const [createOpen, setCreateOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<CaseRecord | null>(null);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-
-  const filtered = useMemo(
-    () =>
-      [...cases]
-        .filter((c) => caseMatchesSearch(c, search))
-        .sort((a, b) => a.name.localeCompare(b.name)),
-    [cases, search]
-  );
-
-  const selectMutation = useMutation({
-    mutationFn: async (id: string) =>
-      setActiveCaseIdFn({ data: { caseId: id } }),
-    onSuccess: async () => {
-      await invalidateAfterCaseSwitch(queryClient);
-      notifyCasesChanged();
-    },
-    onError: (err) => {
-      setSubmitError(errMessage(err, "Failed to switch case"));
-    },
-  });
-
-  function selectCase(id: string) {
-    setSubmitError(null);
-    selectMutation.mutate(id);
-  }
-
-  async function openCase(caseRow: CaseRecord) {
-    setSubmitError(null);
-    try {
-      if (caseRow.id !== activeId) {
-        await selectMutation.mutateAsync(caseRow.id);
-      }
-      await navigate({
-        to: "/cases/$caseSlug",
-        params: { caseSlug: caseRow.slug },
-      });
-    } catch (error) {
-      setSubmitError(errMessage(error, "Failed to open case"));
-    }
-  }
-
-  function openCreate() {
-    setSubmitError(null);
-    setCreateOpen(true);
-  }
-
-  const occupiedSlots = filtered.length + 1;
-  const ghostCount =
-    cases.length > 0 && filtered.length === 0
-      ? 0
-      : caseGridGhostCount(occupiedSlots);
+  const {
+    activeId,
+    cases,
+    search,
+    setSearch,
+    filtered,
+    ghostCount,
+    submitError,
+    createOpen,
+    setCreateOpen,
+    deleteTarget,
+    selecting,
+    selectCase,
+    openCase,
+    openCreate,
+    clearSearch,
+    beginDeleteCase,
+    handleCreateSuccess,
+    handleCreateError,
+    closeDeleteDialog,
+    handleCaseDeleted,
+  } = useCaseList();
 
   return (
     <Page className="min-h-0 gap-4 overflow-hidden">
@@ -515,48 +445,28 @@ export function CaseList() {
         casesLength={cases.length}
         filtered={filtered}
         activeId={activeId}
-        selecting={selectMutation.isPending}
+        selecting={selecting}
         ghostCount={ghostCount}
         search={search}
-        onClearSearch={() => {
-          setSearch("");
-        }}
+        onClearSearch={clearSearch}
         onSelectCase={selectCase}
-        onOpenCase={(caseRow) => {
-          void openCase(caseRow);
-        }}
-        onDeleteCase={(caseRow) => {
-          setSubmitError(null);
-          setDeleteTarget(caseRow);
-        }}
+        onOpenCase={openCase}
+        onDeleteCase={beginDeleteCase}
         onCreate={openCreate}
       />
 
       <CreateCaseDialog
         open={createOpen}
         onOpenChange={setCreateOpen}
-        onCreated={() => {
-          void (async () => {
-            setSubmitError(null);
-            toast.success("Case created");
-            await invalidateAfterCaseSwitch(queryClient);
-            notifyCasesChanged();
-          })();
-        }}
-        onError={(message) => {
-          setSubmitError(message);
-        }}
+        onCreated={handleCreateSuccess}
+        onError={handleCreateError}
       />
 
       <DeleteCaseDialog
         caseRow={deleteTarget}
         open={deleteTarget !== null}
-        onOpenChange={(open) => {
-          if (!open) setDeleteTarget(null);
-        }}
-        onDeleted={() => {
-          toast.success("Case deleted");
-        }}
+        onOpenChange={closeDeleteDialog}
+        onDeleted={handleCaseDeleted}
       />
     </Page>
   );
