@@ -27,6 +27,46 @@ export type HackertargetLookupSnapshot = z.infer<
  */
 
 type HackertargetOptions = { userAgent?: string; limit?: number };
+
+function hackertargetResponseError(text: string): string | null {
+  if (
+    text === "" ||
+    /no records/i.test(text) ||
+    /error check your search parameter/i.test(text) ||
+    /error invalid ip/i.test(text)
+  ) {
+    return text === "" || /no records/i.test(text)
+      ? null
+      : "invalid or empty reverse-IP response";
+  }
+  if (/^error\b/i.test(text) || /api count exceeded/i.test(text)) {
+    return text.split("\n")[0]?.trim() ?? "HackerTarget error";
+  }
+  return null;
+}
+
+function parseHackertargetDomains(
+  text: string,
+  limit: number,
+  seen: Set<string>
+): string[] {
+  const domains: string[] = [];
+  for (const line of text.split(/\r?\n/)) {
+    const raw = line.trim();
+    if (!raw || raw.includes(" ")) continue;
+    try {
+      const host = normalizeHost(raw);
+      if (seen.has(host)) continue;
+      seen.add(host);
+      domains.push(host);
+      if (domains.length >= limit) break;
+    } catch {
+      /* skip */
+    }
+  }
+  return domains;
+}
+
 export async function fetchHackertargetReverseIp(
   ipRaw: string,
   signal: AbortSignal,
@@ -57,39 +97,14 @@ export async function fetchHackertargetReverseIp(
     );
   }
 
-  const rawText = await res.text();
-  const text = rawText.trim();
-  let error: string | null = null;
-  const domains: string[] = [];
+  const text = (await res.text()).trim();
   const seen = new Set<string>();
-
-  if (
-    text === "" ||
-    /no records/i.test(text) ||
-    /error check your search parameter/i.test(text) ||
-    /error invalid ip/i.test(text)
-  ) {
-    error =
-      text === "" || /no records/i.test(text)
-        ? null
-        : "invalid or empty reverse-IP response";
-  } else if (/^error\b/i.test(text) || /api count exceeded/i.test(text)) {
-    error = text.split("\n")[0]?.trim() ?? "HackerTarget error";
-  } else {
-    for (const line of text.split(/\r?\n/)) {
-      const raw = line.trim();
-      if (!raw || raw.includes(" ")) continue;
-      try {
-        const host = normalizeHost(raw);
-        if (seen.has(host)) continue;
-        seen.add(host);
-        domains.push(host);
-        if (domains.length >= limit) break;
-      } catch {
-        /* skip */
-      }
-    }
-  }
+  const responseError = hackertargetResponseError(text);
+  const domains =
+    responseError === null && text !== ""
+      ? parseHackertargetDomains(text, limit, seen)
+      : [];
+  const error = responseError;
 
   return hackertargetLookupSnapshotSchema.parse({
     ip,

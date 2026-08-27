@@ -1,4 +1,4 @@
-import { connect, type PeerCertificate } from "node:tls";
+import { connect, type CipherNameAndProtocol, type PeerCertificate, type TLSSocket } from "node:tls";
 
 import { z } from "zod";
 
@@ -61,6 +61,36 @@ function certField(
   };
 }
 
+function cipherField(cipher: CipherNameAndProtocol | null): TlsAuditSnapshot["cipher"] {
+  if (!cipher) return null;
+  return {
+    name: cipher.name,
+    ...(cipher.standardName ? { standardName: cipher.standardName } : {}),
+    ...(cipher.version ? { version: cipher.version } : {}),
+  };
+}
+
+function snapshotFromSocket(
+  socket: TLSSocket,
+  host: string,
+  port: number
+): TlsAuditSnapshot {
+  const peer = socket.getPeerCertificate(true);
+  const cipher = socket.getCipher();
+  return {
+    host,
+    port,
+    queriedAt: new Date().toISOString(),
+    protocol: socket.getProtocol() ?? null,
+    authorized: socket.authorized,
+    authorizationError: socket.authorizationError
+      ? String(socket.authorizationError)
+      : null,
+    cipher: cipherField(cipher),
+    certificate: certField(peer),
+  };
+}
+
 type AuditOptions = { port?: number; servername?: string };
 
 /** Active TLS handshake against host:port — invasive. */
@@ -87,28 +117,7 @@ export function fetchTlsAudit(
         ...TLS_AUDIT_INSECURE_CONNECT,
       },
       () => {
-        const peer = socket.getPeerCertificate(true);
-        const cipher = socket.getCipher();
-        const snap: TlsAuditSnapshot = {
-          host,
-          port,
-          queriedAt: new Date().toISOString(),
-          protocol: socket.getProtocol() ?? null,
-          authorized: socket.authorized,
-          authorizationError: socket.authorizationError
-            ? String(socket.authorizationError)
-            : null,
-          cipher: cipher
-            ? {
-                name: cipher.name,
-                ...(cipher.standardName
-                  ? { standardName: cipher.standardName }
-                  : {}),
-                ...(cipher.version ? { version: cipher.version } : {}),
-              }
-            : null,
-          certificate: certField(peer),
-        };
+        const snap = snapshotFromSocket(socket, host, port);
         socket.end();
         resolve(tlsAuditSnapshotSchema.parse(snap));
       }

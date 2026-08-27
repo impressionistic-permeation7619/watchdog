@@ -51,15 +51,12 @@ function parseRanks(value: unknown): TrancoRankRow[] {
  */
 
 type TrancoOptions = { userAgent?: string };
-export async function fetchTrancoLookup(
-  domainRaw: string,
-  signal: AbortSignal,
-  options?: TrancoOptions
-): Promise<TrancoLookupSnapshot> {
-  const domain = normalizeHost(domainRaw);
-  const ua =
-    options?.userAgent ?? watchdogUserAgent("network.tranco.lookup");
 
+async function readTrancoBody(
+  domain: string,
+  signal: AbortSignal,
+  ua: string
+): Promise<Record<string, unknown>> {
   const res = await fetch(
     `https://tranco-list.eu/api/ranks/domain/${encodeURIComponent(domain)}`,
     {
@@ -91,6 +88,19 @@ export async function fetchTrancoLookup(
   if (!isRecord(body)) {
     throw parseToolsError("Tranco", domain);
   }
+  return body;
+}
+
+export async function fetchTrancoLookup(
+  domainRaw: string,
+  signal: AbortSignal,
+  options?: TrancoOptions
+): Promise<TrancoLookupSnapshot> {
+  const domain = normalizeHost(domainRaw);
+  const ua =
+    options?.userAgent ?? watchdogUserAgent("network.tranco.lookup");
+
+  const body = await readTrancoBody(domain, signal, ua);
   const rows = parseRanks(body.ranks).sort((a, b) =>
     b.date.localeCompare(a.date)
   );

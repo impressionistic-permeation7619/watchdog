@@ -36,6 +36,19 @@ export const ipctlLookupSnapshotSchema = z.object({
 
 export type IpctlLookupSnapshot = z.infer<typeof ipctlLookupSnapshotSchema>;
 
+function parseIpctlTags(data: Record<string, unknown>): string[] {
+  if (Array.isArray(data.tags)) {
+    return data.tags.flatMap((row) => {
+      const value = asString(row);
+      return value === null ? [] : [value];
+    });
+  }
+  return recordRows(data.tags).flatMap((row) => {
+    const value = asString(row.name) ?? asString(row.tag);
+    return value === null ? [] : [value];
+  });
+}
+
 export function parseIpctlBody(
   ip: string,
   queriedAt: string,
@@ -44,15 +57,11 @@ export function parseIpctlBody(
   const prefix = isRecord(data.prefix) ? data.prefix : {};
   const asnObj = isRecord(data.asn) ? data.asn : {};
   const geo = isRecord(data.geo) ? data.geo : {};
-  const tags = Array.isArray(data.tags)
-    ? data.tags.flatMap((row) => {
-        const value = asString(row);
-        return value === null ? [] : [value];
-      })
-    : recordRows(data.tags).flatMap((row) => {
-        const value = asString(row.name) ?? asString(row.tag);
-        return value === null ? [] : [value];
-      });
+  const tags = parseIpctlTags(data);
+  const bgpPrefixFromPrefix = asString(prefix.prefix);
+  const bgpPrefixFromData =
+    asString(data.bgp_prefix) ??
+    (typeof data.prefix === "string" ? asString(data.prefix) : null);
 
   return ipctlLookupSnapshotSchema.parse({
     ip,
@@ -60,10 +69,7 @@ export function parseIpctlBody(
     source: "api.ipctl.io",
     asn: asNumber(asnObj.asn) ?? asNumber(prefix.asn) ?? asNumber(data.asn),
     asName: asString(asnObj.name),
-    bgpPrefix:
-      asString(prefix.prefix) ??
-      asString(data.bgp_prefix) ??
-      (typeof data.prefix === "string" ? asString(data.prefix) : null),
+    bgpPrefix: bgpPrefixFromPrefix ?? bgpPrefixFromData,
     rirCountryCode:
       asString(prefix.country_code) ?? asString(asnObj.country_code),
     rir: asString(prefix.rir) ?? asString(asnObj.rir),

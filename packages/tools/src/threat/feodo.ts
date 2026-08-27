@@ -54,6 +54,26 @@ export function parseFeodoEntries(raw: unknown): FeodoEntry[] {
 
 type FeodoOptions2 = { userAgent: string; apiKey?: string };
 
+async function downloadFeodoBlocklist(
+  signal: AbortSignal,
+  options: FeodoOptions2
+): Promise<FeodoEntry[]> {
+  const headers: Record<string, string> = {
+    Accept: "application/json",
+    "User-Agent": options.userAgent,
+  };
+  if (options.apiKey) headers["Auth-Key"] = options.apiKey;
+
+  const res = await fetch(FEODO_BLOCKLIST_URL, {
+    method: "GET",
+    signal,
+    headers,
+  });
+  if (!res.ok) throw httpToolsError("Feodo Tracker blocklist", res.status);
+  const body: unknown = await res.json();
+  return parseFeodoEntries(body);
+}
+
 async function fetchBlocklist(
   signal: AbortSignal,
   options: FeodoOptions2
@@ -62,31 +82,17 @@ async function fetchBlocklist(
   if (cachedEntries && now - cachedAt < CACHE_TTL_MS) return cachedEntries;
   if (inflight) return inflight;
 
-  const headers: Record<string, string> = {
-    Accept: "application/json",
-    "User-Agent": options.userAgent,
-  };
-  if (options.apiKey) headers["Auth-Key"] = options.apiKey;
-
-  inflight = (async () => {
-    const res = await fetch(FEODO_BLOCKLIST_URL, {
-      method: "GET",
-      signal,
-      headers,
+  inflight = downloadFeodoBlocklist(signal, options)
+    .then((entries) => {
+      cachedEntries = entries;
+      cachedAt = Date.now();
+      return entries;
+    })
+    .finally(() => {
+      inflight = null;
     });
-    if (!res.ok) throw httpToolsError("Feodo Tracker blocklist", res.status);
-    const body: unknown = await res.json();
-    const entries = parseFeodoEntries(body);
-    cachedEntries = entries;
-    cachedAt = Date.now();
-    return entries;
-  })();
 
-  try {
-    return await inflight;
-  } finally {
-    inflight = null;
-  }
+  return inflight;
 }
 
 /**

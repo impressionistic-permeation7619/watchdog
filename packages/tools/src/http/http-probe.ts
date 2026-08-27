@@ -175,7 +175,7 @@ function failedProbeSnapshot(
   });
 }
 
-async function probePrimaryOrigin(
+function probePrimaryOrigin(
   origins: string[],
   signal: AbortSignal,
   userAgent: string
@@ -188,93 +188,93 @@ async function probePrimaryOrigin(
   let primary: Awaited<ReturnType<typeof fetchHeadOrGet>> | null = null;
   let originBase = origins[0];
 
-  for (const origin of origins) {
+  const tryOrigin = async (index: number): Promise<void> => {
+    if (index >= origins.length) return;
+    const origin = origins[index];
     try {
-      // oxlint-disable-next-line no-await-in-loop -- ordered fallback (https then http); stops at first reachable origin, must stay sequential
       const res = await fetchHeadOrGet(origin, signal, userAgent);
       primary = res;
       originBase = `${new URL(res.finalUrl).origin}/`;
-      if (res.status > 0) break;
+      if (res.status > 0) return;
     } catch (error) {
       lastError = errorMessage(error);
     }
-  }
+    await tryOrigin(index + 1);
+  };
 
-  return { primary, originBase, lastError };
+  return tryOrigin(0).then(() => ({ primary, originBase, lastError }));
 }
 
 /**
  * One Cap / one origin: security headers + security.txt + favicon hash + CDN hints.
  * Active HTTP — invasive.
  */
-export function fetchHttpProbe(
+export async function fetchHttpProbe(
   host: string,
   signal: AbortSignal,
   options: { userAgent: string; preferHttps?: boolean }
 ): Promise<HttpProbeSnapshot> {
-  return (async () => {
-    const preferHttps = options.preferHttps ?? true;
-    const origins = preferHttps
-      ? [`https://${host}/`, `http://${host}/`]
-      : [`http://${host}/`, `https://${host}/`];
+  const preferHttps = options.preferHttps ?? true;
+  const origins = preferHttps
+    ? [`https://${host}/`, `http://${host}/`]
+    : [`http://${host}/`, `https://${host}/`];
 
-    const { primary, originBase, lastError } = await probePrimaryOrigin(
-      origins,
-      signal,
-      options.userAgent
-    );
+  const { primary, originBase, lastError } = await probePrimaryOrigin(
+    origins,
+    signal,
+    options.userAgent
+  );
 
-    if (!primary) {
-      return failedProbeSnapshot(host, origins, lastError);
-    }
+  if (!primary) {
+    return failedProbeSnapshot(host, origins, lastError);
+  }
 
-    const securityTxtUrl = new URL("/.well-known/security.txt", originBase).href;
-    const faviconUrl = new URL("/favicon.ico", originBase).href;
+  const securityTxtUrl = new URL("/.well-known/security.txt", originBase).href;
+  const faviconUrl = new URL("/favicon.ico", originBase).href;
 
-    const [secTxt, favicon] = await Promise.all([
-      fetchBytes(securityTxtUrl, signal, {
-        userAgent: options.userAgent,
-        maxBytes: 16_384,
-        accept: "text/plain,*/*",
-      }),
-      fetchBytes(faviconUrl, signal, {
-        userAgent: options.userAgent,
-        maxBytes: 65_536,
-        accept: "image/*,*/*",
-      }),
-    ]);
+  const [secTxt, favicon] = await Promise.all([
+    fetchBytes(securityTxtUrl, signal, {
+      userAgent: options.userAgent,
+      maxBytes: 16_384,
+      accept: "text/plain,*/*",
+    }),
+    fetchBytes(faviconUrl, signal, {
+      userAgent: options.userAgent,
+      maxBytes: 65_536,
+      accept: "image/*,*/*",
+    }),
+  ]);
 
-    const bodyPreview =
-      secTxt.ok && secTxt.bytes.byteLength > 0
-        ? new TextDecoder().decode(secTxt.bytes).slice(0, 2000)
-        : null;
+  const bodyPreview =
+    secTxt.ok && secTxt.bytes.byteLength > 0
+      ? new TextDecoder().decode(secTxt.bytes).slice(0, 2000)
+      : null;
 
-    return httpProbeSnapshotSchema.parse({
-      host,
-      queriedAt: new Date().toISOString(),
-      finalUrl: primary.finalUrl,
-      status: primary.status,
-      ok: primary.ok,
-      securityHeaders: pickHeaders(primary.headers),
-      server: primary.headers.get("server"),
-      via: primary.headers.get("via"),
-      cdnHints: detectCdnHints(primary.headers),
-      securityTxt: {
-        url: securityTxtUrl,
-        status: secTxt.status,
-        present: secTxt.ok && Boolean(bodyPreview?.includes("Contact:")),
-        bodyPreview,
-      },
-      favicon: {
-        url: faviconUrl,
-        status: favicon.status,
-        sha256:
-          favicon.ok && favicon.bytes.byteLength > 0
-            ? createHash("sha256").update(favicon.bytes).digest("hex")
-            : null,
-        contentType: favicon.contentType,
-      },
-      ...(primary.ok ? {} : { error: `HTTP ${primary.status}` }),
-    });
-  })();
+  return httpProbeSnapshotSchema.parse({
+    host,
+    queriedAt: new Date().toISOString(),
+    finalUrl: primary.finalUrl,
+    status: primary.status,
+    ok: primary.ok,
+    securityHeaders: pickHeaders(primary.headers),
+    server: primary.headers.get("server"),
+    via: primary.headers.get("via"),
+    cdnHints: detectCdnHints(primary.headers),
+    securityTxt: {
+      url: securityTxtUrl,
+      status: secTxt.status,
+      present: secTxt.ok && Boolean(bodyPreview?.includes("Contact:")),
+      bodyPreview,
+    },
+    favicon: {
+      url: faviconUrl,
+      status: favicon.status,
+      sha256:
+        favicon.ok && favicon.bytes.byteLength > 0
+          ? createHash("sha256").update(favicon.bytes).digest("hex")
+          : null,
+      contentType: favicon.contentType,
+    },
+    ...(primary.ok ? {} : { error: `HTTP ${primary.status}` }),
+  });
 }

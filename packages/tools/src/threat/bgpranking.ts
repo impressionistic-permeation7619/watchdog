@@ -61,7 +61,9 @@ async function fetchLatestAsn(
     );
   }
   const entries = isRecord(body.response) ? body.response : {};
-  const latestTimestamp = Object.keys(entries).sort().at(-1);
+  const latestTimestamp = Object.keys(entries)
+    .sort((a, b) => a.localeCompare(b))
+    .at(-1);
   if (!latestTimestamp) return null;
   const entry = entries[latestTimestamp];
   return toAsnNumber(isRecord(entry) ? entry.asn : undefined);

@@ -3,7 +3,7 @@
  * Uses github-dark / github-light matched to the current app theme.
  * Shiki runs once per (code, lang, theme) combo; singleton highlighter cached.
  */
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { createHighlighter } from "shiki";
 
 import { cn } from "@/lib/utils";
@@ -58,6 +58,7 @@ export function CodeBlock({
   maxHeight = "60vh",
 }: CodeBlockProps) {
   const [html, setHtml] = useState<string | null>(null);
+  const highlightedRef = useRef<HTMLDivElement>(null);
 
   const isDark =
     typeof document !== "undefined" &&
@@ -85,6 +86,13 @@ export function CodeBlock({
     };
   }, [code, mime, lang, shikiTheme]);
 
+  useEffect(() => {
+    if (html === null) return;
+    const node = highlightedRef.current;
+    if (!node) return;
+    node.innerHTML = html;
+  }, [html]);
+
   if (html === null) {
     return (
       <pre
@@ -101,6 +109,7 @@ export function CodeBlock({
 
   return (
     <div
+      ref={highlightedRef}
       className={cn(
         "overflow-auto rounded-md text-[11px] leading-relaxed",
         "[&_.shiki]:!bg-muted/40 [&_.shiki]:rounded-md [&_.shiki]:p-3",
@@ -108,7 +117,6 @@ export function CodeBlock({
         className
       )}
       style={{ maxHeight }}
-      dangerouslySetInnerHTML={{ __html: html }}
     />
   );
 }
