@@ -163,6 +163,9 @@
             export SSL_CERT_FILE="''${SSL_CERT_FILE:-${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt}"
             export PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH="${pkgs.chromium}/bin/chromium"
             export PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=1
+            if [ -f lefthook.yml ] && command -v lefthook >/dev/null 2>&1; then
+              lefthook install >/dev/null 2>&1 || true
+            fi
             echo "Watchdog / OSINT shell: node=$(${pkgs.nodejs_24}/bin/node -v) pnpm=$(${pkgs.pnpm}/bin/pnpm -v) uv=$(${pkgs.uv}/bin/uv --version | awk '{print $2}')"
           '';
         };
