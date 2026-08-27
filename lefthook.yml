@@ -26,6 +26,12 @@ pre-commit:
         - "{AGENTS.md,**/AGENTS.md}"
         - "scripts/check-agents.mjs"
       run: pnpm check:agents:strict
+    agent-skills:
+      glob:
+        - "**/.agents/skills/**"
+        - "scripts/validate-agents.mjs"
+        - ".cursor/README.md"
+      run: pnpm validate:agents
 
 pre-push:
   parallel: true

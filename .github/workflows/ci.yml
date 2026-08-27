@@ -98,6 +98,9 @@ jobs:
             agents:
               - '**/AGENTS.md'
               - 'scripts/check-agents.mjs'
+              - '**/.agents/skills/**'
+              - 'scripts/validate-agents.mjs'
+              - '.cursor/README.md'
 
   check:
     name: Check
@@ -144,6 +147,10 @@ jobs:
       - name: AGENTS.md hygiene
         if: github.event_name != 'pull_request' || needs.changes.outputs.agents == 'true' || needs.changes.outputs.config == 'true'
         run: pnpm check:agents:strict
+
+      - name: Agent Skills validation
+        if: github.event_name != 'pull_request' || needs.changes.outputs.agents == 'true' || needs.changes.outputs.config == 'true'
+        run: pnpm validate:agents
 
       - name: Typecheck
         if: github.event_name != 'pull_request' || needs.changes.outputs.typescript == 'true' || needs.changes.outputs.config == 'true'

@@ -1,0 +1,390 @@
+#!/usr/bin/env node
+/**
+ * Validates Agent Skills (SKILL.md) committed under .agents/skills/ and
+ * nested package/app .agents/skills/ dirs, plus the .cursor/README.md sync
+ * gate. Separate from scripts/check-agents.mjs, which owns AGENTS.md prose
+ * hygiene — this script owns the portable-skills layer.
+ *
+ * Modeled on cursor/plugin-template's validate-template.mjs (per-artifact
+ * required-key table, safe-path check, duplicate-name Set, missing-file vs
+ * invalid-content distinction, error/warning arrays with one summarize-and-
+ * exit) but uses a real YAML parser instead of a line-by-line splitter, so
+ * multi-line block scalars and nested maps parse correctly.
+ */
+import { execFileSync } from "node:child_process";
+import { existsSync, statSync } from "node:fs";
+import { readdir, readFile } from "node:fs/promises";
+import path from "node:path";
+
+import { parse as parseYaml } from "yaml";
+
+const repoRoot = path.resolve(import.meta.dirname, "..");
+
+const TOP_LEVEL_KEYS = new Set([
+  "name",
+  "description",
+  "license",
+  "compatibility",
+  "metadata",
+  "allowed-tools",
+]);
+const METADATA_KEYS = new Set(["owner", "sources"]);
+const NAME_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+const TRIGGER_RE = /\b(use when|use for|trigger(?:s)? on)\b/i;
+const LINE_WARN = 70;
+const LINE_FAIL = 80;
+
+/** @type {{ level: "warn" | "fail"; msg: string }[]} */
+const findings = [];
+/** @param {"warn" | "fail"} level @param {string} msg */
+function note(level, msg) {
+  findings.push({ level, msg });
+}
+
+/** @param {string} rel */
+function isSafeRelativePath(rel) {
+  if (!rel || path.isAbsolute(rel)) return false;
+  return !path.normalize(rel).split(path.sep).includes("..");
+}
+
+/** @param {string} raw */
+function splitFrontmatter(raw) {
+  if (!raw.startsWith("---")) return null;
+  const end = raw.indexOf("\n---", 3);
+  if (end === -1) return null;
+  return {
+    fmText: raw.slice(3, end).trim(),
+    body: raw.slice(end + 4).replace(/^\n/, ""),
+  };
+}
+
+/** @param {unknown} value @returns {value is Record<string, unknown>} */
+function isPlainObject(value) {
+  return typeof value === "object" && value !== null;
+}
+
+/** @param {unknown} value @returns {Record<string, unknown>} */
+function asRecord(value) {
+  return isPlainObject(value) ? value : {};
+}
+
+/** @param {string} fmText @returns {Record<string, unknown>} */
+function parseFrontmatter(fmText) {
+  return asRecord(parseYaml(fmText));
+}
+
+/**
+ * Skill dirs to check: top-level .agents/skills/* plus one level of nesting
+ * under packages/*\/.agents/skills/* and apps/*\/.agents/skills/*.
+ */
+async function discoverSkillRoots() {
+  const roots = [];
+  const topLevel = path.join(repoRoot, ".agents/skills");
+  if (existsSync(topLevel)) roots.push(topLevel);
+
+  const nestedTops = ["packages", "apps"].filter((top) =>
+    existsSync(path.join(repoRoot, top))
+  );
+  const nestedNames = await Promise.all(
+    nestedTops.map(async (top) => readdir(path.join(repoRoot, top)))
+  );
+  for (const [i, top] of nestedTops.entries()) {
+    for (const name of nestedNames[i] ?? []) {
+      const nested = path.join(repoRoot, top, name, ".agents/skills");
+      if (existsSync(nested)) roots.push(nested);
+    }
+  }
+  return roots;
+}
+
+/** @param {string} root */
+async function listSkillDirs(root) {
+  const entries = await readdir(root, { withFileTypes: true });
+  return entries
+    .filter(
+      (e) =>
+        e.isDirectory() && !e.name.startsWith("_") && !e.name.startsWith(".")
+    )
+    .map((e) => path.join(root, e.name));
+}
+
+/** @param {string} filePath */
+function gitMtimeSeconds(filePath) {
+  try {
+    const rel = path.relative(repoRoot, filePath);
+    const out = execFileSync("git", ["log", "-1", "--format=%ct", "--", rel], {
+      cwd: repoRoot,
+      encoding: "utf-8",
+    }).trim();
+    return out ? Number(out) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** @param {string} filePath */
+function mtimeSeconds(filePath) {
+  return gitMtimeSeconds(filePath) ?? statSync(filePath).mtimeMs / 1000;
+}
+
+/**
+ * @param {string} skillDir
+ * @param {Map<string, string[]>} namesSeen
+ */
+async function checkSkill(skillDir, namesSeen) {
+  const folder = path.basename(skillDir);
+  const rel = path.relative(repoRoot, skillDir);
+  const skillMd = path.join(skillDir, "SKILL.md");
+
+  if (!existsSync(skillMd)) {
+    note("fail", `${rel}: missing SKILL.md`);
+    return;
+  }
+
+  const raw = await readFile(skillMd, "utf-8");
+  const totalLines = raw.split("\n").length;
+  const fm = splitFrontmatter(raw);
+  if (!fm) {
+    note("fail", `${rel}/SKILL.md: missing or unterminated YAML frontmatter`);
+    return;
+  }
+
+  let parsed;
+  try {
+    parsed = parseFrontmatter(fm.fmText);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    note("fail", `${rel}/SKILL.md: invalid YAML frontmatter — ${message}`);
+    return;
+  }
+
+  for (const key of Object.keys(parsed)) {
+    if (!TOP_LEVEL_KEYS.has(key)) {
+      note("fail", `${rel}/SKILL.md: orphan frontmatter key "${key}"`);
+    }
+  }
+
+  const name = parsed.name;
+  if (typeof name !== "string" || name.length === 0 || name.length > 64) {
+    note("fail", `${rel}/SKILL.md: "name" must be 1-64 chars`);
+  } else if (!NAME_RE.test(name)) {
+    note(
+      "fail",
+      `${rel}/SKILL.md: "name" must be lowercase letters/numbers/hyphens, no leading/trailing/consecutive hyphens`
+    );
+  } else if (name === folder) {
+    const dirs = namesSeen.get(name) ?? [];
+    dirs.push(rel);
+    namesSeen.set(name, dirs);
+  } else {
+    note(
+      "fail",
+      `${rel}/SKILL.md: name "${name}" must equal folder name "${folder}"`
+    );
+  }
+
+  const description = parsed.description;
+  if (typeof description === "string" && description.trim().length > 0) {
+    if (description.length > 1024) {
+      note("fail", `${rel}/SKILL.md: "description" exceeds 1024 chars`);
+    }
+    if (!TRIGGER_RE.test(description)) {
+      note(
+        "warn",
+        `${rel}/SKILL.md: "description" has no trigger clause ("Use when…" / "Use for…" / "Triggers on…")`
+      );
+    }
+  } else {
+    note(
+      "fail",
+      `${rel}/SKILL.md: "description" is required and must be non-empty`
+    );
+  }
+
+  checkMetadata(parsed.metadata, rel, skillMd);
+
+  if (totalLines > LINE_FAIL) {
+    note(
+      "fail",
+      `${rel}/SKILL.md: ${totalLines} lines exceeds the ${LINE_FAIL}-line budget`
+    );
+  } else if (totalLines > LINE_WARN) {
+    note(
+      "warn",
+      `${rel}/SKILL.md: ${totalLines} lines is approaching the ${LINE_FAIL}-line budget`
+    );
+  }
+
+  await checkReferences(skillDir, rel);
+}
+
+/**
+ * @param {unknown} metadata
+ * @param {string} rel
+ * @param {string} skillMd
+ */
+function checkMetadata(metadata, rel, skillMd) {
+  if (!isPlainObject(metadata)) {
+    note(
+      "fail",
+      `${rel}/SKILL.md: "metadata.owner" and "metadata.sources" are required`
+    );
+    return;
+  }
+
+  for (const key of Object.keys(metadata)) {
+    if (!METADATA_KEYS.has(key)) {
+      note("fail", `${rel}/SKILL.md: orphan metadata key "${key}"`);
+    }
+  }
+  if (metadata.owner !== "watchdog") {
+    note("fail", `${rel}/SKILL.md: "metadata.owner" must be "watchdog"`);
+  }
+
+  const sources = metadata.sources;
+  if (typeof sources !== "string" || sources.trim().length === 0) {
+    note(
+      "fail",
+      `${rel}/SKILL.md: "metadata.sources" must be a non-empty comma-separated string`
+    );
+    return;
+  }
+
+  const sourcePaths = sources
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  for (const srcRel of sourcePaths) {
+    if (!isSafeRelativePath(srcRel)) {
+      note("fail", `${rel}/SKILL.md: unsafe source path "${srcRel}"`);
+      continue;
+    }
+    const srcAbs = path.join(repoRoot, srcRel);
+    if (!existsSync(srcAbs)) {
+      note(
+        "fail",
+        `${rel}/SKILL.md: metadata.sources path does not exist: ${srcRel}`
+      );
+      continue;
+    }
+    if (mtimeSeconds(srcAbs) > mtimeSeconds(skillMd)) {
+      note(
+        "warn",
+        `${rel}/SKILL.md: may be stale — ${srcRel} changed more recently than this skill`
+      );
+    }
+  }
+}
+
+/** @param {string} skillDir @param {string} rel */
+async function checkReferences(skillDir, rel) {
+  const refDir = path.join(skillDir, "references");
+  if (!existsSync(refDir)) return;
+
+  const template = path.join(refDir, "_template.md");
+  if (!existsSync(template)) {
+    note("warn", `${rel}/references: has no _template.md scaffold`);
+  }
+
+  const entries = await readdir(refDir, { withFileTypes: true });
+  const refFiles = entries.filter(
+    (e) => e.isFile() && e.name !== "_template.md" && !e.name.startsWith("_")
+  );
+  const texts = await Promise.all(
+    refFiles.map(async (e) => readFile(path.join(refDir, e.name), "utf-8"))
+  );
+  for (const [i, entry] of refFiles.entries()) {
+    if (!/load this when/i.test(texts[i] ?? "")) {
+      note(
+        "warn",
+        `${rel}/references/${entry.name}: missing an explicit "Load this when:" trigger line`
+      );
+    }
+  }
+}
+
+async function checkReadmeSync() {
+  const readmePath = path.join(repoRoot, ".cursor/README.md");
+  if (!existsSync(readmePath)) {
+    note(
+      "warn",
+      ".cursor/README.md is missing — add it to document hooks and skills"
+    );
+    return;
+  }
+  const text = await readFile(readmePath, "utf-8");
+  const pkgRaw = await readFile(path.join(repoRoot, "package.json"), "utf-8");
+  const pkgJson = asRecord(JSON.parse(pkgRaw));
+  const scripts = asRecord(pkgJson.scripts);
+
+  for (const m of text.matchAll(/`pnpm ([a-zA-Z0-9:_-]+)`/g)) {
+    const scriptName = m[1] ?? "";
+    if (!(scriptName in scripts)) {
+      note(
+        "fail",
+        `.cursor/README.md references "pnpm ${scriptName}", not in package.json scripts`
+      );
+    }
+  }
+
+  for (const m of text.matchAll(
+    /`(\.cursor\/[^`]+|scripts\/[^`]+|\.agents\/[^`]+)`/g
+  )) {
+    const refRel = (m[1] ?? "").split("#")[0]?.trim() ?? "";
+    if (!refRel || refRel.endsWith("/")) continue;
+    if (!isSafeRelativePath(refRel)) {
+      note("fail", `.cursor/README.md references unsafe path "${refRel}"`);
+      continue;
+    }
+    if (!existsSync(path.join(repoRoot, refRel))) {
+      note("fail", `.cursor/README.md references missing path "${refRel}"`);
+    }
+  }
+}
+
+async function main() {
+  const roots = await discoverSkillRoots();
+  const dirLists = await Promise.all(roots.map(async (r) => listSkillDirs(r)));
+  const skillDirs = dirLists.flat();
+
+  if (skillDirs.length === 0) {
+    note(
+      "fail",
+      "no skills discovered — check the walk paths in validate-agents.mjs"
+    );
+  }
+
+  /** @type {Map<string, string[]>} */
+  const namesSeen = new Map();
+  await Promise.all(skillDirs.map(async (dir) => checkSkill(dir, namesSeen)));
+  for (const [name, dirs] of namesSeen) {
+    if (dirs.length > 1) {
+      note(
+        "warn",
+        `skill name "${name}" used in multiple dirs: ${dirs.join(", ")}`
+      );
+    }
+  }
+
+  await checkReadmeSync();
+
+  let warns = 0;
+  let fails = 0;
+  for (const { level, msg } of findings) {
+    if (level === "fail") {
+      fails += 1;
+      console.error(`FAIL  ${msg}`);
+    } else {
+      warns += 1;
+      console.warn(`WARN  ${msg}`);
+    }
+  }
+
+  console.log(
+    `validate:agents: checked ${skillDirs.length} skill(s), ${findings.length} finding(s) (${fails} fail, ${warns} warn)`
+  );
+
+  process.exit(fails > 0 ? 1 : 0);
+}
+
+await main();

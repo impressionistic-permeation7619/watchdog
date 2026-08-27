@@ -6,7 +6,14 @@
 *.key
 
 # Tooling
-.cursor/
+# .cursor/ is an allowlist, not a blanket ignore — see .cursor/README.md.
+# Tracked: hooks/ (portable), hooks.json, README.md.
+# Local-only: rules/, skills/, agents/ (third-party tool installs), plans/, settings.json.
+.cursor/*
+!.cursor/hooks
+!.cursor/hooks/**
+!.cursor/hooks.json
+!.cursor/README.md
 _legacy-v2/
 .desloppify/
 node_modules/

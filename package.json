@@ -29,6 +29,7 @@
     "db:studio": "pnpm --filter @watchdog/db studio",
     "check:agents": "node ./scripts/check-agents.mjs",
     "check:agents:strict": "node ./scripts/check-agents.mjs --strict",
+    "validate:agents": "node ./scripts/validate-agents.mjs",
     "desloppify:bootstrap": "bash scripts/desloppify-bootstrap.sh",
     "desloppify:scan": "bash scripts/desloppify-bootstrap.sh && PYTHONPATH= desloppify --lang typescript scan --path .",
     "desloppify:scan:ci": "bash scripts/desloppify-bootstrap.sh && PYTHONPATH= desloppify --lang typescript scan --path . --profile ci --no-badge",
@@ -51,7 +52,8 @@
     "tsx": "^4.20.0",
     "typescript": "^6.0.2",
     "ultracite": "7.9.4",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.10",
+    "yaml": "^2.9.0"
   },
   "engines": {
     "node": ">=22"
