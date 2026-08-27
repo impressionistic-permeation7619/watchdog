@@ -90,10 +90,12 @@ async function emailrepFailReason(res: Response): Promise<string> {
  * GET https://emailrep.io/{email}
  * @see https://docs.sublime.security/reference/emailrep-introduction
  */
+
+type EmailrepOptions = { apiKey?: string; userAgent?: string };
 export async function fetchEmailrepLookup(
   emailRaw: string,
   signal: AbortSignal,
-  options?: { apiKey?: string; userAgent?: string }
+  options?: EmailrepOptions
 ): Promise<EmailrepLookupSnapshot> {
   const email = emailRaw.trim().toLowerCase();
   if (!email.includes("@")) throw validationToolsError(`Invalid email: ${emailRaw}`);

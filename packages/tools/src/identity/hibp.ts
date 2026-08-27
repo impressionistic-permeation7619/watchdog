@@ -33,11 +33,13 @@ export type HibpLookupSnapshot = z.infer<typeof hibpLookupSnapshotSchema>;
  * HIBP breachedaccount (metadata only — no plaintext passwords).
  * Requires API key. Truncated list (max 40) for Proposal hygiene.
  */
+
+type HibpOptions = { userAgent?: string; truncate?: number };
 export async function fetchHibpBreachedAccount(
   email: string,
   apiKey: string,
   signal: AbortSignal,
-  options?: { userAgent?: string; truncate?: number }
+  options?: HibpOptions
 ): Promise<HibpLookupSnapshot> {
   const normalized = email.trim().toLowerCase();
   if (!normalized.includes("@")) throw validationToolsError(`Invalid email: ${email}`);

@@ -70,10 +70,12 @@ async function fetchScannerFeed(
  * (30-minute in-process cache — public feed, not per-query.)
  * @see https://greedybear-docs.readthedocs.io/en/latest/OpenAPI.html
  */
+
+type GreedybearOptions = { userAgent?: string };
 export async function fetchGreedybearLookup(
   queryRaw: string,
   signal: AbortSignal,
-  options?: { userAgent?: string }
+  options?: GreedybearOptions
 ): Promise<GreedybearLookupSnapshot> {
   const { kind, value } = classifyIpOrHost(queryRaw);
   const ua =

@@ -73,10 +73,12 @@ function firstProductName(body: Record<string, unknown>): string | null {
  * GET https://hashlookup.circl.lu/lookup/{md5|sha1|sha256|sha512}/{hash}
  * @see https://hashlookup.circl.lu/
  */
+
+type HashlookupOptions = { userAgent?: string };
 export async function fetchHashlookup(
   hashRaw: string,
   signal: AbortSignal,
-  options?: { userAgent?: string }
+  options?: HashlookupOptions
 ): Promise<HashlookupSnapshot> {
   const hash = normalizeHashlookupHash(hashRaw);
   const algo = algoForHash(hash);

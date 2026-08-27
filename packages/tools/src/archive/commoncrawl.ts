@@ -72,6 +72,14 @@ export function parseCommoncrawlCdxText(
   return out;
 }
 
+type CommoncrawlLookupOptions = {
+  userAgent?: string;
+  /** How many newest indexes to query (default 2). */
+  indexes?: number;
+  /** Max hits to keep across indexes (default 40). */
+  limit?: number;
+};
+
 /**
  * Common Crawl CDX — recent crawl indexes for URLs under a host.
  * Resolves latest indexes via collinfo.json, then queries each CDX API.
@@ -80,19 +88,14 @@ export function parseCommoncrawlCdxText(
 export async function fetchCommoncrawlLookup(
   hostRaw: string,
   signal: AbortSignal,
-  options?: {
-    userAgent?: string;
-    /** How many newest indexes to query (default 2). */
-    indexes?: number;
-    /** Max hits to keep across indexes (default 40). */
-    limit?: number;
-  }
+  options?: CommoncrawlLookupOptions
 ): Promise<CommoncrawlLookupSnapshot> {
+  const resolved = options ?? {};
   const host = normalizeHost(hostRaw);
-  const indexCount = Math.min(Math.max(options?.indexes ?? 2, 1), 6);
-  const limit = Math.min(Math.max(options?.limit ?? 40, 1), 200);
+  const indexCount = Math.min(Math.max(resolved.indexes ?? 2, 1), 6);
+  const limit = Math.min(Math.max(resolved.limit ?? 40, 1), 200);
   const ua =
-    options?.userAgent ?? watchdogUserAgent("archive.commoncrawl.lookup");
+    resolved.userAgent ?? watchdogUserAgent("archive.commoncrawl.lookup");
 
   const collRes = await fetch("https://index.commoncrawl.org/collinfo.json", {
     method: "GET",

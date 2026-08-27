@@ -142,12 +142,16 @@ export async function getCredential(
   return open(userKey(userId), Buffer.from(ciphertext));
 }
 
-export async function putCredential(input: {
+type PutCredentialInput = {
   userId: string;
   name: string;
   secret: string;
   label?: string | null;
-}): Promise<CredentialMeta> {
+};
+
+export async function putCredential(
+  input: PutCredentialInput
+): Promise<CredentialMeta> {
   const name = assertCredentialName(input.name);
   const secret = input.secret.trim();
   if (!secret) {

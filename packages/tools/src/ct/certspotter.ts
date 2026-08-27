@@ -35,10 +35,12 @@ export type CertspotterLookupSnapshot = z.infer<
  * GET https://api.certspotter.com/v1/issuances?domain=&include_subdomains=true&expand=dns_names
  * @see https://sslmate.com/certspotter/api/
  */
+
+type CertspotterOptions = { userAgent?: string; limit?: number };
 export async function fetchCertspotterLookup(
   hostRaw: string,
   signal: AbortSignal,
-  options?: { userAgent?: string; limit?: number }
+  options?: CertspotterOptions
 ): Promise<CertspotterLookupSnapshot> {
   const host = normalizeHost(hostRaw);
   const limit = options?.limit ?? 100;

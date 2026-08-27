@@ -40,11 +40,13 @@ const THREAT_TYPES = [
  * POST https://safebrowsing.googleapis.com/v4/threatMatches:find?key=…
  * @see https://developers.google.com/safe-browsing/v4/lookup-api
  */
+
+type SafebrowsingOptions = { userAgent?: string };
 export async function fetchSafebrowsingLookup(
   urlRaw: string,
   apiKey: string,
   signal: AbortSignal,
-  options?: { userAgent?: string }
+  options?: SafebrowsingOptions
 ): Promise<SafebrowsingLookupSnapshot> {
   const url = urlRaw.trim();
   if (!url) throw validationToolsError("url required");

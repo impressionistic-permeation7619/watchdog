@@ -207,10 +207,12 @@ export function parseKeybaseBody(
  * GET https://keybase.io/_/api/1.0/user/lookup.json?usernames=|domain=
  * @see https://keybase.io/docs/api/1.0/call/user/lookup
  */
+
+type KeybaseOptions = { userAgent?: string };
 export async function fetchKeybaseLookup(
   queryRaw: string,
   signal: AbortSignal,
-  options?: { userAgent?: string }
+  options?: KeybaseOptions
 ): Promise<KeybaseLookupSnapshot> {
   const { kind, value, param } = classifyQuery(queryRaw);
   const ua =

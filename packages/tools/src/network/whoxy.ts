@@ -40,11 +40,13 @@ function contactField(contact: unknown, key: string): string | null {
  * GET https://api.whoxy.com/?key=&whois=domain
  * @see https://www.whoxy.com/
  */
+
+type WhoxyOptions = { userAgent?: string };
 export async function fetchWhoxyWhois(
   hostRaw: string,
   apiKey: string,
   signal: AbortSignal,
-  options?: { userAgent?: string }
+  options?: WhoxyOptions
 ): Promise<WhoxyLookupSnapshot> {
   const host = normalizeHost(hostRaw);
   const key = apiKey.trim();

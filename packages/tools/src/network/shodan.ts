@@ -32,11 +32,13 @@ export type ShodanLookupSnapshot = z.infer<typeof shodanLookupSnapshotSchema>;
  * Shodan host lookup — GET /shodan/host/{ip}?key=&minify=true
  * @see https://developer.shodan.io/api
  */
+
+type ShodanOptions = { userAgent?: string };
 export async function fetchShodanHost(
   ipRaw: string,
   apiKey: string,
   signal: AbortSignal,
-  options?: { userAgent?: string }
+  options?: ShodanOptions
 ): Promise<ShodanLookupSnapshot> {
   const ip = normalizeIp(ipRaw);
   const key = apiKey.trim();

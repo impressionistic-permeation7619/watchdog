@@ -176,10 +176,12 @@ export async function getJobForCase(
   return toJobRecord(row.job, row.playbookId, row.playbookRunStatus);
 }
 
+type EntityListOpts3 = { actorId?: string };
+
 export async function cancelJob(
   caseId: string,
   jobId: string,
-  opts?: { actorId?: string }
+  opts?: EntityListOpts3
 ): Promise<JobRecord> {
   const row = await jobsRepo.getInCase(db, caseId, jobId);
   if (!row) throw new DomainError("not_found", "Job not found");

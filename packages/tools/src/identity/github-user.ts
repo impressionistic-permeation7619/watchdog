@@ -40,10 +40,12 @@ export function normalizeGithubHandle(raw: string): string {
  * GitHub user profile via REST API.
  * Optional token raises rate limits; unauthenticated still works (public).
  */
+
+type GithubUserOptions = { token?: string; userAgent?: string };
 export async function fetchGithubUser(
   handleRaw: string,
   signal: AbortSignal,
-  options?: { token?: string; userAgent?: string }
+  options?: GithubUserOptions
 ): Promise<GithubUserSnapshot> {
   const handle = normalizeGithubHandle(handleRaw);
   const ua =

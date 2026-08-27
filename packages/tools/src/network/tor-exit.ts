@@ -64,10 +64,12 @@ async function fetchExitAddresses(
  * GET https://check.torproject.org/exit-addresses (1h in-process cache — public list, not per-IP).
  * @see https://check.torproject.org/exit-addresses
  */
+
+type TorExitOptions = { userAgent?: string };
 export async function fetchTorExitLookup(
   ipRaw: string,
   signal: AbortSignal,
-  options?: { userAgent?: string }
+  options?: TorExitOptions
 ): Promise<TorExitLookupSnapshot> {
   const ip = normalizeIp(ipRaw);
   const ua =

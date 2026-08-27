@@ -4,8 +4,7 @@ import { storeCapCache } from "../cap-cache";
 import type { CollectRuntime } from "./collect";
 import type { PreflightState } from "./preflight";
 
-/** Persist Cap result for future cache hits (act Caps / errors / reclaim skip). */
-export async function storeCacheStage(input: {
+type StoreCacheStageInput = {
   state: PreflightState;
   runtime: CollectRuntime;
   artifacts: JobArtifact[];
@@ -13,7 +12,12 @@ export async function storeCacheStage(input: {
   fromCache: boolean;
   reclaim: boolean;
   interpretError: string | null;
-}): Promise<void> {
+};
+
+/** Persist Cap result for future cache hits (act Caps / errors / reclaim skip). */
+export async function storeCacheStage(
+  input: StoreCacheStageInput
+): Promise<void> {
   const { runtime, state } = input;
   if (
     runtime.cacheTtlMs === null ||

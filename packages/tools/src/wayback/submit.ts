@@ -22,10 +22,12 @@ function ensureHttpUrl(raw: string): string {
  * Push a URL to Wayback Save Page Now.
  * Creates a public archive record — Cap must declare third_party egress.
  */
+
+type SubmitOptions = { userAgent?: string };
 export async function submitWaybackSave(
   url: string,
   signal: AbortSignal,
-  options?: { userAgent?: string }
+  options?: SubmitOptions
 ): Promise<ArchiveSubmitSnapshot> {
   const target = ensureHttpUrl(url);
   const saveUrl = `https://web.archive.org/save/${target}`;

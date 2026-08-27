@@ -72,13 +72,15 @@ async function readEvidenceFile(filePath: string): Promise<Buffer> {
   return buf;
 }
 
-export async function uploadEvidenceFile(input: {
+type UploadEvidenceFileInput = {
   caseId: string;
   path: string;
   label?: string;
   entityId?: string;
   mime?: string;
-}) {
+};
+
+export async function uploadEvidenceFile(input: UploadEvidenceFileInput) {
   const buf = await readEvidenceFile(input.path);
   const sha256 = sha256HexSchema.parse(sha256HexBuffer(buf));
   const mime = guessMime(input.path, input.mime);

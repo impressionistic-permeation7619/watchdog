@@ -65,11 +65,13 @@ function parseHit(row: unknown): C99SubdomainHit | null {
  * Optional realtime=true for instant scan.
  * @see https://api.c99.nl/api_overview
  */
+
+type C99Options = { userAgent?: string; realtime?: boolean; limit?: number };
 export async function fetchC99Subdomains(
   hostRaw: string,
   apiKey: string,
   signal: AbortSignal,
-  options?: { userAgent?: string; realtime?: boolean; limit?: number }
+  options?: C99Options
 ): Promise<C99LookupSnapshot> {
   const host = normalizeHost(hostRaw);
   const key = apiKey.trim();

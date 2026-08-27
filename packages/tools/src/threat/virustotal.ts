@@ -37,11 +37,13 @@ export type VirusTotalLookupSnapshot = z.infer<
  * Auth: x-apikey header.
  * @see https://docs.virustotal.com/reference/ip-info
  */
+
+type VirustotalOptions = { userAgent?: string };
 export async function fetchVirusTotalLookup(
   queryRaw: string,
   apiKey: string,
   signal: AbortSignal,
-  options?: { userAgent?: string }
+  options?: VirustotalOptions
 ): Promise<VirusTotalLookupSnapshot> {
   const { kind, value } = classifyIpOrHost(queryRaw);
   const key = apiKey.trim();

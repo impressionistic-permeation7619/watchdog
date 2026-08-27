@@ -40,10 +40,12 @@ async function resolveTxtFlat(
  * Collect MX + SPF/DMARC/DKIM posture via DNS only (passive).
  * DKIM uses a small fixed selector list — not a full selector hunt.
  */
+
+type MailConfigOptions = { dkimSelectors?: readonly string[] };
 export async function fetchMailConfig(
   host: string,
   signal: AbortSignal,
-  options?: { dkimSelectors?: readonly string[] }
+  options?: MailConfigOptions
 ): Promise<MailConfigSnapshot> {
   const { resolver, cleanup } = withAbortableResolver(
     signal,

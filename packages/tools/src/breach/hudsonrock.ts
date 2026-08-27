@@ -77,11 +77,13 @@ function summarize(raw: unknown): {
  * Header `api-key`.
  * @see https://docs.hudsonrock.com/reference/search-by-domains
  */
+
+type HudsonrockOptions = { userAgent?: string };
 export async function fetchHudsonrockLookup(
   queryRaw: string,
   apiKey: string,
   signal: AbortSignal,
-  options?: { userAgent?: string }
+  options?: HudsonrockOptions
 ): Promise<HudsonrockLookupSnapshot> {
   const key = apiKey.trim();
   if (!key) throw missingApiKey("HUDSONROCK_API_KEY");

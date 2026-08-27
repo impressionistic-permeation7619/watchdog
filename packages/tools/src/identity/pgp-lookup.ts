@@ -66,10 +66,12 @@ export function parseHkpMrIndex(body: string): PgpKeyHit[] {
  * HKP lookup across public keyservers (keys.openpgp.org first).
  * Query: email, fingerprint, or key id.
  */
+
+type PgpLookupOptions = { userAgent?: string };
 export async function fetchPgpLookup(
   queryRaw: string,
   signal: AbortSignal,
-  options?: { userAgent?: string }
+  options?: PgpLookupOptions
 ): Promise<PgpLookupSnapshot> {
   const query = queryRaw.trim();
   if (!query) throw validationToolsError("PGP query required");

@@ -56,11 +56,13 @@ function certField(
   };
 }
 
+type AuditOptions = { port?: number; servername?: string };
+
 /** Active TLS handshake against host:port — invasive. */
-export async function fetchTlsAudit(
+export function fetchTlsAudit(
   host: string,
   signal: AbortSignal,
-  options?: { port?: number; servername?: string }
+  options?: AuditOptions
 ): Promise<TlsAuditSnapshot> {
   const port = options?.port ?? 443;
   const servername = options?.servername ?? host;

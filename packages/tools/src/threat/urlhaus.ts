@@ -65,11 +65,13 @@ function emptyResult(
  * POST …/v1/{url,host,payload}/ with Auth-Key header. Never downloads samples.
  * @see https://urlhaus-api.abuse.ch/
  */
+
+type UrlhausOptions = { userAgent?: string };
 export async function fetchUrlhausLookup(
   queryRaw: string,
   apiKey: string,
   signal: AbortSignal,
-  options?: { userAgent?: string }
+  options?: UrlhausOptions
 ): Promise<UrlhausLookupSnapshot> {
   const { kind, value } = classifyQuery(queryRaw);
   const key = apiKey.trim();

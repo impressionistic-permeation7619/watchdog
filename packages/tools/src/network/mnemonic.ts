@@ -165,10 +165,12 @@ export function parseMnemonicPdnsBody(
  * GET https://api.mnemonic.no/pdns/v3/{query}?limit=
  * @see https://docs.mnemonic.no/display/public/API/PassiveDNS+Integration+Guide
  */
+
+type MnemonicOptions = { userAgent?: string; limit?: number };
 export async function fetchMnemonicPdns(
   queryRaw: string,
   signal: AbortSignal,
-  options?: { userAgent?: string; limit?: number }
+  options?: MnemonicOptions
 ): Promise<MnemonicLookupSnapshot> {
   const { kind, value } = classifyIpOrHost(queryRaw);
   const limit = Math.min(Math.max(options?.limit ?? 50, 1), 500);

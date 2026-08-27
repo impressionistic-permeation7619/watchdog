@@ -81,11 +81,13 @@ function buildMessages(snapshot: EvidenceSnapshot): {
   return { system, prompt };
 }
 
+type ResolveProviderCtx = {
+  getCredential: (name: string) => Promise<string>;
+  hasCredential: (name: string) => Promise<boolean>;
+};
+
 async function resolveProvider(
-  ctx: {
-    getCredential: (name: string) => Promise<string>;
-    hasCredential: (name: string) => Promise<boolean>;
-  },
+  ctx: ResolveProviderCtx,
   modelOverride?: string
 ): Promise<LlmProviderConfig> {
   // Preflight already ensured one of these exists — pick without swallowing

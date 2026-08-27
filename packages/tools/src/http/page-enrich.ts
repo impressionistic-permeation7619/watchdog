@@ -69,10 +69,12 @@ const TRACKER_PATTERNS: { vendor: string; re: RegExp }[] = [
 ];
 
 /** Live HTML → title/meta + tracker hints. */
+
+type PageEnrichOptions = { userAgent: string; maxBytes?: number };
 export async function fetchPageEnrich(
   url: string,
   signal: AbortSignal,
-  options: { userAgent: string; maxBytes?: number }
+  options: PageEnrichOptions
 ): Promise<PageEnrichSnapshot> {
   const res = await fetchBytes(url, signal, {
     userAgent: options.userAgent,

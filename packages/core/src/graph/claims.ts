@@ -66,10 +66,12 @@ function toRecord(row: ClaimRow, evidenceIds: string[]): ClaimRecord {
   };
 }
 
+type EntityListOpts = { includeRetracted?: boolean };
+
 export async function listClaimsForEntity(
   caseId: string,
   entityId: string,
-  opts?: { includeRetracted?: boolean }
+  opts?: EntityListOpts
 ): Promise<ClaimRecord[]> {
   await assertEntityInCase(caseId, entityId, db);
   const rows = await claimsRepo.listForEntity(db, entityId, opts);

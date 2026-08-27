@@ -63,11 +63,13 @@ function classifyQuery(raw: string): {
  * Distinct from AbuseIPDB.com. POST …/api/v1/ with Auth-Key header.
  * @see https://threatfox.abuse.ch/api/
  */
+
+type ThreatfoxOptions = { userAgent?: string };
 export async function fetchThreatfoxLookup(
   queryRaw: string,
   apiKey: string,
   signal: AbortSignal,
-  options?: { userAgent?: string }
+  options?: ThreatfoxOptions
 ): Promise<ThreatfoxLookupSnapshot> {
   const { kind, value } = classifyQuery(queryRaw);
   const key = apiKey.trim();

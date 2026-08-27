@@ -53,13 +53,17 @@ export async function listCredentialSlots(
   return slots;
 }
 
-/** Create/replace secret and return the configured slot (no full re-list). */
-export async function putCredentialSlot(input: {
+type PutCredentialSlotInput = {
   userId: string;
   name: string;
   secret: string;
   label?: string | null;
-}): Promise<CredentialSlot> {
+};
+
+/** Create/replace secret and return the configured slot (no full re-list). */
+export async function putCredentialSlot(
+  input: PutCredentialSlotInput
+): Promise<CredentialSlot> {
   const meta = await putCredential(input);
   return slotFromMeta(meta);
 }

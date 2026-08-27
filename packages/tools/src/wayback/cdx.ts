@@ -36,17 +36,19 @@ export function waybackArchiveUrl(timestamp: string, url: string): string {
   return `https://web.archive.org/web/${timestamp}id_/${url}`;
 }
 
+type WaybackLookupOptions = {
+  userAgent: string;
+  limit?: number;
+  filterStatus200?: boolean;
+};
+
 /**
  * CDX history rows for a URL — shared by archive.wayback.lookup and url.enrich.
  */
 export async function fetchWaybackLookup(
   url: string,
   signal: AbortSignal,
-  options: {
-    userAgent: string;
-    limit?: number;
-    filterStatus200?: boolean;
-  }
+  options: WaybackLookupOptions
 ): Promise<WaybackLookupSnapshot> {
   const limit = options.limit ?? 25;
   const params = new URLSearchParams({
@@ -121,11 +123,13 @@ export async function closestWaybackTimestamp(
 }
 
 /** Fetch a Wayback raw snapshot body (id_ URL). */
+
+type CdxOptions = { userAgent: string; maxBytes?: number };
 export async function fetchWaybackSnapshot(
   url: string,
   timestamp: string,
   signal: AbortSignal,
-  options: { userAgent: string; maxBytes?: number }
+  options: CdxOptions
 ): Promise<WaybackFetchSnapshot> {
   const archiveUrl = waybackArchiveUrl(timestamp, url);
   const maxBytes = options.maxBytes ?? 512_000;

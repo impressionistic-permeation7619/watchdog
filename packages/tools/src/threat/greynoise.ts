@@ -30,10 +30,12 @@ export type GreynoiseLookupSnapshot = z.infer<
  * Optional API key via header `key`.
  * @see https://docs.greynoise.io/reference/get_v3-community-ip
  */
+
+type GreynoiseOptions = { apiKey?: string; userAgent?: string };
 export async function fetchGreynoiseCommunity(
   ipRaw: string,
   signal: AbortSignal,
-  options?: { apiKey?: string; userAgent?: string }
+  options?: GreynoiseOptions
 ): Promise<GreynoiseLookupSnapshot> {
   const ip = normalizeIp(ipRaw);
   const key = options?.apiKey?.trim() ?? "";

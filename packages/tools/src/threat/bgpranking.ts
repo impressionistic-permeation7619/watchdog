@@ -67,15 +67,17 @@ async function fetchLatestAsn(
   return toAsnNumber(isRecord(entry) ? entry.asn : undefined);
 }
 
+type AsnRankingResult = {
+  asnDescription: string | null;
+  asnRank: number | null;
+  asnPosition: number | null;
+};
+
 async function fetchAsnRanking(
   asn: number,
   signal: AbortSignal,
   ua: string
-): Promise<{
-  asnDescription: string | null;
-  asnRank: number | null;
-  asnPosition: number | null;
-}> {
+): Promise<AsnRankingResult> {
   const res = await fetch("https://bgpranking-ng.circl.lu/json/asn", {
     method: "POST",
     signal,
@@ -118,10 +120,12 @@ async function fetchAsnRanking(
  * POST https://bgpranking-ng.circl.lu/json/asn {"asn": N}
  * @see https://github.com/D4-project/bgp-ranking
  */
+
+type BgprankingOptions = { userAgent?: string };
 export async function fetchBgprankingLookup(
   ipRaw: string,
   signal: AbortSignal,
-  options?: { userAgent?: string }
+  options?: BgprankingOptions
 ): Promise<BgprankingLookupSnapshot> {
   const ip = normalizeIp(ipRaw);
   const ua =

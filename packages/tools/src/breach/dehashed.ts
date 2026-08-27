@@ -107,11 +107,13 @@ function mapEntry(raw: unknown): DehashedEntry | null {
  * POST https://api.dehashed.com/v2/search — header `DeHashed-Api-Key`.
  * @see https://docs.dehashed.com/
  */
+
+type DehashedOptions = { userAgent?: string };
 export async function fetchDehashedLookup(
   queryRaw: string,
   apiKey: string,
   signal: AbortSignal,
-  options?: { userAgent?: string }
+  options?: DehashedOptions
 ): Promise<DehashedLookupSnapshot> {
   const key = apiKey.trim();
   if (!key) throw missingApiKey("DEHASHED_API_KEY");

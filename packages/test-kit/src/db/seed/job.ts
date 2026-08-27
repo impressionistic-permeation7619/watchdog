@@ -5,21 +5,22 @@ import { TEST_ACTOR_ID } from "../../fixtures/ids.ts";
 export async function seedJob(
   exec: DbExec,
   caseId: string,
-  overrides: Partial<NewJob> = {}
+  overrides?: Partial<NewJob>
 ): Promise<JobRow> {
+  const overridesResolved = overrides ?? {};
   const created = await jobsRepo.create(exec, {
     caseId,
-    capabilityId: overrides.capabilityId ?? "network.dns.lookup",
-    input: overrides.input ?? { host: "example.com" },
-    status: overrides.status ?? "queued",
-    actorId: overrides.actorId ?? TEST_ACTOR_ID,
-    logs: overrides.logs,
-    playbookRunId: overrides.playbookRunId,
-    playbookStep: overrides.playbookStep,
-    playbookFanIndex: overrides.playbookFanIndex,
-    output: overrides.output,
-    evidenceIds: overrides.evidenceIds,
-    handoff: overrides.handoff,
+    capabilityId: overridesResolved.capabilityId ?? "network.dns.lookup",
+    input: overridesResolved.input ?? { host: "example.com" },
+    status: overridesResolved.status ?? "queued",
+    actorId: overridesResolved.actorId ?? TEST_ACTOR_ID,
+    logs: overridesResolved.logs,
+    playbookRunId: overridesResolved.playbookRunId,
+    playbookStep: overridesResolved.playbookStep,
+    playbookFanIndex: overridesResolved.playbookFanIndex,
+    output: overridesResolved.output,
+    evidenceIds: overridesResolved.evidenceIds,
+    handoff: overridesResolved.handoff,
   });
   if (!created) {
     throw new Error("seedJob failed");

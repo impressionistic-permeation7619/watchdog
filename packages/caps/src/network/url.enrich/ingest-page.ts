@@ -23,7 +23,7 @@ type UploadFn = (input: {
   name?: string;
 }) => Promise<CapArtifact>;
 
-export async function ingestRemotePage(opts: {
+type IngestRemotePageOpts = {
   fetchUrl: string;
   /** Base URL for resolving relative hrefs (usually the live page URL). */
   linkBaseUrl: string;
@@ -34,7 +34,11 @@ export async function ingestRemotePage(opts: {
   /** Live may keep opaque/binary as text; Wayback treats that as failure. */
   allowPlainBinary: boolean;
   stepExtras?: Partial<StepResult>;
-}): Promise<IngestResult> {
+};
+
+export async function ingestRemotePage(
+  opts: IngestRemotePageOpts
+): Promise<IngestResult> {
   const {
     fetchUrl,
     linkBaseUrl,

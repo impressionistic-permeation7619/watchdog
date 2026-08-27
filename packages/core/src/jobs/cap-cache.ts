@@ -40,7 +40,7 @@ export function lookupCapCache(input: {
   );
 }
 
-export async function storeCapCache(input: {
+type StoreCapCacheInput = {
   caseId: string;
   capabilityId: string;
   inputHash: string;
@@ -48,7 +48,11 @@ export async function storeCapCache(input: {
   artifacts: JobArtifact[];
   resultSummary: string | null;
   ttlMs: number;
-}): Promise<void> {
+};
+
+export async function storeCapCache(
+  input: StoreCapCacheInput
+): Promise<void> {
   const now = new Date();
   const expiresAt = new Date(now.getTime() + input.ttlMs);
   await capCacheRepo.upsert(db, {

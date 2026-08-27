@@ -52,9 +52,11 @@ export function parseFeodoEntries(raw: unknown): FeodoEntry[] {
   return out;
 }
 
+type FeodoOptions2 = { userAgent: string; apiKey?: string };
+
 async function fetchBlocklist(
   signal: AbortSignal,
-  options: { userAgent: string; apiKey?: string }
+  options: FeodoOptions2
 ): Promise<FeodoEntry[]> {
   const now = Date.now();
   if (cachedEntries && now - cachedAt < CACHE_TTL_MS) return cachedEntries;
@@ -93,10 +95,12 @@ async function fetchBlocklist(
  * across lookups this process). Optional Auth-Key header.
  * @see https://feodotracker.abuse.ch/
  */
+
+type FeodoOptions = { userAgent?: string; apiKey?: string };
 export async function fetchFeodoLookup(
   ipRaw: string,
   signal: AbortSignal,
-  options?: { userAgent?: string; apiKey?: string }
+  options?: FeodoOptions
 ): Promise<FeodoLookupSnapshot> {
   const ip = normalizeIp(ipRaw);
   const ua = options?.userAgent ?? watchdogUserAgent("threat.feodo.lookup");

@@ -127,10 +127,12 @@ async function fetchCidrList(
  * GET https://iplists.firehol.org/files/firehol_level1.netset
  * @see http://iplists.firehol.org/?ipset=firehol_level1
  */
+
+type FireholOptions = { userAgent?: string };
 export async function fetchFireholLookup(
   ipRaw: string,
   signal: AbortSignal,
-  options?: { userAgent?: string }
+  options?: FireholOptions
 ): Promise<FireholLookupSnapshot> {
   const ip = normalizeIp(ipRaw);
   const ua =

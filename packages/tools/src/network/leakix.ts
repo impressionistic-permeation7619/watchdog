@@ -39,11 +39,13 @@ function firstArray(body: Record<string, unknown>, keys: string[]): unknown[] {
  * bodies. `/host/{ip}` for IPs, `/domain/{host}` for hostnames/domains.
  * @see https://docs.leakix.net/docs/api/hostdetails/
  */
+
+type LeakixOptions = { userAgent?: string };
 export async function fetchLeakixLookup(
   queryRaw: string,
   apiKey: string,
   signal: AbortSignal,
-  options?: { userAgent?: string }
+  options?: LeakixOptions
 ): Promise<LeakixLookupSnapshot> {
   const key = apiKey.trim();
   if (!key) throw missingApiKey("LEAKIX_API_KEY");

@@ -28,11 +28,13 @@ export type IpinfoLookupSnapshot = z.infer<typeof ipinfoLookupSnapshotSchema>;
  * GET https://ipinfo.io/{ip}/json?token=KEY
  * @see https://ipinfo.io/developers
  */
+
+type IpinfoOptions = { userAgent?: string };
 export async function fetchIpinfoLookup(
   ipRaw: string,
   apiToken: string,
   signal: AbortSignal,
-  options?: { userAgent?: string }
+  options?: IpinfoOptions
 ): Promise<IpinfoLookupSnapshot> {
   const token = apiToken.trim();
   if (!token) throw missingApiKey("IPINFO_API_TOKEN");

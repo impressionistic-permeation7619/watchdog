@@ -8,11 +8,13 @@ type UploadFn = (input: {
 }) => Promise<CapArtifact>;
 
 /** Upload report.json + a named JSON artifact with identical body (Collect Caps). */
+
+type UploadJsonReportPairResult = { report: CapArtifact; artifact: CapArtifact };
 export async function uploadJsonReportPair(
   uploadArtifact: UploadFn,
   snap: unknown,
   namedArtifactName: string
-): Promise<{ report: CapArtifact; artifact: CapArtifact }> {
+): Promise<UploadJsonReportPairResult> {
   const body = new TextEncoder().encode(JSON.stringify(snap, null, 2));
   const report = await uploadArtifact({
     bytes: body,

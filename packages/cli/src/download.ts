@@ -25,15 +25,19 @@ function safeDownloadFilename(
   return base;
 }
 
+type DownloadToFileInput = {
+  urlPath: string;
+  outPath?: string;
+  fallbackFilename: string;
+};
+
 /**
  * Authenticated GET for binary/markdown export routes (not on oRPC contract).
  * Checks res.ok before writing — never creates the output file on error.
  */
-export async function downloadToFile(input: {
-  urlPath: string;
-  outPath?: string;
-  fallbackFilename: string;
-}): Promise<string> {
+export async function downloadToFile(
+  input: DownloadToFileInput
+): Promise<string> {
   const { apiUrl, apiKey } = getConfig();
   const base = apiUrl.replace(/\/$/, "");
   const url = `${base}${input.urlPath.startsWith("/") ? "" : "/"}${input.urlPath}`;

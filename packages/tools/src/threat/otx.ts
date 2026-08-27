@@ -107,11 +107,13 @@ function extractPulseInfo(body: Record<string, unknown>): {
  * GET https://otx.alienvault.com/api/v1/indicators/{type}/{value}/general
  * @see https://otx.alienvault.com/assets/static/external_api.html
  */
+
+type OtxOptions = { userAgent?: string };
 export async function fetchOtxLookup(
   queryRaw: string,
   apiKey: string,
   signal: AbortSignal,
-  options?: { userAgent?: string }
+  options?: OtxOptions
 ): Promise<OtxLookupSnapshot> {
   const key = apiKey.trim();
   if (!key) throw missingApiKey("OTX_API_KEY");

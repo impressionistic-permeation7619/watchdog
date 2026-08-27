@@ -103,11 +103,13 @@ function flattenSearchResults(results: unknown): {
  * POST https://api.snusbase.com/data/search — header `Auth`.
  * @see https://docs.snusbase.com/
  */
+
+type SnusbaseOptions = { userAgent?: string };
 export async function fetchSnusbaseLookup(
   queryRaw: string,
   apiKey: string,
   signal: AbortSignal,
-  options?: { userAgent?: string }
+  options?: SnusbaseOptions
 ): Promise<SnusbaseLookupSnapshot> {
   const key = apiKey.trim();
   if (!key) throw missingApiKey("SNUSBASE_API_KEY");

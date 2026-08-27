@@ -85,10 +85,12 @@ export function parseIpctlBody(
  * GET https://api.ipctl.io/v1/ip/{ip}
  * @see https://ipctl.io/vs/bgpview
  */
+
+type IpctlOptions = { userAgent?: string };
 export async function fetchIpctlLookup(
   ipRaw: string,
   signal: AbortSignal,
-  options?: { userAgent?: string }
+  options?: IpctlOptions
 ): Promise<IpctlLookupSnapshot> {
   const ip = normalizeIp(ipRaw);
   const ua =

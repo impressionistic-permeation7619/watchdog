@@ -115,10 +115,12 @@ export function parseGravatarBody(
  * GET https://secure.gravatar.com/{md5}.json — 404 = no public profile.
  * @see https://docs.gravatar.com/api/profiles/
  */
+
+type GravatarOptions = { userAgent?: string };
 export async function fetchGravatarLookup(
   emailRaw: string,
   signal: AbortSignal,
-  options?: { userAgent?: string }
+  options?: GravatarOptions
 ): Promise<GravatarLookupSnapshot> {
   const { email } = normalizeEmail(emailRaw);
   const hash = gravatarEmailHash(email);

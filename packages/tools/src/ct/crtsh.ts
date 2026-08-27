@@ -78,12 +78,13 @@ export interface FetchCrtShOptions {
 export async function fetchCrtShLookup(
   host: string,
   signal?: AbortSignal,
-  options: FetchCrtShOptions = {}
+  options?: FetchCrtShOptions
 ): Promise<CtLookupSnapshot> {
+  const resolved = options ?? {};
   const normalized = normalizeHost(host);
-  const limit = options.limit ?? 50;
+  const limit = resolved.limit ?? 50;
   const userAgent =
-    options.userAgent ?? watchdogUserAgent("network.ct.lookup");
+    resolved.userAgent ?? watchdogUserAgent("network.ct.lookup");
 
   const url = new URL(CRT_SH_URL);
   url.searchParams.set("q", `%.${normalized}`);

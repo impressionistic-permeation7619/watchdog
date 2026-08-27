@@ -10,20 +10,21 @@ import { TEST_ACTOR_ID } from "../../fixtures/ids.ts";
 export async function seedEvidence(
   exec: DbExec,
   caseId: string,
-  overrides: Partial<NewEvidence> = {}
+  overrides?: Partial<NewEvidence>
 ): Promise<EvidenceRow> {
+  const overridesResolved = overrides ?? {};
   const created = await evidenceRepo.create(exec, {
     caseId,
-    entityId: overrides.entityId ?? null,
-    kind: overrides.kind ?? "attestation",
-    label: overrides.label ?? "test evidence",
-    notes: overrides.notes ?? null,
-    mime: overrides.mime ?? "text/plain",
-    uri: overrides.uri ?? null,
-    sha256: overrides.sha256 ?? null,
-    text: overrides.text ?? "attestation body",
-    sourceUrl: overrides.sourceUrl ?? null,
-    actorId: overrides.actorId ?? TEST_ACTOR_ID,
+    entityId: overridesResolved.entityId ?? null,
+    kind: overridesResolved.kind ?? "attestation",
+    label: overridesResolved.label ?? "test evidence",
+    notes: overridesResolved.notes ?? null,
+    mime: overridesResolved.mime ?? "text/plain",
+    uri: overridesResolved.uri ?? null,
+    sha256: overridesResolved.sha256 ?? null,
+    text: overridesResolved.text ?? "attestation body",
+    sourceUrl: overridesResolved.sourceUrl ?? null,
+    actorId: overridesResolved.actorId ?? TEST_ACTOR_ID,
   });
   if (!created) {
     throw new Error("seedEvidence failed");

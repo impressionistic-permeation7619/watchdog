@@ -49,10 +49,12 @@ function parseRanks(value: unknown): TrancoRankRow[] {
  * GET https://tranco-list.eu/api/ranks/domain/{domain} — rate limit 1 req/s.
  * @see https://tranco-list.eu/api_documentation
  */
+
+type TrancoOptions = { userAgent?: string };
 export async function fetchTrancoLookup(
   domainRaw: string,
   signal: AbortSignal,
-  options?: { userAgent?: string }
+  options?: TrancoOptions
 ): Promise<TrancoLookupSnapshot> {
   const domain = normalizeHost(domainRaw);
   const ua =

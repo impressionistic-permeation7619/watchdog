@@ -25,10 +25,12 @@ export type HackertargetLookupSnapshot = z.infer<
  * GET https://api.hackertarget.com/reverseiplookup/?q={ip}
  * @see https://hackertarget.com/reverse-ip-lookup/
  */
+
+type HackertargetOptions = { userAgent?: string; limit?: number };
 export async function fetchHackertargetReverseIp(
   ipRaw: string,
   signal: AbortSignal,
-  options?: { userAgent?: string; limit?: number }
+  options?: HackertargetOptions
 ): Promise<HackertargetLookupSnapshot> {
   const ip = normalizeIp(ipRaw);
   const limit = options?.limit ?? 200;

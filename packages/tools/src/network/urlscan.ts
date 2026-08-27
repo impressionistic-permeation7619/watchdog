@@ -37,10 +37,12 @@ export type UrlscanLookupSnapshot = z.infer<typeof urlscanLookupSnapshotSchema>;
  * GET https://urlscan.io/api/v1/search/?q=page.domain:{host}&size=
  * @see https://urlscan.io/docs/api/
  */
+
+type UrlscanOptions = { userAgent?: string; size?: number };
 export async function fetchUrlscanSearch(
   hostRaw: string,
   signal: AbortSignal,
-  options?: { userAgent?: string; size?: number }
+  options?: UrlscanOptions
 ): Promise<UrlscanLookupSnapshot> {
   const host = normalizeHost(hostRaw);
   const size = Math.min(Math.max(options?.size ?? 20, 1), 100);

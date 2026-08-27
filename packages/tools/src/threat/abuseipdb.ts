@@ -36,11 +36,13 @@ export type AbuseIpdbLookupSnapshot = z.infer<
  * Auth: Key header.
  * @see https://docs.abuseipdb.com/
  */
+
+type AbuseipdbOptions = { userAgent?: string; maxAgeInDays?: number };
 export async function fetchAbuseIpdbCheck(
   ipRaw: string,
   apiKey: string,
   signal: AbortSignal,
-  options?: { userAgent?: string; maxAgeInDays?: number }
+  options?: AbuseipdbOptions
 ): Promise<AbuseIpdbLookupSnapshot> {
   const ip = normalizeIp(ipRaw);
   const key = apiKey.trim();

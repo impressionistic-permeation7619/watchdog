@@ -151,11 +151,18 @@ export async function runPlaybook(
   };
 }
 
+type CancelPlaybookRunOpts = { actorId?: string };
+
+type CancelPlaybookRunResult = {
+  playbookRunId: string;
+  cancelledJobIds: string[];
+};
+
 export async function cancelPlaybookRun(
   caseId: string,
   playbookRunId: string,
-  opts?: { actorId?: string }
-): Promise<{ playbookRunId: string; cancelledJobIds: string[] }> {
+  opts?: CancelPlaybookRunOpts
+): Promise<CancelPlaybookRunResult> {
   await assertCaseExists(caseId);
   const now = new Date();
   const result = await db.transaction(async (tx) => {

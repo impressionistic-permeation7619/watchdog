@@ -80,10 +80,12 @@ export function parseDshieldBody(
  * GET https://isc.sans.edu/api/ip/{ip}?json
  * @see https://isc.sans.edu/api
  */
+
+type DshieldOptions = { userAgent?: string };
 export async function fetchDshieldLookup(
   ipRaw: string,
   signal: AbortSignal,
-  options?: { userAgent?: string }
+  options?: DshieldOptions
 ): Promise<DshieldLookupSnapshot> {
   const ip = normalizeIp(ipRaw);
   const ua =

@@ -18,6 +18,11 @@ export interface InterpretStageResult {
   handoff?: JobHandoff;
 }
 
+type InterpretExistingState = {
+  proposalId: string | null;
+  resultSummary: string | null;
+};
+
 /**
  * Load Cap report and run pure interpret → parse PatchOp[].
  * Handoff is computed here but persisted on the success write.
@@ -26,10 +31,7 @@ export async function interpretStage(
   state: PreflightState,
   artifacts: JobArtifact[],
   runtime: CollectRuntime,
-  existing: {
-    proposalId: string | null;
-    resultSummary: string | null;
-  }
+  existing: InterpretExistingState
 ): Promise<InterpretStageResult> {
   let resultSummary = existing.resultSummary;
   let markSourceProcessed: boolean | undefined;

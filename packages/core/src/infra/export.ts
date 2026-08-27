@@ -181,15 +181,19 @@ export async function renderEntityMarkdown(
   };
 }
 
+type CaseExportResult = {
+  files: Map<string, string>;
+  evidenceRows: EvidenceRow[];
+};
+
 /**
  * Render all entities in a Case and return them as a map of
  * `kind/slug` → markdown string.
  * Also includes evidence file references in CASE.md.
  */
-export async function renderCaseExport(caseId: string): Promise<{
-  files: Map<string, string>;
-  evidenceRows: EvidenceRow[];
-}> {
+export async function renderCaseExport(
+  caseId: string
+): Promise<CaseExportResult> {
   const entityRows = await entitiesRepo.listPeersForCase(db, caseId);
   const peerMap = new Map(entityRows.map((e) => [e.id, e]));
   const mdFiles = new Map<string, string>();

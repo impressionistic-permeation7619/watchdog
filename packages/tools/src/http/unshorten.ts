@@ -49,10 +49,12 @@ export function isBlockedUnshortenUrl(raw: string): boolean {
  * Follow redirects without downloading bodies — records the hop chain.
  * Capacitively capped (maxHops) to avoid loops.
  */
+
+type UnshortenOptions = { userAgent: string; maxHops?: number };
 export async function fetchUnshorten(
   url: string,
   signal: AbortSignal,
-  options: { userAgent: string; maxHops?: number }
+  options: UnshortenOptions
 ): Promise<UnshortenSnapshot> {
   const maxHops = options.maxHops ?? 10;
   const chain: { url: string; status: number }[] = [];
