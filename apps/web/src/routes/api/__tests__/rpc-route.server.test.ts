@@ -19,7 +19,7 @@ vi.mock("@tanstack/react-router", async (importOriginal) => {
 });
 
 vi.mock("@orpc/server/fetch", () => ({
-  RPCHandler: vi.fn().mockImplementation(() => {
+  RPCHandler: vi.fn(function RPCHandler() {
     return { handle: handleMock };
   }),
 }));

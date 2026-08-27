@@ -8,7 +8,7 @@ const createApiContextMock = vi.hoisted(() =>
 );
 
 vi.mock("@orpc/openapi/fetch", () => ({
-  OpenAPIHandler: vi.fn().mockImplementation(() => {
+  OpenAPIHandler: vi.fn(function OpenAPIHandler() {
     return { handle: handleMock };
   }),
 }));
