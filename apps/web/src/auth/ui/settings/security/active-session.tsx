@@ -7,7 +7,7 @@ import { toast } from "sonner"
 import { Button } from "@/shared/ui/shadcn/button"
 import { Card, CardContent } from "@/shared/ui/shadcn/card"
 import { Spinner } from "@/shared/ui/shadcn/spinner"
-import { formatRelativeTime } from "@/shared/ui/relative-time"
+import { formatRelativeTime } from "@/shared/ui/relative-time.lib";
 
 export type ActiveSessionProps = {
   activeSession: Session

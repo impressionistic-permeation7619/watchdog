@@ -1,12 +1,12 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
+import { StatusBadge } from "@/shared/ui/vocab/status";
 import {
   STATUS_DOT,
   STATUS_LABELS,
   statusLabel,
-  StatusBadge,
-} from "@/shared/ui/vocab/status";
+} from "@/shared/ui/vocab/status.lib";
 
 describe("status vocab", () => {
   it("maps display statuses to labels and dot classes", () => {

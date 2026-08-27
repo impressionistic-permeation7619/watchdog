@@ -11,12 +11,13 @@ import {
 import { KEYS } from "platejs";
 import type { PlateEditor } from "platejs/react";
 
+import type {
+  HeadingValue,
+  MarkValue,
+} from "@/shared/ui/rich-text/rich-text-toolbar-controls.lib";
 import { Button } from "@/shared/ui/shadcn/button";
 import { ToggleGroup, ToggleGroupItem } from "@/shared/ui/shadcn/toggle-group";
 import { WithTooltip } from "@/shared/ui/timestamp";
-
-type HeadingValue = "h1" | "h2" | "h3";
-type MarkValue = "bold" | "italic" | "underline";
 
 function isHeadingValue(value: string | undefined): value is HeadingValue {
   return value === "h1" || value === "h2" || value === "h3";
@@ -186,33 +187,4 @@ export function RichTextListButtons({ editor }: { editor: PlateEditor }) {
       </WithTooltip>
     </>
   );
-}
-
-export type { HeadingValue, MarkValue };
-
-export function activeHeading(
-  isH1: boolean,
-  isH2: boolean,
-  isH3: boolean
-): HeadingValue[] {
-  if (isH1) return ["h1"];
-  if (isH2) return ["h2"];
-  if (isH3) return ["h3"];
-  return [];
-}
-
-export function activeMarks(
-  isBold: boolean,
-  isItalic: boolean,
-  isUnderline: boolean
-): MarkValue[] {
-  return [
-    ...(isBold ? (["bold"] as const) : []),
-    ...(isItalic ? (["italic"] as const) : []),
-    ...(isUnderline ? (["underline"] as const) : []),
-  ];
-}
-
-export function preventToolbarMouseDown(e: React.MouseEvent): void {
-  e.preventDefault();
 }

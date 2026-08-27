@@ -11,6 +11,6 @@ export {
   DataTableComposerActions,
   DataTableComposerRow,
   TableComposerInput,
-  tableComposerKeyDown,
 } from "./table-composer";
+export { tableComposerKeyDown } from "./table-composer.lib";
 export { useDataTable } from "./use-data-table";

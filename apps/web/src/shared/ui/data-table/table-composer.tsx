@@ -1,6 +1,5 @@
-/* oxlint-disable react/only-export-components -- composer chrome + keydown helper */
 import { CheckIcon, PlusIcon, XIcon } from "lucide-react";
-import type { ComponentProps, KeyboardEvent, ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/shared/ui/shadcn/button";
@@ -92,22 +91,4 @@ export function DataTableComposerRow({ children }: { children: ReactNode }) {
       {children}
     </TableRow>
   );
-}
-
-export function tableComposerKeyDown(opts: {
-  busy: boolean;
-  canSubmit: boolean;
-  onSubmit: () => void;
-  onCancel: () => void;
-}) {
-  return (e: KeyboardEvent) => {
-    if (e.key === "Escape" && !opts.busy) {
-      e.preventDefault();
-      opts.onCancel();
-    }
-    if (e.key === "Enter" && !e.shiftKey && opts.canSubmit) {
-      e.preventDefault();
-      opts.onSubmit();
-    }
-  };
 }

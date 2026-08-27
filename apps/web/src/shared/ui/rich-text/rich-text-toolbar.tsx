@@ -2,13 +2,15 @@ import { KEYS } from "platejs";
 import { useEditorRef, useEditorSelector } from "platejs/react";
 
 import {
-  activeHeading,
-  activeMarks,
-  preventToolbarMouseDown,
   RichTextHeadingToggleGroup,
   RichTextListButtons,
   RichTextMarkToggleGroup,
 } from "@/shared/ui/rich-text/rich-text-toolbar-controls";
+import {
+  activeHeading,
+  activeMarks,
+  preventToolbarMouseDown,
+} from "@/shared/ui/rich-text/rich-text-toolbar-controls.lib";
 
 export function RichTextToolbar() {
   const editor = useEditorRef();

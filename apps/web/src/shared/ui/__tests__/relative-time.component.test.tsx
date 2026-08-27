@@ -1,7 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { formatRelativeTime, RelativeTime } from "@/shared/ui/relative-time";
+import { RelativeTime } from "@/shared/ui/relative-time";
+import { formatRelativeTime } from "@/shared/ui/relative-time.lib";
 
 describe("RelativeTime", () => {
   beforeEach(() => {

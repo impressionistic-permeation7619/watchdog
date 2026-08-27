@@ -1,13 +1,12 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
+import { ClaimClassBadge, KindBadge } from "@/shared/ui/vocab/kind";
 import {
-  ClaimClassBadge,
   ENTITY_KIND_LABELS,
   isEntityKind,
   kindLabel,
-  KindBadge,
-} from "@/shared/ui/vocab/kind";
+} from "@/shared/ui/vocab/kind.lib";
 
 describe("kind vocab", () => {
   it("detects entity kinds and labels unknown values", () => {

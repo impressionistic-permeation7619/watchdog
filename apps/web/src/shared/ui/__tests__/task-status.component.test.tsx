@@ -1,11 +1,11 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
+import { TaskStatusBadge } from "@/shared/ui/vocab/task-status";
 import {
   taskStatusLabel,
-  TaskStatusBadge,
   TASK_STATUS_TONE_MAP,
-} from "@/shared/ui/vocab/task-status";
+} from "@/shared/ui/vocab/task-status.lib";
 
 describe("task-status vocab", () => {
   it("maps task statuses to labels and status tones", () => {

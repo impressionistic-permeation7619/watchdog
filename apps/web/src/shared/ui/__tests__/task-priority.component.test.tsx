@@ -1,11 +1,11 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
+import { TaskPriorityBadge } from "@/shared/ui/vocab/task-priority";
 import {
   taskPriorityLabel,
-  TaskPriorityBadge,
   TASK_PRIORITY_TONE_MAP,
-} from "@/shared/ui/vocab/task-priority";
+} from "@/shared/ui/vocab/task-priority.lib";
 
 describe("task-priority vocab", () => {
   it("maps priorities to labels and status tones", () => {

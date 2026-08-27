@@ -12,7 +12,7 @@ describe("FieldSelect", () => {
         onValueChange={() => {}}
         options={[{ value: "a", label: "Alpha" }]}
         placeholder="Pick one"
-        aria-label="Field"
+        aria-label="Pick one"
       />
     );
     expect(screen.getByText("Pick one")).toBeInTheDocument();
@@ -29,10 +29,10 @@ describe("FieldSelect", () => {
           { value: "", label: "None" },
           { value: "a", label: "Alpha" },
         ]}
-        aria-label="Field"
+        aria-label="Pick one"
       />
     );
-    await user.click(screen.getByRole("combobox", { name: "Field" }));
+    await user.click(screen.getByRole("combobox", { name: "Pick one" }));
     await user.click(await screen.findByRole("option", { name: "Alpha" }));
     expect(onValueChange).toHaveBeenCalledWith("a");
   });

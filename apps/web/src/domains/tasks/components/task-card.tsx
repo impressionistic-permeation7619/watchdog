@@ -11,7 +11,7 @@ import {
   KindBadge,
   taskPriorityLabel,
 } from "@/shared/ui/vocab";
-import { STATUS_TONES } from "@/shared/ui/vocab/status";
+import { STATUS_TONES } from "@/shared/ui/vocab/status.lib";
 import type { TaskPriority } from "@watchdog/schemas";
 
 interface Props {

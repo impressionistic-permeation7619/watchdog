@@ -1,12 +1,12 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
+import { PatchOpBadge } from "@/shared/ui/vocab/patch-op";
 import {
   PATCH_OP_LABELS,
   patchOpLabel,
-  PatchOpBadge,
   PATCH_RESOURCE_META,
-} from "@/shared/ui/vocab/patch-op";
+} from "@/shared/ui/vocab/patch-op.lib";
 
 describe("patch-op vocab", () => {
   it("labels patch operations and resources", () => {

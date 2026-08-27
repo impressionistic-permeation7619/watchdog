@@ -1,11 +1,11 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
+import { ConfidenceBadge } from "@/shared/ui/vocab/confidence";
 import {
   confidenceLabel,
-  ConfidenceBadge,
   CONFIDENCE_LABELS,
-} from "@/shared/ui/vocab/confidence";
+} from "@/shared/ui/vocab/confidence.lib";
 
 describe("Confidence vocab", () => {
   it("maps tiers to labels", () => {
