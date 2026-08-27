@@ -47,12 +47,9 @@ export const Route = createFileRoute("/_protected/inbox/")({
   loader: async ({ context: { queryClient } }) => {
     const { active } = await queryClient.ensureQueryData(casesContextQuery());
     if (active) {
-      await Promise.all([
-        queryClient.ensureQueryData(allProposalsQuery(active.id)),
-        // Same query the decide band reads — must be ready before paint, not
-        // fire-and-forget prefetch (useQuery falls back to [] while pending).
-        queryClient.ensureQueryData(evidenceListQuery(active.id)),
-      ]);
+      await queryClient.ensureQueryData(allProposalsQuery(active.id));
+      // Detail band loads evidence via useQuery ([] fallback); warm in parallel.
+      void queryClient.prefetchQuery(evidenceListQuery(active.id));
     }
   },
   pendingComponent: RoutePending,

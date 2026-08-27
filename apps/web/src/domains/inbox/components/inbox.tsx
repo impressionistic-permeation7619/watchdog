@@ -1,6 +1,6 @@
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { Link, Navigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 
 import { casesContextQuery } from "@/domains/cases/queries";
 import type { CaseRecord } from "@/domains/cases/types";
@@ -19,6 +19,7 @@ import { EmptyState } from "@/shared/ui/empty-state";
 import { QueueHeader } from "@/shared/ui/queue-header";
 import { QueueShell } from "@/shared/ui/queue-shell";
 import { Button } from "@/shared/ui/shadcn/button";
+import { QueueSkeleton } from "@/shared/ui/skeletons";
 import { SplitView } from "@/shared/ui/split-view";
 import type { ProposalStatus } from "@watchdog/schemas";
 
@@ -184,12 +185,24 @@ export function Inbox({
       <PageHeader />
 
       {casesCtx.active ? (
-        <InboxActive
-          active={casesCtx.active}
-          proposalId={proposalId}
-          initialStatus={initialStatus}
-          onProposalIdChange={onProposalIdChange}
-        />
+        <Suspense
+          fallback={
+            <div
+              className="min-h-0 flex-1 overflow-hidden"
+              aria-busy
+              aria-live="polite"
+            >
+              <QueueSkeleton rows={10} />
+            </div>
+          }
+        >
+          <InboxActive
+            active={casesCtx.active}
+            proposalId={proposalId}
+            initialStatus={initialStatus}
+            onProposalIdChange={onProposalIdChange}
+          />
+        </Suspense>
       ) : (
         <EmptyState
           intent="blank-slate"

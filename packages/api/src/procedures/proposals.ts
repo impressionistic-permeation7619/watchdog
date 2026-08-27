@@ -55,13 +55,16 @@ export const listForCase = authed
   .input(
     z.object({
       caseId: z.uuid(),
-      status: proposalStatusSchema.optional().default("pending"),
+      status: proposalStatusSchema.optional(),
     })
   )
   .output(z.array(proposalSchema))
   .handler(
     withDomainError(async ({ input }) =>
-      listProposalsForCase(input.caseId, { status: input.status })
+      listProposalsForCase(
+        input.caseId,
+        input.status === undefined ? undefined : { status: input.status }
+      )
     )
   );
 

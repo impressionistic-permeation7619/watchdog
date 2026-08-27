@@ -21,18 +21,11 @@ export const proposalsByStatusQuery = (
     gcTime: GC_REALTIME,
   });
 
-/** Concatenated pending + accepted + rejected for Inbox queue. */
+/** All proposals for Inbox queue (pending + accepted + rejected). */
 export const allProposalsQuery = (caseId: string) =>
   queryOptions({
     queryKey: proposalsKeys.all(caseId),
-    queryFn: async () => {
-      const [pending, accepted, rejected] = await Promise.all([
-        listProposalsFn({ data: { caseId, status: "pending" } }),
-        listProposalsFn({ data: { caseId, status: "accepted" } }),
-        listProposalsFn({ data: { caseId, status: "rejected" } }),
-      ]);
-      return [...pending, ...accepted, ...rejected];
-    },
+    queryFn: async () => listProposalsFn({ data: { caseId } }),
     staleTime: STALE_REALTIME,
     gcTime: GC_REALTIME,
   });

@@ -59,5 +59,34 @@ describe("proposals procedures", () => {
         caseId: "00000000-0000-4000-8000-000000000001",
       })
     ).resolves.toHaveLength(1);
+    expect(listProposalsForCase).toHaveBeenCalledWith(
+      "00000000-0000-4000-8000-000000000001",
+      undefined
+    );
+  });
+
+  it("filters by status when provided", async () => {
+    listProposalsForCase.mockResolvedValueOnce([]);
+
+    const client = createRouterClient(
+      { listForCase },
+      {
+        context: {
+          headers: new Headers(),
+          actor,
+          authMethod: "session",
+        },
+      }
+    );
+
+    await client.listForCase({
+      caseId: "00000000-0000-4000-8000-000000000001",
+      status: "pending",
+    });
+
+    expect(listProposalsForCase).toHaveBeenCalledWith(
+      "00000000-0000-4000-8000-000000000001",
+      { status: "pending" }
+    );
   });
 });

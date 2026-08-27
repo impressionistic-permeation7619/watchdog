@@ -9708,8 +9708,7 @@
                 "accepted",
                 "rejected"
               ],
-              "type": "string",
-              "default": "pending"
+              "type": "string"
             },
             "allowEmptyValue": true,
             "allowReserved": true

@@ -16,7 +16,7 @@ export const listProposalsFn = createServerFn({ method: "GET" })
     async ({ data, context }): Promise<ProposalRecord[]> =>
       orpcFromContext(context).proposals.listForCase({
         caseId: data.caseId,
-        status: data.status ?? "pending",
+        ...(data.status === undefined ? {} : { status: data.status }),
       })
   );
 
