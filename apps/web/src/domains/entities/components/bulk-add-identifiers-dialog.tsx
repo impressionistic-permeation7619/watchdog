@@ -125,6 +125,65 @@ function overlayServerErrors(
   });
 }
 
+function entityIdOverrideChanged(
+  value: string,
+  base: IdentifierPasteRow | undefined
+): boolean {
+  return value !== (base?.entityId ?? "");
+}
+
+function typeOverrideChanged(
+  value: NonNullable<IdentifierPasteRowOverride["type"]>,
+  base: IdentifierPasteRow | undefined
+): boolean {
+  return value !== (base?.type ?? null);
+}
+
+function valueOverrideChanged(
+  value: string,
+  base: IdentifierPasteRow | undefined
+): boolean {
+  return value !== (base?.value ?? "");
+}
+
+function platformOverrideChanged(
+  value: string,
+  base: IdentifierPasteRow | undefined
+): boolean {
+  return normalizeIdentifierPlatform(value) !== (base?.platform ?? "");
+}
+
+function statusOverrideChanged(
+  value: NonNullable<IdentifierPasteRowOverride["status"]>,
+  base: IdentifierPasteRow | undefined
+): boolean {
+  return value !== base?.status;
+}
+
+function confidenceOverrideChanged(
+  value: NonNullable<IdentifierPasteRowOverride["confidence"]>,
+  base: IdentifierPasteRow | undefined
+): boolean {
+  return value !== base?.confidence;
+}
+
+function applyOverrideField<K extends keyof IdentifierPasteRowOverride>(
+  next: IdentifierPasteRowOverride,
+  key: K,
+  merged: IdentifierPasteRowOverride,
+  base: IdentifierPasteRow | undefined,
+  changed: (
+    value: NonNullable<IdentifierPasteRowOverride[K]>,
+    baseRow: IdentifierPasteRow | undefined
+  ) => boolean
+): void {
+  const value = merged[key];
+  if (value === undefined) return;
+  if (changed(value as NonNullable<IdentifierPasteRowOverride[K]>, base)) {
+    next[key] = value;
+  }
+}
+
 function mergeRowOverride(
   base: IdentifierPasteRow | undefined,
   current: IdentifierPasteRowOverride | undefined,
@@ -132,33 +191,12 @@ function mergeRowOverride(
 ): IdentifierPasteRowOverride | null {
   const merged = { ...current, ...patch };
   const next: IdentifierPasteRowOverride = {};
-  if (
-    merged.entityId !== undefined &&
-    merged.entityId !== (base?.entityId ?? "")
-  ) {
-    next.entityId = merged.entityId;
-  }
-  if (merged.type !== undefined && merged.type !== (base?.type ?? null)) {
-    next.type = merged.type;
-  }
-  if (merged.value !== undefined && merged.value !== (base?.value ?? "")) {
-    next.value = merged.value;
-  }
-  if (
-    merged.platform !== undefined &&
-    normalizeIdentifierPlatform(merged.platform) !== (base?.platform ?? "")
-  ) {
-    next.platform = merged.platform;
-  }
-  if (merged.status !== undefined && merged.status !== base?.status) {
-    next.status = merged.status;
-  }
-  if (
-    merged.confidence !== undefined &&
-    merged.confidence !== base?.confidence
-  ) {
-    next.confidence = merged.confidence;
-  }
+  applyOverrideField(next, "entityId", merged, base, entityIdOverrideChanged);
+  applyOverrideField(next, "type", merged, base, typeOverrideChanged);
+  applyOverrideField(next, "value", merged, base, valueOverrideChanged);
+  applyOverrideField(next, "platform", merged, base, platformOverrideChanged);
+  applyOverrideField(next, "status", merged, base, statusOverrideChanged);
+  applyOverrideField(next, "confidence", merged, base, confidenceOverrideChanged);
   return Object.keys(next).length === 0 ? null : next;
 }
 
