@@ -12,7 +12,7 @@ export interface StructuredExtractResult<T> {
   usage?: StructuredExtractUsage;
 }
 
-type StructuredExtractInput<TSchema extends z.ZodType> = {
+interface StructuredExtractInput<TSchema extends z.ZodType> {
   model: LanguageModel;
   schema: TSchema;
   instructions?: string;
@@ -20,7 +20,7 @@ type StructuredExtractInput<TSchema extends z.ZodType> = {
   abortSignal?: AbortSignal;
   temperature?: number;
   maxOutputTokens?: number;
-};
+}
 
 /**
  * Thin wrapper: generateText + Output.object.

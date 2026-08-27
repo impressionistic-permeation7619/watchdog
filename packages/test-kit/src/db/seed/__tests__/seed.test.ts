@@ -26,8 +26,8 @@ vi.mock("@watchdog/db", () => ({
 
 import type { DbExec } from "@watchdog/db";
 
-import { buildClaimCreateOp } from "../../../fixtures/patch.ts";
 import { testId } from "../../../fixtures/ids.ts";
+import { buildClaimCreateOp } from "../../../fixtures/patch.ts";
 import { seedCase } from "../case";
 import { seedEntity } from "../entity";
 import { seedEvidence } from "../evidence";
@@ -140,9 +140,7 @@ describe("test-kit db seeds", () => {
     });
     expect(mocks.insertManySuppression).toHaveBeenCalledWith(
       exec,
-      expect.arrayContaining([
-        expect.objectContaining({ fingerprint: "fp-1" }),
-      ])
+      expect.arrayContaining([expect.objectContaining({ fingerprint: "fp-1" })])
     );
   });
 });

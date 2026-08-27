@@ -77,11 +77,7 @@ function assertQuestionOpShape(op: PatchOp): void {
 function assertEntityOpShape(op: PatchOp): void {
   if (op.resource !== "entity") return;
   if (op.op === "create" || op.op === "upsert") {
-    requireEnum(
-      requireString(op.data, "kind"),
-      ENTITY_KINDS,
-      "entity kind"
-    );
+    requireEnum(requireString(op.data, "kind"), ENTITY_KINDS, "entity kind");
     requireString(op.data, "name");
     requireString(op.data, "slug");
     return;

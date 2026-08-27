@@ -23,9 +23,7 @@ export const listForCase = authed
   })
   .input(z.object({ caseId: z.uuid() }))
   .output(z.array(jobListSchema))
-  .handler(
-    withDomainError(async ({ input }) => listJobsForCase(input.caseId))
-  );
+  .handler(withDomainError(async ({ input }) => listJobsForCase(input.caseId)));
 
 export const get = authed
   .route({

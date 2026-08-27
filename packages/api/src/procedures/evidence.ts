@@ -139,9 +139,7 @@ export const attachEntity = authed
     })
   )
   .output(evidenceSchema)
-  .handler(
-    withDomainError(async ({ input }) => attachEvidenceEntity(input))
-  );
+  .handler(withDomainError(async ({ input }) => attachEvidenceEntity(input)));
 
 export const presign = authed
   .route({

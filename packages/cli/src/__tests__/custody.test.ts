@@ -63,11 +63,15 @@ function assertCustody(stdout: string): void {
 
 describe("custody helpers", () => {
   it("requireUserOverride throws when override is disabled", () => {
-    expect(() => requireUserOverride(false)).toThrow(/CUSTODY/);
+    expect(() => {
+      requireUserOverride(false);
+    }).toThrow(/CUSTODY/);
   });
 
   it("refuseConfirmed throws for confirmed confidence", () => {
-    expect(() => refuseConfirmed("confirmed")).toThrow(/CUSTODY/);
+    expect(() => {
+      refuseConfirmed("confirmed");
+    }).toThrow(/CUSTODY/);
   });
 });
 

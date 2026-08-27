@@ -25,7 +25,9 @@ describe("exportContract", () => {
   it("writes contract and openapi artifacts", async () => {
     await exportContract("/tmp/out");
 
-    expect(fsMocks.mkdirSync).toHaveBeenCalledWith("/tmp/out", { recursive: true });
+    expect(fsMocks.mkdirSync).toHaveBeenCalledWith("/tmp/out", {
+      recursive: true,
+    });
     expect(fsMocks.writeFileSync).toHaveBeenCalledTimes(2);
     expect(fsMocks.writeFileSync.mock.calls[0]?.[0]).toContain("contract.json");
     expect(fsMocks.writeFileSync.mock.calls[1]?.[0]).toContain("openapi.json");

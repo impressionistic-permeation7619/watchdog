@@ -46,8 +46,8 @@ function ipv6HasInvalidCompression(value: string): boolean {
 function splitIpv6Value(
   value: string
 ): { head: string; ipv4Tail: string | null } | null {
-  let head = value;
-  let ipv4Tail: string | null = null;
+  const head = value;
+  const ipv4Tail: string | null = null;
   const lastColon = value.lastIndexOf(":");
   if (lastColon === -1) return { head, ipv4Tail };
 
@@ -255,7 +255,7 @@ export function validateIdentifierValue(
     return fail("Value is required.");
   }
 
-  if (SOFT_IDENTIFIER_TYPES.has(type as IdentifierType)) {
+  if ((SOFT_IDENTIFIER_TYPES as ReadonlySet<string>).has(type)) {
     return { ok: true, value: normalized };
   }
   if (!isStrictIdentifierType(type)) {

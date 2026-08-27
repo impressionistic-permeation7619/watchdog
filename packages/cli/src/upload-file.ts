@@ -75,13 +75,13 @@ async function readEvidenceFile(filePath: string): Promise<Buffer> {
   return buf;
 }
 
-type UploadEvidenceFileInput = {
+interface UploadEvidenceFileInput {
   caseId: string;
   path: string;
   label?: string;
   entityId?: string;
   mime?: string;
-};
+}
 
 export async function uploadEvidenceFile(input: UploadEvidenceFileInput) {
   const buf = await readEvidenceFile(input.path);

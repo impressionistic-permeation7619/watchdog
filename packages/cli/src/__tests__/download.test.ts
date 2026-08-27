@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 const fsMocks = vi.hoisted(() => ({
-  writeFile: vi.fn(async () => undefined),
+  writeFile: vi.fn(async () => {}),
 }));
 
 vi.mock("node:fs/promises", () => fsMocks);
@@ -23,13 +23,14 @@ import { downloadToFile } from "../download";
 
 describe("downloadToFile", () => {
   it("writes a successful download using the content-disposition filename", async () => {
-    const fetchMock = vi.fn(async () =>
-      new Response("payload", {
-        status: 200,
-        headers: {
-          "content-disposition": 'attachment; filename="case-export.zip"',
-        },
-      })
+    const fetchMock = vi.fn(
+      async () =>
+        new Response("payload", {
+          status: 200,
+          headers: {
+            "content-disposition": 'attachment; filename="case-export.zip"',
+          },
+        })
     );
     vi.stubGlobal("fetch", fetchMock);
 

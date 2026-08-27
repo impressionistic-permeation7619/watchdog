@@ -8,9 +8,9 @@ import { resetTestDb } from "@watchdog/test-kit/db";
 import type { ApiActor, ApiContext } from "../context";
 import { router } from "../router";
 
-function routerClient(context: Partial<ApiContext> = {}): ReturnType<
-  typeof createRouterClient<typeof router>
-> {
+function routerClient(
+  context: Partial<ApiContext> = {}
+): ReturnType<typeof createRouterClient<typeof router>> {
   const actor: ApiActor = {
     userId: TEST_ACTOR_ID,
     email: "agent@test.local",

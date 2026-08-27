@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-const exportContract = vi.hoisted(() => vi.fn(async () => undefined));
+const exportContract = vi.hoisted(() => vi.fn(async () => {}));
 
 vi.mock("../../src/export-contract.ts", () => ({
   exportContract,

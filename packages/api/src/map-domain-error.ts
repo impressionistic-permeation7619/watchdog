@@ -37,5 +37,5 @@ export async function mapDomainError<T>(fn: () => Promise<T>): Promise<T> {
 export function withDomainError<TArgs extends unknown[], TResult>(
   handler: (...args: TArgs) => Promise<TResult>
 ): (...args: TArgs) => Promise<TResult> {
-  return async (...args: TArgs) => mapDomainError(() => handler(...args));
+  return async (...args: TArgs) => mapDomainError(async () => handler(...args));
 }

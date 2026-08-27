@@ -69,7 +69,7 @@ async function listWithEndpoints(
           caseScope
         );
 
-  return await exec
+  return exec
     .select({
       ...edgeColumns,
       fromName: fromEntity.name,

@@ -21,7 +21,12 @@ const mocks = vi.hoisted(() => {
     },
     cases: {
       list: vi.fn().mockResolvedValue([
-        { id: "case-1", name: "Alpha", slug: "alpha", allowThirdPartyEgress: false },
+        {
+          id: "case-1",
+          name: "Alpha",
+          slug: "alpha",
+          allowThirdPartyEgress: false,
+        },
       ]),
       get: vi.fn().mockResolvedValue({ id: "case-1", name: "Alpha" }),
     },
@@ -58,9 +63,11 @@ const mocks = vi.hoisted(() => {
       ]),
     },
     entities: {
-      list: vi.fn().mockResolvedValue([
-        { id: "ent-1", kind: "person", name: "Jane", slug: "jane" },
-      ]),
+      list: vi
+        .fn()
+        .mockResolvedValue([
+          { id: "ent-1", kind: "person", name: "Jane", slug: "jane" },
+        ]),
     },
     events: {
       list: vi.fn().mockResolvedValue([
@@ -117,9 +124,11 @@ const mocks = vi.hoisted(() => {
       ]),
     },
     questions: {
-      list: vi.fn().mockResolvedValue([
-        { id: "question-1", text: "Who owns this?", status: "open" },
-      ]),
+      list: vi
+        .fn()
+        .mockResolvedValue([
+          { id: "question-1", text: "Who owns this?", status: "open" },
+        ]),
     },
   };
 
@@ -142,7 +151,7 @@ vi.mock("../../client", async (importOriginal) => {
 
 vi.mock("../../ids", () => ({
   resolveEntityId: vi.fn(async () => "entity-id-1"),
-  parseIdList: vi.fn(() => undefined),
+  parseIdList: vi.fn(() => {}),
 }));
 
 vi.mock("../../download", () => ({
@@ -182,7 +191,9 @@ describe("CLI noun commands", () => {
   });
 
   it("claimsCmd requires case and entity then lists claims", async () => {
-    await claimsCmd.run?.({ args: { case: "case-1", entity: "jane" } } as never);
+    await claimsCmd.run?.({
+      args: { case: "case-1", entity: "jane" },
+    } as never);
     expect(mocks.client.claims.list).toHaveBeenCalled();
     expect(mocks.emitList).toHaveBeenCalled();
   });
@@ -206,7 +217,9 @@ describe("CLI noun commands", () => {
   });
 
   it("eventsCmd lists timeline events for a case entity", async () => {
-    await eventsCmd.run?.({ args: { case: "case-1", entity: "jane" } } as never);
+    await eventsCmd.run?.({
+      args: { case: "case-1", entity: "jane" },
+    } as never);
     expect(mocks.client.events.list).toHaveBeenCalled();
     expect(mocks.emitList).toHaveBeenCalled();
   });
@@ -227,13 +240,13 @@ describe("CLI noun commands", () => {
 
   it("exportCmd zip downloads the case export archive", async () => {
     const zip = exportCmd.subCommands?.zip;
-    await zip?.run?.({ args: { case: "case-1" } } as never);
+    await zip?.run?.({ args: { case: "case-1" } });
     expect(mocks.emitOk).toHaveBeenCalledWith({ path: "/tmp/export.zip" });
   });
 
   it("graphCmd write sends a patch with userOverride", async () => {
     const write = graphCmd.subCommands?.write;
-    await write?.run?.({ args: { case: "case-1", patch: "[]" } } as never);
+    await write?.run?.({ args: { case: "case-1", patch: "[]" } });
     expect(mocks.client.graph.write).toHaveBeenCalled();
     expect(mocks.emit).toHaveBeenCalled();
   });

@@ -7,9 +7,7 @@ function str(v: JsonValue | undefined): string | undefined {
   return typeof v === "string" && v.trim() ? v.trim() : undefined;
 }
 
-function fingerprintIdentifierOp(
-  d: Record<string, JsonValue>
-): string | null {
+function fingerprintIdentifierOp(d: Record<string, JsonValue>): string | null {
   const entityId = str(d.entityId);
   const type = str(d.type);
   const valueRaw = str(d.value);

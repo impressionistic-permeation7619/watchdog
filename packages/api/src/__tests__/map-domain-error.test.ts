@@ -72,7 +72,9 @@ describe("mapDomainError", () => {
 
 describe("withDomainError", () => {
   it("returns handler output on success", async () => {
-    const wrapped = withDomainError(async (value: string) => value.toUpperCase());
+    const wrapped = withDomainError(async (value: string) =>
+      value.toUpperCase()
+    );
     await expect(wrapped("case")).resolves.toBe("CASE");
   });
 

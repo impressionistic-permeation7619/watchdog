@@ -1,8 +1,8 @@
 import { ORPCError, os } from "@orpc/server";
 import { evlog } from "evlog/orpc";
 
-import { assertAgentChildWriteCustody } from "./custody";
 import type { ApiActor, ApiContext } from "./context";
+import { assertAgentChildWriteCustody } from "./custody";
 
 const ID_KEYS = [
   ["caseId", "case"],
