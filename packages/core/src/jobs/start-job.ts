@@ -205,5 +205,5 @@ export async function cancelJob(
 }
 
 export async function findCancelledJobIds(ids: string[]): Promise<string[]> {
-  return jobsRepo.findCancelledJobIds(db, ids);
+  return await jobsRepo.findCancelledJobIds(db, ids);
 }

@@ -31,7 +31,7 @@ export async function lookupCapCache(input: {
   jobId: string | null;
   evidenceIds: string[];
 } | null> {
-  return capCacheRepo.lookupActive(
+  return await capCacheRepo.lookupActive(
     db,
     input.caseId,
     input.capabilityId,

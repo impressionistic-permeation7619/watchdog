@@ -47,7 +47,7 @@ async function startCapForEvidence(input: {
     }
   }
 
-  return startJob({
+  return await startJob({
     caseId: input.caseId,
     capabilityId: input.capabilityId,
     actorId: input.actorId,
@@ -67,7 +67,7 @@ export async function processEvidence(input: {
       ? EVIDENCE_EXTRACT_AI_CAPABILITY_ID
       : EVIDENCE_HARVEST_CAPABILITY_ID;
 
-  return startCapForEvidence({
+  return await startCapForEvidence({
     caseId: input.caseId,
     evidenceId: input.evidenceId,
     actorId: input.actorId,
@@ -100,7 +100,7 @@ export async function enrichUrlEvidence(input: {
   evidenceId: string;
   actorId: string;
 }): Promise<JobRecord> {
-  return startCapForEvidence({
+  return await startCapForEvidence({
     caseId: input.caseId,
     evidenceId: input.evidenceId,
     actorId: input.actorId,

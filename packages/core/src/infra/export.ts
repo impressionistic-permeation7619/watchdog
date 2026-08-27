@@ -195,7 +195,7 @@ export async function renderCaseExport(caseId: string): Promise<{
   const mdFiles = new Map<string, string>();
 
   const exportedEntities = await Promise.all(
-    entityRows.map(async ({ id }) => renderEntityMarkdown(id, peerMap))
+    entityRows.map(async ({ id }) => await renderEntityMarkdown(id, peerMap))
   );
   for (const exported of exportedEntities) {
     if (exported) {

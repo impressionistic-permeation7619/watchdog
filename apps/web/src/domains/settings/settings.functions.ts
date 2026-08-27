@@ -11,14 +11,14 @@ export { type CredentialSlot } from "@/domains/settings/types";
 
 export const listCredentialsFn = createServerFn({ method: "GET" }).handler(
   async ({ context }): Promise<CredentialSlot[]> =>
-    orpcFromContext(context).credentials.list()
+    await orpcFromContext(context).credentials.list()
 );
 
 export const putCredentialFn = createServerFn({ method: "POST" })
   .validator(putCredentialInputSchema)
   .handler(
     async ({ data, context }): Promise<CredentialSlot> =>
-      orpcFromContext(context).credentials.put({
+      await orpcFromContext(context).credentials.put({
         name: data.name,
         secret: data.secret,
         label: data.label,

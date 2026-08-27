@@ -213,7 +213,7 @@ export async function presignUpload(
   input: PresignUploadInput
 ): Promise<PresignedPut> {
   await assertCaseExists(input.caseId);
-  return createPresignedPut({
+  return await createPresignedPut({
     caseId: input.caseId,
     sha256: input.sha256,
     mime: input.mime,

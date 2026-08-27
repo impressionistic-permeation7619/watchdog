@@ -54,11 +54,13 @@ async function enqueueReleased(
 ): Promise<void> {
   if (released.length === 0) return;
   await Promise.all(
-    released.map(async (row) => enqueueCapJob(row.id, row.capabilityId))
+    released.map(
+      async (row) => await enqueueCapJob(row.id, row.capabilityId)
+    )
   );
   await Promise.all(
     released.map(async (row) =>
-      notifyEvent({
+      await notifyEvent({
         type: "job_update",
         caseId,
         jobId: row.id,

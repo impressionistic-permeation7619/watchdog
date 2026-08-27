@@ -45,7 +45,7 @@ export async function uploadFileEvidence(input: {
     throw new Error(`MinIO upload failed (${res.status})`);
   }
 
-  return confirmFileUploadFn({
+  return await confirmFileUploadFn({
     data: {
       caseId: input.caseId,
       uri: put.uri,

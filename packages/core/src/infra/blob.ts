@@ -208,7 +208,7 @@ export async function createPresignedGet(
   expiresIn = 300
 ): Promise<string> {
   const cfg = s3Config();
-  return getSignedUrl(
+  return await getSignedUrl(
     getClient(),
     new GetObjectCommand({ Bucket: cfg.bucket, Key: uri }),
     { expiresIn }

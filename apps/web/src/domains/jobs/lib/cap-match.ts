@@ -250,7 +250,7 @@ export function categoryFilterOptions(
   caps: readonly CapListItem[]
 ): { value: string; label: string }[] {
   const cats = [...new Set(caps.map((c) => capCategory(c.id)).filter(Boolean))];
-  cats.sort();
+  cats.sort((a, b) => a.localeCompare(b));
   return [
     { value: "", label: "All categories" },
     ...cats.map((c) => ({
