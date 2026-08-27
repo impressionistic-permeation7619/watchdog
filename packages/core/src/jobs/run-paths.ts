@@ -1,14 +1,14 @@
 import { db, jobsRepo, playbookRunsRepo, type JobRow } from "@watchdog/db";
 
-import { logSwallowed } from "../infra/process-log";
 import { errorMessage } from "../infra/domain-error";
+import { logSwallowed } from "../infra/process-log";
 import { storeCacheStage } from "./stages/cache";
 import { advancePlaybookRun } from "./stages/chain";
 import type { CollectResult } from "./stages/collect";
 import { failJob, type createJobLog } from "./stages/helpers";
 import type { PreflightState } from "./stages/preflight";
 
-function logPlaybookAdvanceFailure(
+async function logPlaybookAdvanceFailure(
   advanceError: unknown,
   opts: {
     jobId: string;
@@ -35,7 +35,7 @@ function logPlaybookAdvanceFailure(
     });
 }
 
-export function runSucceededPath(opts: {
+export async function runSucceededPath(opts: {
   jobId: string;
   state: PreflightState;
   collected: CollectResult;
@@ -60,29 +60,31 @@ export function runSucceededPath(opts: {
     return advancePlaybookRun({
       caseId: state.job.caseId,
       playbookRunId,
-    }).catch((advanceError: unknown) =>
-      logPlaybookAdvanceFailure(advanceError, {
-        jobId,
-        caseId: state.job.caseId,
-        playbookRunId,
-        jobLog,
-      }).then(() =>
-        playbookRunsRepo
-          .setStatus(db, playbookRunId, "cancelled", new Date(), {
-            onlyStatuses: ["running"],
-          })
-          .catch((cancelError: unknown) => {
-            logSwallowed("playbook.advance_cancel", cancelError, {
-              jobId,
-              playbookRunId,
-            });
-          })
+    })
+      .catch(async (advanceError: unknown) =>
+        logPlaybookAdvanceFailure(advanceError, {
+          jobId,
+          caseId: state.job.caseId,
+          playbookRunId,
+          jobLog,
+        }).then(async () =>
+          playbookRunsRepo
+            .setStatus(db, playbookRunId, "cancelled", new Date(), {
+              onlyStatuses: ["running"],
+            })
+            .catch((cancelError: unknown) => {
+              logSwallowed("playbook.advance_cancel", cancelError, {
+                jobId,
+                playbookRunId,
+              });
+            })
+        )
       )
-    ).then(() => undefined);
+      .then(() => {});
   });
 }
 
-export function runFailedPath(opts: {
+export async function runFailedPath(opts: {
   jobId: string;
   error: unknown;
   jobLog: ReturnType<typeof createJobLog>;

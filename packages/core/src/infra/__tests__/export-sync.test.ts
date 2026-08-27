@@ -11,7 +11,7 @@ import {
 
 describe("safeFilename", () => {
   it("strips path separators and control characters", () => {
-    expect(safeFilename('evil/../etc\u0001pass')).toBe("evil_.._etc_pass");
+    expect(safeFilename("evil/../etc\u0001pass")).toBe("evil_.._etc_pass");
     expect(safeFilename("a/b:c*d?")).not.toMatch(/[/\\:]/);
   });
 });

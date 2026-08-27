@@ -14,8 +14,8 @@ vi.mock("../../infra/blob", () => ({
 
 import type { CollectRuntime } from "../collect";
 import { createJobLog } from "../helpers";
-import type { PreflightState } from "../preflight";
 import { interpretStage, logInterpretFailure } from "../interpret";
+import type { PreflightState } from "../preflight";
 
 describe("interpret stage", () => {
   it("logInterpretFailure appends log line and fallback summary", () => {

@@ -1,4 +1,10 @@
-import { activityEventsRepo, db, tasksRepo, type DbExec, type TaskRow } from "@watchdog/db";
+import {
+  activityEventsRepo,
+  db,
+  tasksRepo,
+  type DbExec,
+  type TaskRow,
+} from "@watchdog/db";
 import {
   trimmedOrNull,
   type TaskPriority,

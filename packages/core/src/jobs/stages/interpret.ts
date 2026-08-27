@@ -18,10 +18,10 @@ export interface InterpretStageResult {
   handoff?: JobHandoff;
 }
 
-type InterpretExistingState = {
+interface InterpretExistingState {
   proposalId: string | null;
   resultSummary: string | null;
-};
+}
 
 /**
  * Load Cap report and run pure interpret → parse PatchOp[].

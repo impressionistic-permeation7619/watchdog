@@ -33,7 +33,10 @@ describe("updateCase", () => {
 
   it("rejects a rename whose slug is taken", async () => {
     await seedCase(db, { name: "First Case", slug: "first-case" });
-    const second = await seedCase(db, { name: "Second Case", slug: "second-case" });
+    const second = await seedCase(db, {
+      name: "Second Case",
+      slug: "second-case",
+    });
     await expect(
       updateCase({ id: second.id, name: "First Case" })
     ).rejects.toSatisfy(

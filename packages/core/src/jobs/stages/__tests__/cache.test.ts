@@ -8,9 +8,9 @@ vi.mock("../../cap-cache", () => ({
   storeCapCache,
 }));
 
+import { storeCacheStage } from "../cache";
 import type { CollectRuntime } from "../collect";
 import type { PreflightState } from "../preflight";
-import { storeCacheStage } from "../cache";
 
 function makeRuntime(overrides: Partial<CollectRuntime> = {}): CollectRuntime {
   return {
@@ -66,7 +66,14 @@ describe("storeCacheStage", () => {
     await storeCacheStage({
       state: makeState(),
       runtime,
-      artifacts: [{ name: "report.json", mime: "application/json", uri: "u", sha256: "s" }],
+      artifacts: [
+        {
+          name: "report.json",
+          mime: "application/json",
+          uri: "u",
+          sha256: "s",
+        },
+      ],
       resultSummary: "done",
       fromCache: false,
       reclaim: false,

@@ -18,7 +18,7 @@ import { startJob, type JobRecord, toJobRecord } from "../jobs/start-job";
 /**
  * Shared Intake glue: load Evidence, dedupe against active Cap Jobs, startJob.
  */
-function startCapForEvidence(input: {
+async function startCapForEvidence(input: {
   caseId: string;
   evidenceId: string;
   actorId: string;
@@ -30,7 +30,7 @@ function startCapForEvidence(input: {
 }): Promise<JobRecord> {
   return evidenceRepo
     .getCapSeedInCase(db, input.caseId, input.evidenceId)
-    .then((seed) => {
+    .then(async (seed) => {
       if (!seed) throw new DomainError("not_found", "Evidence not found");
       input.assertSeed?.(seed);
       return jobsRepo
@@ -38,7 +38,7 @@ function startCapForEvidence(input: {
         .then((active) => {
           for (const job of active) {
             if (input.matchActive(job, seed)) {
-              return Promise.resolve(toJobRecord(job));
+              return toJobRecord(job);
             }
           }
           return startJob({
@@ -51,7 +51,7 @@ function startCapForEvidence(input: {
     });
 }
 
-export function processEvidence(input: {
+export async function processEvidence(input: {
   caseId: string;
   evidenceId: string;
   actorId: string;
@@ -84,16 +84,16 @@ export function processEvidence(input: {
   });
 }
 
-export function markEvidenceProcessed(input: {
+export async function markEvidenceProcessed(input: {
   caseId: string;
   evidenceId: string;
 }): Promise<void> {
   return evidenceRepo
     .markProcessed(db, input.caseId, input.evidenceId)
-    .then(() => undefined);
+    .then(() => {});
 }
 
-export function enrichUrlEvidence(input: {
+export async function enrichUrlEvidence(input: {
   caseId: string;
   evidenceId: string;
   actorId: string;

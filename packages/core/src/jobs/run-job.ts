@@ -3,16 +3,20 @@ import { rm } from "node:fs/promises";
 import { db, jobsRepo, type JobRow } from "@watchdog/db";
 
 import { logSwallowed } from "../infra/process-log";
-import { runFailedPath, runSucceededPath } from "./run-paths";
-import { advancePlaybookRun } from "./stages/chain";
-import { collect, type CollectResult } from "./stages/collect";
-import { finish } from "./stages/finish";
 import {
   getActiveJobAbortSignal,
   unregisterActiveJobController,
 } from "./job-cancel-registry";
+import { runFailedPath, runSucceededPath } from "./run-paths";
+import { advancePlaybookRun } from "./stages/chain";
+import { collect, type CollectResult } from "./stages/collect";
+import { finish } from "./stages/finish";
 import { createJobLog, type JobLog } from "./stages/helpers";
-import { interpretStage, logInterpretFailure, type InterpretStageResult } from "./stages/interpret";
+import {
+  interpretStage,
+  logInterpretFailure,
+  type InterpretStageResult,
+} from "./stages/interpret";
 import { landEvidence } from "./stages/land-evidence";
 import {
   preflight,
@@ -142,11 +146,11 @@ async function cleanupCollectedRun(
   });
 }
 
-type ProposePipelineResult = {
+interface ProposePipelineResult {
   proposalId: string | null;
   suppressedCount: number;
   interpreted: InterpretStageResult;
-};
+}
 
 async function proposeFromInterpret(
   state: PreflightState,
@@ -200,10 +204,7 @@ function finalizeResultSummary(
       resultSummary
     );
   }
-  if (
-    collected.fromCache &&
-    (resultSummary === null || resultSummary === "")
-  ) {
+  if (collected.fromCache && (resultSummary === null || resultSummary === "")) {
     return "Reused prior Cap artifacts";
   }
   return resultSummary;
@@ -252,11 +253,7 @@ async function runReadyJob(
     suppressedCount = proposed.suppressedCount;
     interpreted = proposed.interpreted;
 
-    const resultSummary = finalizeResultSummary(
-      interpreted,
-      collected,
-      jobLog
-    );
+    const resultSummary = finalizeResultSummary(interpreted, collected, jobLog);
 
     const finishOutcome = await finish({
       state,

@@ -9,9 +9,8 @@
 import { mkdir, rename, rm, writeFile } from "node:fs/promises";
 import nodePath from "node:path";
 
-import { env } from "@watchdog/env/server";
-
 import type { EvidenceRow } from "@watchdog/db";
+import { env } from "@watchdog/env/server";
 
 import { readArtifactBytes } from "./blob";
 import { renderCaseExport, renderEntityMarkdown } from "./export";
@@ -64,10 +63,10 @@ function evidenceExt(mime: string | null, label: string | null): string {
   return map[base] ?? ".bin";
 }
 
-type EvidenceExportCounts = {
+interface EvidenceExportCounts {
   included: number;
   skipped: number;
-};
+}
 
 async function writeUriEvidenceFile(
   caseId: string,
@@ -76,8 +75,9 @@ async function writeUriEvidenceFile(
 ): Promise<"included" | "skipped"> {
   const prefix = ev.id.slice(0, 8);
   const labelBase = safeFilename(ev.label ?? ev.sourceUrl ?? ev.id.slice(0, 8));
+  if (!ev.uri) return "skipped";
   try {
-    const bytes = await readArtifactBytes(ev.uri!);
+    const bytes = await readArtifactBytes(ev.uri);
     const ext = evidenceExt(ev.mime, ev.label);
     const filename = `${prefix}--${labelBase}${ext}`;
     await write(nodePath.join(evidenceDir, filename), bytes);
@@ -98,7 +98,8 @@ async function writeInlineEvidenceFile(
   const prefix = ev.id.slice(0, 8);
   const labelBase = safeFilename(ev.label ?? ev.sourceUrl ?? ev.id.slice(0, 8));
   const filename = `${prefix}--${labelBase}.txt`;
-  await write(nodePath.join(evidenceDir, filename), ev.text!);
+  if (ev.text === null || ev.text === undefined) return;
+  await write(nodePath.join(evidenceDir, filename), ev.text);
 }
 
 async function writeCaseEvidenceFiles(

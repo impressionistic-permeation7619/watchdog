@@ -53,12 +53,12 @@ export async function listCredentialSlots(
   return slots;
 }
 
-type PutCredentialSlotInput = {
+interface PutCredentialSlotInput {
   userId: string;
   name: string;
   secret: string;
   label?: string | null;
-};
+}
 
 /** Create/replace secret and return the configured slot (no full re-list). */
 export async function putCredentialSlot(

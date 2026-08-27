@@ -104,10 +104,10 @@ export async function renderEntityMarkdown(
   };
 }
 
-type CaseExportResult = {
+interface CaseExportResult {
   files: Map<string, string>;
   evidenceRows: EvidenceRow[];
-};
+}
 
 /**
  * Render all entities in a Case and return them as a map of
@@ -122,7 +122,7 @@ export async function renderCaseExport(
   const mdFiles = new Map<string, string>();
 
   const exportedEntities = await Promise.all(
-    entityRows.map(async ({ id }) => await renderEntityMarkdown(id, peerMap))
+    entityRows.map(async ({ id }) => renderEntityMarkdown(id, peerMap))
   );
   for (const exported of exportedEntities) {
     if (exported) {

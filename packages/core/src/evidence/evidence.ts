@@ -196,36 +196,33 @@ export async function restoreEvidence(input: SoftDeleteInput): Promise<void> {
   if (!row) throw new DomainError("not_found", "Hidden Evidence not found");
 }
 
-export function attachEvidenceEntity(input: {
+export async function attachEvidenceEntity(input: {
   caseId: string;
   evidenceId: string;
   entityId: string | null;
 }): Promise<EvidenceRecord> {
-  return assertCaseExists(input.caseId)
-    .then(async () => {
-      const entityId =
-        input.entityId === null || input.entityId === ""
-          ? null
-          : input.entityId;
-      if (entityId !== null) {
-        await assertEntityInCase(input.caseId, entityId);
-      }
-      const row = await evidenceRepo.setEntityInCase(
-        db,
-        input.caseId,
-        input.evidenceId,
-        entityId
-      );
-      if (!row) throw new DomainError("not_found", "Evidence not found");
-      return toRecord(row);
-    });
+  return assertCaseExists(input.caseId).then(async () => {
+    const entityId =
+      input.entityId === null || input.entityId === "" ? null : input.entityId;
+    if (entityId !== null) {
+      await assertEntityInCase(input.caseId, entityId);
+    }
+    const row = await evidenceRepo.setEntityInCase(
+      db,
+      input.caseId,
+      input.evidenceId,
+      entityId
+    );
+    if (!row) throw new DomainError("not_found", "Evidence not found");
+    return toRecord(row);
+  });
 }
 
 export async function presignUpload(
   input: PresignUploadInput
 ): Promise<PresignedPut> {
   await assertCaseExists(input.caseId);
-  return await createPresignedPut({
+  return createPresignedPut({
     caseId: input.caseId,
     sha256: input.sha256,
     mime: input.mime,
@@ -267,18 +264,20 @@ export async function confirmFileUpload(
   return toRecord(row);
 }
 
-export function getEvidenceDownloadUrl(
+export async function getEvidenceDownloadUrl(
   caseId: string,
   evidenceId: string
 ): Promise<{ url: string | null }> {
-  return assertCaseExists(caseId).then(() =>
-    evidenceRepo.getUriInCaseIncludingDeleted(db, caseId, evidenceId)
-  ).then((row) => {
-    if (row === null || row.uri === null || row.uri === "") {
-      return { url: null };
-    }
-    return createPresignedGet(row.uri).then((url) => ({ url }));
-  });
+  return assertCaseExists(caseId)
+    .then(async () =>
+      evidenceRepo.getUriInCaseIncludingDeleted(db, caseId, evidenceId)
+    )
+    .then((row) => {
+      if (row === null || row.uri === null || row.uri === "") {
+        return { url: null };
+      }
+      return createPresignedGet(row.uri).then((url) => ({ url }));
+    });
 }
 
 /**

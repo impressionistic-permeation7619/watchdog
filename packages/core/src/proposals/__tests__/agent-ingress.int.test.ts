@@ -1,15 +1,8 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
-import {
-  DomainError,
-  writeGraphFromAgent,
-} from "@watchdog/core";
+import { DomainError, writeGraphFromAgent } from "@watchdog/core";
 import { claimsRepo, db, evidenceRepo, graphWritesRepo } from "@watchdog/db";
-import {
-  TEST_ACTOR_ID,
-  buildClaimCreateOp,
-  testId,
-} from "@watchdog/test-kit";
+import { TEST_ACTOR_ID, buildClaimCreateOp, testId } from "@watchdog/test-kit";
 import { resetTestDb, seedCase, seedEntity } from "@watchdog/test-kit/db";
 
 describe("writeGraphFromAgent", () => {

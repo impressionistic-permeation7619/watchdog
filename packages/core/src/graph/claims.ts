@@ -66,7 +66,7 @@ function toRecord(row: ClaimRow, evidenceIds: string[]): ClaimRecord {
   };
 }
 
-type EntityListOpts = { includeRetracted?: boolean };
+interface EntityListOpts { includeRetracted?: boolean }
 
 export async function listClaimsForEntity(
   caseId: string,

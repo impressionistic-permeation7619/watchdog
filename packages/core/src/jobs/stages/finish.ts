@@ -6,7 +6,7 @@ import { setJobStatus } from "../set-job-status";
 import { inputString, type JobLog } from "./helpers";
 import type { PreflightState } from "./preflight";
 
-type FinishInput = {
+interface FinishInput {
   state: PreflightState;
   jobLog: JobLog;
   proposalId: string | null;
@@ -16,13 +16,15 @@ type FinishInput = {
   interpretError: string | null;
   markSourceProcessed: boolean | undefined;
   handoff?: JobHandoff;
-};
+}
 
 /**
  * Persist terminal Job outcome (succeeded write, or skip if cancelled),
  * notify, optionally stamp source Evidence processed.
  */
-export async function finish(input: FinishInput): Promise<"succeeded" | "cancelled"> {
+export async function finish(
+  input: FinishInput
+): Promise<"succeeded" | "cancelled"> {
   const { state, jobLog } = input;
 
   const finished = await setJobStatus(

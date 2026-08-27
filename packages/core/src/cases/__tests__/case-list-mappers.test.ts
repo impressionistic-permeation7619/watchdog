@@ -1,11 +1,8 @@
 import { describe, it, expect } from "vitest";
-import {
-toCaseEdgeRecord,
-toCaseIdentifierRecord,
-} from "../../index.ts";
+
+import { toCaseEdgeRecord, toCaseIdentifierRecord } from "../../index.ts";
 
 describe("case-list-mappers", () => {
-
   it("toCaseEdgeRecord keeps absolute endpoints (no peer/direction)", () => {
     const mapped = toCaseEdgeRecord(
       {
@@ -59,6 +56,4 @@ describe("case-list-mappers", () => {
     expect(mapped.value).toBe("a@example.com");
     expect(mapped.evidenceIds).toEqual([]);
   });
-
 });
-

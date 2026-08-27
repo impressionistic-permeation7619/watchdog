@@ -176,7 +176,9 @@ export async function getJobForCase(
   return toJobRecord(row.job, row.playbookId, row.playbookRunStatus);
 }
 
-type EntityListOpts3 = { actorId?: string };
+interface EntityListOpts3 {
+  actorId?: string;
+}
 
 export async function cancelJob(
   caseId: string,
@@ -207,5 +209,5 @@ export async function cancelJob(
 }
 
 export async function findCancelledJobIds(ids: string[]): Promise<string[]> {
-  return await jobsRepo.findCancelledJobIds(db, ids);
+  return jobsRepo.findCancelledJobIds(db, ids);
 }

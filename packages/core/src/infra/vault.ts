@@ -142,12 +142,12 @@ export async function getCredential(
   return open(userKey(userId), Buffer.from(ciphertext));
 }
 
-type PutCredentialInput = {
+interface PutCredentialInput {
   userId: string;
   name: string;
   secret: string;
   label?: string | null;
-};
+}
 
 export async function putCredential(
   input: PutCredentialInput

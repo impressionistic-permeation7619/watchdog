@@ -14,7 +14,10 @@ export function artifactsHaveCapReport(artifacts: ArtifactRef[]): boolean {
   return artifacts.some((a) => a.name === REPORT_JSON_ARTIFACT);
 }
 
-type CapReportLoadResult = { report: JsonValue; name: string };
+interface CapReportLoadResult {
+  report: JsonValue;
+  name: string;
+}
 
 /**
  * Load Cap report JSON for pure interpret.

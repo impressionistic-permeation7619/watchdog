@@ -19,7 +19,7 @@ function truncate(text: string, max = MAX_SNAPSHOT_CHARS): string {
   return `${text.slice(0, max)}\n\n…[truncated ${text.length - max} chars]`;
 }
 
-function loadTextFromEvidence(row: {
+async function loadTextFromEvidence(row: {
   text: string | null;
   uri: string | null;
   mime: string | null;
@@ -48,18 +48,13 @@ function loadTextFromEvidence(row: {
  * URL dumps are metadata-only until Enrich. Process should harvest the Job
  * Output (enriched.md), not the bare URL string on the Evidence row.
  */
-function loadEnrichOutputText(input: {
+async function loadEnrichOutputText(input: {
   caseId: string;
   evidenceId: string;
 }): Promise<string | null> {
   return jobsRepo
-    .listSucceededForCapability(
-      db,
-      input.caseId,
-      URL_ENRICH_CAPABILITY_ID,
-      40
-    )
-    .then((recent) => {
+    .listSucceededForCapability(db, input.caseId, URL_ENRICH_CAPABILITY_ID, 40)
+    .then(async (recent) => {
       let chain: Promise<string | null> = Promise.resolve(null);
       for (const job of recent) {
         chain = chain.then((found) => {
@@ -92,21 +87,21 @@ function loadEnrichOutputText(input: {
     });
 }
 
-export function packEvidenceSnapshot(input: {
+export async function packEvidenceSnapshot(input: {
   caseId: string;
   evidenceId: string;
   entityId?: string;
 }): Promise<EvidenceSnapshot> {
   return evidenceRepo
     .getActiveInCase(db, input.caseId, input.evidenceId)
-    .then((row) => {
+    .then(async (row) => {
       if (!row) {
         throw new DomainError(
           "not_found",
           `Evidence not found: ${input.evidenceId}`
         );
       }
-      return loadTextFromEvidence(row).then((initialText) => {
+      return loadTextFromEvidence(row).then(async (initialText) => {
         const looksLikeUrlOnly =
           row.uri === null &&
           Boolean(initialText.trim()) &&
@@ -116,11 +111,10 @@ export function packEvidenceSnapshot(input: {
           ? loadEnrichOutputText({
               caseId: input.caseId,
               evidenceId: row.id,
-            }).then(
-              (fromEnrich) =>
-                fromEnrich !== null && fromEnrich.trim() !== ""
-                  ? fromEnrich
-                  : initialText
+            }).then((fromEnrich) =>
+              fromEnrich !== null && fromEnrich.trim() !== ""
+                ? fromEnrich
+                : initialText
             )
           : Promise.resolve(initialText);
         return textPromise.then((rawText) => {
@@ -128,9 +122,7 @@ export function packEvidenceSnapshot(input: {
           return evidenceSnapshotSchema.parse({
             evidenceId: row.id,
             caseId: row.caseId,
-            ...(entityId !== undefined && entityId !== ""
-              ? { entityId }
-              : {}),
+            ...(entityId !== undefined && entityId !== "" ? { entityId } : {}),
             kind: row.kind,
             ...(row.label !== null && row.label !== ""
               ? { label: row.label }

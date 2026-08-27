@@ -109,9 +109,7 @@ describe("acceptProposal", () => {
 
     const onB = await identifiersRepo.listForEntity(db, entityB.id);
     expect(
-      onB.some(
-        (row) => row.type === "email" && row.value === "ada@example.com"
-      )
+      onB.some((row) => row.type === "email" && row.value === "ada@example.com")
     ).toBe(true);
   });
 
@@ -148,9 +146,11 @@ describe("acceptProposal", () => {
     const fp = fingerprintPatchOp(op);
     expect(fp).toBeTruthy();
     if (fp === null) throw new Error("expected fingerprint");
-    const stored = await findingSuppressionsRepo.listFingerprints(db, cased.id, [
-      fp,
-    ]);
+    const stored = await findingSuppressionsRepo.listFingerprints(
+      db,
+      cased.id,
+      [fp]
+    );
     expect(stored).toContain(fp);
 
     await expect(
@@ -166,9 +166,9 @@ describe("acceptProposal", () => {
     );
 
     const listed = await proposalsRepo.listForCase(db, cased.id);
-    expect(listed.filter((row) => row.proposal.status === "pending")).toHaveLength(
-      0
-    );
+    expect(
+      listed.filter((row) => row.proposal.status === "pending")
+    ).toHaveLength(0);
   });
 
   it("conflicts when accepting an already accepted proposal", async () => {
@@ -298,9 +298,10 @@ describe("acceptProposal", () => {
       expect(fulfilled).toHaveLength(1);
 
       const row = await proposalsRepo.getInCase(db, cased.id, proposalId);
-      expect(row?.proposal.status === "accepted" || row?.proposal.status === "rejected").toBe(
-        true
-      );
+      expect(
+        row?.proposal.status === "accepted" ||
+          row?.proposal.status === "rejected"
+      ).toBe(true);
       const claims = await claimsRepo.listForEntity(db, entity.id);
       const wrote = claims.some((c) => c.text === "Half apply");
       if (row?.proposal.status === "accepted") {

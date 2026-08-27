@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { createClaim, createEvent, suppressKnownFindings } from "@watchdog/core";
+import {
+  createClaim,
+  createEvent,
+  suppressKnownFindings,
+} from "@watchdog/core";
 import { db } from "@watchdog/db";
 import { fingerprintPatchOp } from "@watchdog/schemas";
 import {

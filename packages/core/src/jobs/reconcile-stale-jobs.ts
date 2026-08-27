@@ -1,8 +1,8 @@
 import { db, jobsRepo, playbookRunsRepo } from "@watchdog/db";
 import { isOpenJobStatus } from "@watchdog/schemas";
 
-import { logSwallowed } from "../infra/process-log";
 import { errorMessage } from "../infra/domain-error";
+import { logSwallowed } from "../infra/process-log";
 import { advancePlaybookRun } from "./stages/chain";
 import { failJob } from "./stages/helpers";
 import { capExpireSeconds } from "./timeouts";

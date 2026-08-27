@@ -9,8 +9,8 @@ import { requireCapability } from "@watchdog/caps";
 import { db, jobsRepo, type JobArtifact, type JobRow } from "@watchdog/db";
 import { isJsonObject } from "@watchdog/schemas";
 
-import { logProcess } from "../../infra/process-log";
 import { errorMessage } from "../../infra/domain-error";
+import { logProcess } from "../../infra/process-log";
 import {
   evaluateCapAvailability,
   formatCapAvailabilityError,
@@ -107,9 +107,7 @@ async function enforceCapAvailabilityOrStop(
   return {
     kind: "stop",
     reason:
-      result.kind === "egress_blocked"
-        ? "egress_denied"
-        : "missing_credential",
+      result.kind === "egress_blocked" ? "egress_denied" : "missing_credential",
   };
 }
 

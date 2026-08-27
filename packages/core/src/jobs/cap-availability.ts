@@ -46,7 +46,7 @@ export function formatCapAvailabilityError(
   }
 }
 
-export function evaluateCapAvailability(input: {
+export async function evaluateCapAvailability(input: {
   actorId: string;
   caseId: string;
   cap: CapabilityDef<z.ZodType>;
@@ -59,12 +59,12 @@ export function evaluateCapAvailability(input: {
   const names = credentialNames(specs);
   const present = new Set<string>();
   return Promise.all(
-    names.map((name) =>
+    names.map(async (name) =>
       hasCredential(input.actorId, name).then((ok) => {
         if (ok) present.add(name);
       })
     )
-  ).then(() =>
+  ).then(async () =>
     casesRepo.getById(db, input.caseId).then((caseRow) => {
       const allowThirdPartyEgress = caseRow?.allowThirdPartyEgress ?? false;
       return {
@@ -87,7 +87,7 @@ export function evaluateCapAvailability(input: {
 }
 
 /** Fail closed before enqueue — same predicate as playbooks / worker preflight. */
-export function assertCapAvailability(input: {
+export async function assertCapAvailability(input: {
   actorId: string;
   caseId: string;
   cap: CapabilityDef<z.ZodType>;

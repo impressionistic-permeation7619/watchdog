@@ -11,8 +11,8 @@ import { readArtifactBytes, uploadArtifact } from "../../infra/blob";
 import { logSwallowed } from "../../infra/process-log";
 import { getCredential, hasCredential } from "../../infra/vault";
 import { hashCapInput, lookupCapCache } from "../cap-cache";
-import { artifactsHaveCapReport } from "../load-cap-report";
 import { registerActiveJobController } from "../job-cancel-registry";
+import { artifactsHaveCapReport } from "../load-cap-report";
 import { inputString, linkedEvidenceId, type JobLog } from "./helpers";
 import type { PreflightState } from "./preflight";
 

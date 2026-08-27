@@ -178,7 +178,9 @@ export async function runPlaybook(
   await Promise.all(
     result.jobRows
       .filter((row) => row.status === "queued")
-      .map(async (row) => await enqueueCapJob(row.id, row.capabilityId))
+      .map(async (row) => {
+        await enqueueCapJob(row.id, row.capabilityId);
+      })
   );
 
   return {
@@ -190,12 +192,14 @@ export async function runPlaybook(
   };
 }
 
-type CancelPlaybookRunOpts = { actorId?: string };
+interface CancelPlaybookRunOpts {
+  actorId?: string;
+}
 
-type CancelPlaybookRunResult = {
+interface CancelPlaybookRunResult {
   playbookRunId: string;
   cancelledJobIds: string[];
-};
+}
 
 export async function cancelPlaybookRun(
   caseId: string,
@@ -224,8 +228,8 @@ export async function cancelPlaybookRun(
       playbookRunId
     );
     const updatedIds = await Promise.all(
-      cancellable.map(
-        async (row) => await jobsRepo.cancelCancellable(tx, row.id, now)
+      cancellable.map(async (row) =>
+        jobsRepo.cancelCancellable(tx, row.id, now)
       )
     );
     const cancelledJobIds = updatedIds.filter((id): id is string =>

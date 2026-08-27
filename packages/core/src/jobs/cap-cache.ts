@@ -21,7 +21,7 @@ export function hashCapInput(input: unknown): string {
   return createHash("sha256").update(body).digest("hex");
 }
 
-export function lookupCapCache(input: {
+export async function lookupCapCache(input: {
   caseId: string;
   capabilityId: string;
   inputHash: string;
@@ -40,7 +40,7 @@ export function lookupCapCache(input: {
   );
 }
 
-type StoreCapCacheInput = {
+interface StoreCapCacheInput {
   caseId: string;
   capabilityId: string;
   inputHash: string;
@@ -48,11 +48,9 @@ type StoreCapCacheInput = {
   artifacts: JobArtifact[];
   resultSummary: string | null;
   ttlMs: number;
-};
+}
 
-export async function storeCapCache(
-  input: StoreCapCacheInput
-): Promise<void> {
+export async function storeCapCache(input: StoreCapCacheInput): Promise<void> {
   const now = new Date();
   const expiresAt = new Date(now.getTime() + input.ttlMs);
   await capCacheRepo.upsert(db, {

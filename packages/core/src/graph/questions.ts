@@ -52,7 +52,7 @@ const DEFAULT_QUESTIONS: Partial<Record<EntityKind, readonly string[]>> = {
   ],
 };
 
-type SeedQuestionEntity = { id: string; kind: EntityKind };
+interface SeedQuestionEntity { id: string; kind: EntityKind }
 
 export async function seedDefaultQuestions(
   tx: DbExec,

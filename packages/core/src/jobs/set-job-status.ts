@@ -3,12 +3,12 @@ import type { JobStatus } from "@watchdog/schemas";
 
 import { notifyEvent } from "../infra/events";
 
-type SetJobStatusOpts = {
+interface SetJobStatusOpts {
   unlessCancelled?: boolean;
   onlyStatuses?: JobStatus[];
   notify?: boolean;
   caseId?: string;
-};
+}
 
 type JobStatusPatch = JobPatch & { status: JobStatus };
 
