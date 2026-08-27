@@ -1,4 +1,1 @@
-export {
-  unshortenSnapshotSchema,
-  type UnshortenSnapshot,
-} from "@watchdog/tools";
+export { unshortenSnapshotSchema } from "@watchdog/tools";

@@ -36,8 +36,6 @@ export const HOTKEYS = [
   },
 ] as const;
 
-export type HotkeyCatalogEntry = (typeof HOTKEYS)[number];
-
 /** Duck-typed so unit tests work without a DOM. */
 export function isEditableTarget(target: unknown): boolean {
   if (target === null || typeof target !== "object") return false;

@@ -12,8 +12,6 @@ import {
 } from "@/shared/ui/vocab/edge-predicate";
 import type { EntityKind } from "@watchdog/schemas";
 
-export type { ConnectionComposerValues };
-
 interface Props {
   centerKind: EntityKind;
   peerOptions: readonly EntityOption[];

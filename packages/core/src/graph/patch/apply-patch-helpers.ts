@@ -6,7 +6,7 @@ import type { JsonValue } from "@watchdog/schemas";
 
 import { DomainError, errorMessage } from "../../infra/domain-error";
 
-export function asDomainInvalid<T>(fn: () => T): T {
+function asDomainInvalid<T>(fn: () => T): T {
   try {
     return fn();
   } catch (error) {

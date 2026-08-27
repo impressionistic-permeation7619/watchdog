@@ -12,7 +12,7 @@ export const CONFIDENCE_LABELS: Record<ConfidenceTier, string> = {
   confirmed: "Confirmed",
 };
 
-export const CONFIDENCE_TONES: Record<ConfidenceTier, VocabTone> = {
+const CONFIDENCE_TONES: Record<ConfidenceTier, VocabTone> = {
   confirmed: {
     low: "bg-confidence-confirmed-bg text-confidence-confirmed-fg",
     high: "bg-confidence-confirmed text-primary-foreground",

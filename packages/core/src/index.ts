@@ -256,7 +256,6 @@ export {
 } from "./activity/recent-activity";
 export {
   searchCase,
-  SEARCH_CASE_MIN_QUERY_LENGTH,
   type SearchCaseOpts,
   type SearchCaseResult,
   type SearchCaseEntityHit,

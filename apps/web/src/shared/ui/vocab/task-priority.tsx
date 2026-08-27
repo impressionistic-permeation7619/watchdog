@@ -4,7 +4,6 @@ import type { ComponentProps } from "react";
 import type { DisplayStatus } from "@/shared/ui/vocab/status";
 import { STATUS_TONES } from "@/shared/ui/vocab/status";
 import { optionsFromLabels } from "@/shared/ui/vocab/title-case";
-import type { VocabTone } from "@/shared/ui/vocab/vocab-badge";
 import { VocabBadge } from "@/shared/ui/vocab/vocab-badge";
 import { TASK_PRIORITIES, type TaskPriority } from "@watchdog/schemas";
 
@@ -30,10 +29,6 @@ export const TASK_PRIORITY_OPTIONS = optionsFromLabels(
 
 export function taskPriorityLabel(priority: TaskPriority): string {
   return TASK_PRIORITY_LABELS[priority];
-}
-
-export function taskPriorityTone(priority: TaskPriority): VocabTone {
-  return STATUS_TONES[TASK_PRIORITY_TONE_MAP[priority]];
 }
 
 type TaskPriorityBadgeProps = Omit<
@@ -63,4 +58,4 @@ export function TaskPriorityBadge({
   );
 }
 
-export { TASK_PRIORITY_LABELS, TASK_PRIORITY_TONE_MAP };
+export { TASK_PRIORITY_TONE_MAP };

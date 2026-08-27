@@ -25,7 +25,6 @@ export {
   type IdentifierPasteRowOverride,
   type IdentifierPasteTable,
   type IdentifierPasteTarget,
-  type PasteDelimiter,
 } from "./parse-identifier-paste.types";
 export {
   applyIdentifierPasteRowOverrides,

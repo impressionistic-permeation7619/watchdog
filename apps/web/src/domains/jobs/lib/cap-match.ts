@@ -1,7 +1,7 @@
 import type { CapListItem } from "@/domains/jobs/types";
 
 /** Jobs category label from Cap id first segment (`docs/CAPS.md`). */
-export const CAP_CATEGORY_LABELS: Record<string, string> = {
+const CAP_CATEGORY_LABELS: Record<string, string> = {
   network: "Infrastructure",
   archive: "Archives",
   web: "Live web",
@@ -139,7 +139,7 @@ export function capCategoryLabel(id: string): string {
 }
 
 /** Paste-facing consume labels for CapMatch (may be multiple per Cap). */
-export function capPasteKinds(cap: CapListItem): Set<PasteSeedKind> {
+function capPasteKinds(cap: CapListItem): Set<PasteSeedKind> {
   const out = new Set<PasteSeedKind>();
   for (const c of cap.consumes ?? []) {
     switch (c.kind) {
@@ -175,21 +175,6 @@ export function capPasteKinds(cap: CapListItem): Set<PasteSeedKind> {
     }
   }
   return out;
-}
-
-/** Primary consume kind for ranking (first match wins). */
-export function capConsumesKind(
-  cap: CapListItem
-): Exclude<PasteSeedKind, "unknown"> | null {
-  const kinds = capPasteKinds(cap);
-  if (kinds.has("ip")) return "ip";
-  if (kinds.has("host")) return "host";
-  if (kinds.has("email")) return "email";
-  if (kinds.has("handle")) return "handle";
-  if (kinds.has("url")) return "url";
-  if (kinds.has("evidence")) return "evidence";
-  if (kinds.has("hash")) return "hash";
-  return null;
 }
 
 /** Paste kinds a CapMatch seed can satisfy (URL also unlocks host / IP). */

@@ -122,7 +122,7 @@ export async function assertEdgeKindsAllowed(
   }
 }
 
-export function buildEdgePatch(
+function buildEdgePatch(
   existing: NonNullable<Awaited<ReturnType<typeof edgesRepo.getInCase>>>,
   next: ValidatedEdgeUpdate["next"]
 ): Parameters<typeof edgesRepo.update>[2] {

@@ -186,14 +186,8 @@ function buildTokenMap<T extends string>(
 }
 
 export const TYPE_BY_TOKEN = buildTokenMap(IDENTIFIER_TYPES, TYPE_LABELS);
-export const STATUS_BY_TOKEN = buildTokenMap(
-  IDENTIFIER_STATUSES,
-  STATUS_LABELS
-);
-export const CONFIDENCE_BY_TOKEN = buildTokenMap(
-  CONFIDENCE_TIERS,
-  CONFIDENCE_LABELS
-);
+const STATUS_BY_TOKEN = buildTokenMap(IDENTIFIER_STATUSES, STATUS_LABELS);
+const CONFIDENCE_BY_TOKEN = buildTokenMap(CONFIDENCE_TIERS, CONFIDENCE_LABELS);
 
 export function parsePasteTypeToken(raw: string): IdentifierType | null {
   return TYPE_BY_TOKEN.get(raw.trim().toLowerCase()) ?? null;

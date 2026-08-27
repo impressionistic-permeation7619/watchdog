@@ -1,4 +1,1 @@
-export {
-  waybackLookupSnapshotSchema,
-  type WaybackLookupSnapshot,
-} from "@watchdog/tools";
+export { waybackLookupSnapshotSchema } from "@watchdog/tools";

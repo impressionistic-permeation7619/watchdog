@@ -5,7 +5,7 @@ import type {
   IdentifierPasteTarget,
 } from "./parse-identifier-paste.types";
 
-export function isPinnedValueTarget(
+function isPinnedValueTarget(
   target: IdentifierPasteTarget
 ): target is IdentifierType {
   return (IDENTIFIER_TYPES as readonly string[]).includes(target);

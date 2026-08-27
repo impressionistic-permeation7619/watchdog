@@ -7,8 +7,8 @@
  */
 export const CONTROL_HEIGHT = "h-8";
 export const CONTROL_TEXT = "text-xs";
-export const CONTROL_RADIUS = "rounded-md";
-export const CONTROL_SURFACE = "bg-transparent dark:bg-input/30";
+const CONTROL_RADIUS = "rounded-md";
+const CONTROL_SURFACE = "bg-transparent dark:bg-input/30";
 
 /** SelectTrigger / field controls — height + type + radius + surface. */
 export const CONTROL_TRIGGER = `${CONTROL_HEIGHT} ${CONTROL_RADIUS} ${CONTROL_TEXT} ${CONTROL_SURFACE}`;
@@ -27,9 +27,6 @@ export const CONTROL_FIELD_TRIGGER = [
   "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   CONTROL_TRIGGER,
 ].join(" ");
-
-/** InputGroup / ComboboxInput outer shell. */
-export const CONTROL_SHELL = CONTROL_HEIGHT;
 
 /**
  * Dense table-cell control (EditableSelectCell).

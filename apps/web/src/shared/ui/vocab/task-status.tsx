@@ -4,7 +4,6 @@ import type { ComponentProps } from "react";
 import type { DisplayStatus } from "@/shared/ui/vocab/status";
 import { STATUS_TONES } from "@/shared/ui/vocab/status";
 import { optionsFromLabels } from "@/shared/ui/vocab/title-case";
-import type { VocabTone } from "@/shared/ui/vocab/vocab-badge";
 import { VocabBadge } from "@/shared/ui/vocab/vocab-badge";
 import { TASK_STATUSES, type TaskStatus } from "@watchdog/schemas";
 
@@ -34,10 +33,6 @@ export function taskStatusLabel(status: TaskStatus): string {
   return TASK_STATUS_LABELS[status];
 }
 
-export function taskStatusTone(status: TaskStatus): VocabTone {
-  return STATUS_TONES[TASK_STATUS_TONE_MAP[status]];
-}
-
 type TaskStatusBadgeProps = Omit<
   ComponentProps<typeof VocabBadge>,
   "label" | "tone"
@@ -65,4 +60,4 @@ export function TaskStatusBadge({
   );
 }
 
-export { TASK_STATUS_LABELS, TASK_STATUS_TONE_MAP };
+export { TASK_STATUS_TONE_MAP };

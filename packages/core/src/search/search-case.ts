@@ -182,5 +182,3 @@ export async function searchCase(
     })),
   };
 }
-
-export { SEARCH_CASE_MIN_QUERY_LENGTH } from "@watchdog/schemas";

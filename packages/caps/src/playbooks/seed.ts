@@ -6,7 +6,6 @@ import {
 } from "@watchdog/schemas";
 
 export type { PlaybookSeedKind };
-export { PLAYBOOK_SEED_KINDS };
 
 export interface SeedValues {
   host?: string;

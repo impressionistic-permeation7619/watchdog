@@ -7,7 +7,6 @@ import { VocabBadge } from "@/shared/ui/vocab/vocab-badge";
 import {
   JOB_STATUSES,
   PROPOSAL_STATUSES,
-  RETRACT_KINDS,
   IDENTIFIER_STATUSES,
   type JobStatus,
   type ProposalStatus,
@@ -64,10 +63,6 @@ export const PROPOSAL_STATUS_OPTIONS = optionsFromLabels(
 export const IDENTIFIER_STATUS_OPTIONS = optionsFromLabels(
   IDENTIFIER_STATUSES,
   IDENTIFIER_STATUS_LABELS
-);
-export const RETRACT_KIND_OPTIONS = optionsFromLabels(
-  RETRACT_KINDS,
-  RETRACT_LABELS
 );
 
 export const STATUS_TONES: Record<DisplayStatus, VocabTone> = {
@@ -182,10 +177,3 @@ export function StatusBadge({
     </VocabBadge>
   );
 }
-
-export {
-  JOB_LABELS,
-  PROPOSAL_LABELS,
-  RETRACT_LABELS,
-  IDENTIFIER_STATUS_LABELS,
-};

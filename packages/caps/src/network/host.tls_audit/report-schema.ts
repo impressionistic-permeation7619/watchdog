@@ -1,1 +1,1 @@
-export { tlsAuditSnapshotSchema, type TlsAuditSnapshot } from "@watchdog/tools";
+export { tlsAuditSnapshotSchema } from "@watchdog/tools";

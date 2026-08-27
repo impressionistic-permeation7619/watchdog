@@ -9,7 +9,6 @@
   },
   "dependencies": {
     "@watchdog/core": "workspace:*",
-    "@watchdog/env": "workspace:*",
     "@watchdog/log": "workspace:*"
   },
   "devDependencies": {

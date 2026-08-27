@@ -6,12 +6,10 @@ export { EditableTextCell } from "./editable-text-cell";
 export { EditableSelectCell } from "./editable-select-cell";
 export type { EditableSelectOption } from "./editable-select-cell";
 export { EditableSuggestCell } from "./editable-suggest-cell";
-export type { EditableSuggestOption } from "./editable-suggest-cell";
 export {
   DataTableAddRow,
   DataTableComposerActions,
   DataTableComposerRow,
-  TABLE_COMPOSER_INPUT_CLASS,
   TableComposerInput,
   tableComposerKeyDown,
 } from "./table-composer";

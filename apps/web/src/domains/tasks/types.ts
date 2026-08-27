@@ -21,7 +21,6 @@ export {
   taskCreateInputSchema as createTaskInputSchema,
   taskDeleteInputSchema as deleteTaskInputSchema,
   taskFiltersSchema,
-  taskIdInputSchema,
   taskReorderInputSchema as reorderTasksInputSchema,
   taskUpdateInputSchema as updateTaskInputSchema,
 } from "@watchdog/schemas";

@@ -28,7 +28,6 @@ import { suppressStage } from "./stages/suppress";
 
 export {
   abortActiveJob,
-  getActiveJobAbortSignal,
   listActiveJobIds,
   registerActiveJobController,
   unregisterActiveJobController,

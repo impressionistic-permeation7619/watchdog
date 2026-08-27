@@ -185,7 +185,6 @@ export {
 export type { SearchCaseInput, SearchCaseResult } from "./search";
 
 export {
-  SEARCH_CASE_MIN_QUERY_LENGTH,
   SEARCH_MIN_QUERY_LENGTH,
   searchCaseCaseHitSchema,
   searchCaseEntityHitSchema,

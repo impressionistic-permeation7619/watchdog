@@ -164,7 +164,7 @@ export function groupJobsForQueue(jobs: JobListRecord[]): JobQueueEntry[] {
 }
 
 /** Aggregate status for a playbook run (live > blocked > failed > …). */
-export function playbookRecipeDone(steps: readonly JobListRecord[]): number {
+function playbookRecipeDone(steps: readonly JobListRecord[]): number {
   const byStep = new Map<number, JobListRecord[]>();
   for (const step of steps) {
     const n = step.playbookStep ?? 0;

@@ -1,7 +1,7 @@
 import type { KeyboardEvent } from "react";
 
 import { cn } from "@/lib/utils";
-import { CONTROL_CELL_SHELL, CONTROL_SHELL } from "@/shared/ui/control-chrome";
+import { CONTROL_CELL_SHELL, CONTROL_HEIGHT } from "@/shared/ui/control-chrome";
 import {
   Combobox,
   ComboboxContent,
@@ -61,7 +61,7 @@ export function EntityCombobox({
   className?: string;
   "aria-label"?: string;
   "aria-invalid"?: boolean;
-  /** Width density only — height matches CONTROL_SHELL either way. Ignored for `cell`. */
+  /** Width density only — height matches CONTROL_HEIGHT either way. Ignored for `cell`. */
   size?: "default" | "sm";
   /** `cell` = ghost table-composer chrome (matches EditableSelectCell). */
   variant?: "default" | "cell";
@@ -114,7 +114,7 @@ export function EntityCombobox({
           variant === "cell"
             ? CONTROL_CELL_SHELL
             : [
-                CONTROL_SHELL,
+                CONTROL_HEIGHT,
                 "shrink-0 [&_[data-slot=input-group-control]]:text-xs",
                 size === "default" && "w-48",
                 size === "sm" && "min-w-[10rem] flex-1",

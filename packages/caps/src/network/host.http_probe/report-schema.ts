@@ -1,4 +1,1 @@
-export {
-  httpProbeSnapshotSchema,
-  type HttpProbeSnapshot,
-} from "@watchdog/tools";
+export { httpProbeSnapshotSchema } from "@watchdog/tools";

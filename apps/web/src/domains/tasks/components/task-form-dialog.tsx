@@ -13,8 +13,6 @@ import {
 } from "@/shared/ui/shadcn/dialog";
 import type { TaskStatus } from "@watchdog/schemas";
 
-export type { TaskFormValues } from "@/domains/tasks/lib/task-form";
-
 interface EntityOption {
   id: string;
   name: string;

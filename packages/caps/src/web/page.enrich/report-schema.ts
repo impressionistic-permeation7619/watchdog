@@ -1,4 +1,1 @@
-export {
-  pageEnrichSnapshotSchema,
-  type PageEnrichSnapshot,
-} from "@watchdog/tools";
+export { pageEnrichSnapshotSchema } from "@watchdog/tools";

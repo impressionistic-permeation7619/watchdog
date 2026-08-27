@@ -10,7 +10,7 @@ import { useState } from "react"
 import { Button } from "@/shared/ui/shadcn/button"
 import { Card, CardContent } from "@/shared/ui/shadcn/card"
 import { Separator } from "@/shared/ui/shadcn/separator"
-import { SETTINGS_CARD_SURFACE } from "@/shared/ui/form-section"
+import { ACCENT_CARD_SURFACE } from "@/shared/ui/form-section"
 import { cn } from "@/lib/utils"
 import { ApiKey } from "./api-key"
 import { ApiKeySkeleton } from "./api-key-skeleton"
@@ -72,7 +72,7 @@ export function ApiKeys({
         )}
       </div>
 
-      <Card className={cn(SETTINGS_CARD_SURFACE, "gap-0 p-0 py-0")}>
+      <Card className={cn(ACCENT_CARD_SURFACE, "gap-0 p-0 py-0")}>
         <CardContent className="p-0">
           {isPending ? (
             <ApiKeySkeleton />

@@ -8,12 +8,7 @@ import {
   resolveRedirectUrl,
 } from "./unshorten-guards";
 
-export {
-  isBlockedUnshortenUrl,
-  isRedirectResponse,
-  isRedirectStatus,
-  resolveRedirectUrl,
-} from "./unshorten-guards";
+export { isBlockedUnshortenUrl } from "./unshorten-guards";
 
 export const unshortenSnapshotSchema = z.object({
   url: z.string().min(1),

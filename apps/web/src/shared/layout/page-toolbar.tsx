@@ -24,7 +24,7 @@ export function PageToolbar({
   return (
     <div
       className={cn(
-        // min-h-8 matches CONTROL_SHELL (SearchField / Select / EntityCombobox)
+        // min-h-8 matches CONTROL_HEIGHT (SearchField / Select / EntityCombobox)
         "flex min-h-8 shrink-0 flex-wrap items-center gap-2",
         className
       )}

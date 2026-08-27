@@ -11,9 +11,6 @@ import {
 const CDX = "https://web.archive.org/cdx/search/cdx";
 
 export {
-  waybackFetchSnapshotSchema,
-  waybackLookupSnapshotSchema,
-  type WaybackCdxRow,
   type WaybackFetchSnapshot,
   type WaybackLookupSnapshot,
 } from "./schema";

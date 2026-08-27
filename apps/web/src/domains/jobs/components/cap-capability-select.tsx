@@ -4,7 +4,7 @@ import { groupCapsByCategory } from "@/domains/jobs/lib/cap-match";
 import { capInfoRows, type CapInfoRow } from "@/domains/jobs/lib/cap-run-view";
 import type { CapListItem } from "@/domains/jobs/types";
 import { cn } from "@/lib/utils";
-import { CONTROL_SHELL } from "@/shared/ui/control-chrome";
+import { CONTROL_HEIGHT } from "@/shared/ui/control-chrome";
 import {
   Combobox,
   ComboboxCollection,
@@ -157,7 +157,7 @@ export function CapCapabilitySelect({
         aria-label="Capability"
         placeholder="Select Cap…"
         className={cn(
-          CONTROL_SHELL,
+          CONTROL_HEIGHT,
           "w-56 shrink-0 [&_[data-slot=input-group-control]]:text-xs",
           needsEgress &&
             "border-warning/40 [&_[data-slot=input-group-control]]:text-warning",

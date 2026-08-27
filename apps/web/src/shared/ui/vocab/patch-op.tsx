@@ -24,7 +24,7 @@ export const PATCH_OP_LABELS: Record<Op, string> = {
 };
 
 /** Bind patch ops to status-domain tones (not freestyle success/warning). */
-export const PATCH_OP_TONES: Record<Op, VocabTone> = {
+const PATCH_OP_TONES: Record<Op, VocabTone> = {
   create: {
     low: "bg-status-succeeded-bg text-status-succeeded-fg",
     high: "bg-status-succeeded text-primary-foreground",

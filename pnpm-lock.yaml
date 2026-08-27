@@ -272,9 +272,6 @@ importers:
       '@watchdog/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@watchdog/env':
-        specifier: workspace:*
-        version: link:../../packages/env
       '@watchdog/log':
         specifier: workspace:*
         version: link:../../packages/log

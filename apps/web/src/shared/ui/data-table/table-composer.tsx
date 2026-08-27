@@ -7,7 +7,7 @@ import { Button } from "@/shared/ui/shadcn/button";
 import { Input } from "@/shared/ui/shadcn/input";
 import { TableCell, TableRow } from "@/shared/ui/shadcn/table";
 
-export const TABLE_COMPOSER_INPUT_CLASS =
+const TABLE_COMPOSER_INPUT_CLASS =
   "h-7 w-full rounded-md border-transparent bg-transparent px-1.5 py-0 text-xs shadow-none focus-visible:bg-background/60 focus-visible:border-transparent focus-visible:!shadow-none focus-visible:!ring-0 focus-visible:outline-none";
 
 export function TableComposerInput({

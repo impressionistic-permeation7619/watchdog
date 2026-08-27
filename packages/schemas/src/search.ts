@@ -10,7 +10,6 @@ import {
 import { uuidSchema } from "./primitives";
 
 export const SEARCH_MIN_QUERY_LENGTH = 2;
-export const SEARCH_CASE_MIN_QUERY_LENGTH = SEARCH_MIN_QUERY_LENGTH;
 
 export const searchCaseInputSchema = z.object({
   caseId: uuidSchema,

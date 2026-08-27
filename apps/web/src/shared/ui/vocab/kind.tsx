@@ -7,9 +7,7 @@ import { optionsFromLabels, titleCase } from "@/shared/ui/vocab/title-case";
 import type { VocabTone } from "@/shared/ui/vocab/vocab-badge";
 import { VocabBadge } from "@/shared/ui/vocab/vocab-badge";
 import {
-  CLAIM_CLASSES,
   ENTITY_KINDS,
-  EVIDENCE_KINDS,
   IDENTIFIER_PLATFORMS,
   IDENTIFIER_TYPES,
   type ClaimClass,
@@ -80,7 +78,7 @@ export function EntityKindIcon({
   );
 }
 
-export const EVIDENCE_KIND_LABELS: Record<EvidenceKind, string> = {
+const EVIDENCE_KIND_LABELS: Record<EvidenceKind, string> = {
   file: "File",
   url_archive: "URL Archive",
   attestation: "Attestation",
@@ -107,7 +105,7 @@ export const CLAIM_CLASS_LABELS: Record<ClaimClass, string> = {
   other: "Other",
 };
 
-export const ENTITY_KIND_TONES: Record<EntityKind, VocabTone> = {
+const ENTITY_KIND_TONES: Record<EntityKind, VocabTone> = {
   person: {
     low: "bg-kind-person/15 text-kind-person",
     high: "bg-kind-person text-primary-foreground",
@@ -122,7 +120,7 @@ export const ENTITY_KIND_TONES: Record<EntityKind, VocabTone> = {
   },
 };
 
-export const EVIDENCE_KIND_TONES: Record<EvidenceKind, VocabTone> = {
+const EVIDENCE_KIND_TONES: Record<EvidenceKind, VocabTone> = {
   file: {
     low: "bg-kind-file/15 text-kind-file",
     high: "bg-kind-file text-primary-foreground",
@@ -141,7 +139,7 @@ export const EVIDENCE_KIND_TONES: Record<EvidenceKind, VocabTone> = {
   },
 };
 
-export const IDENTIFIER_TYPE_TONES: Record<IdentifierType, VocabTone> = {
+const IDENTIFIER_TYPE_TONES: Record<IdentifierType, VocabTone> = {
   email: {
     low: "bg-kind-email/15 text-kind-email",
     high: "bg-kind-email text-primary-foreground",
@@ -184,7 +182,7 @@ export const IDENTIFIER_TYPE_TONES: Record<IdentifierType, VocabTone> = {
   },
 };
 
-export const CLAIM_CLASS_TONES: Record<ClaimClass, VocabTone> = {
+const CLAIM_CLASS_TONES: Record<ClaimClass, VocabTone> = {
   observation: {
     low: "bg-kind-observation/15 text-kind-observation",
     high: "bg-kind-observation text-primary-foreground",
@@ -204,13 +202,13 @@ export const CLAIM_CLASS_TONES: Record<ClaimClass, VocabTone> = {
 };
 
 /** Lookup across entity/evidence/identifier maps only (claim classes use ClaimClassBadge). */
-export const KIND_LABELS: Record<KindValue, string> = {
+const KIND_LABELS: Record<KindValue, string> = {
   ...ENTITY_KIND_LABELS,
   ...EVIDENCE_KIND_LABELS,
   ...IDENTIFIER_TYPE_LABELS,
 };
 
-export const KIND_TONES: Record<KindValue, VocabTone> = {
+const KIND_TONES: Record<KindValue, VocabTone> = {
   ...ENTITY_KIND_TONES,
   ...EVIDENCE_KIND_TONES,
   ...IDENTIFIER_TYPE_TONES,
@@ -220,10 +218,6 @@ export const ENTITY_KIND_OPTIONS = optionsFromLabels(
   ENTITY_KINDS,
   ENTITY_KIND_LABELS
 );
-export const EVIDENCE_KIND_OPTIONS = optionsFromLabels(
-  EVIDENCE_KINDS,
-  EVIDENCE_KIND_LABELS
-);
 export const IDENTIFIER_TYPE_OPTIONS = optionsFromLabels(
   IDENTIFIER_TYPES,
   IDENTIFIER_TYPE_LABELS
@@ -232,15 +226,6 @@ export const IDENTIFIER_PLATFORM_OPTIONS = IDENTIFIER_PLATFORMS.map((p) => ({
   value: p.slug,
   label: p.label,
 }));
-export const CLAIM_CLASS_OPTIONS = optionsFromLabels(
-  CLAIM_CLASSES,
-  CLAIM_CLASS_LABELS
-);
-
-const FALLBACK_TONE: VocabTone = {
-  low: "bg-kind-unknown/15 text-kind-unknown",
-  high: "bg-kind-unknown text-primary-foreground",
-};
 
 function isKindValue(value: string): value is KindValue {
   return value in KIND_LABELS;
@@ -249,11 +234,6 @@ function isKindValue(value: string): value is KindValue {
 export function kindLabel(value: string): string {
   const key = value.trim().toLowerCase();
   return isKindValue(key) ? KIND_LABELS[key] : titleCase(value);
-}
-
-export function kindTone(value: string): VocabTone {
-  const key = value.trim().toLowerCase();
-  return isKindValue(key) ? KIND_TONES[key] : FALLBACK_TONE;
 }
 
 type KindBadgeProps = Omit<

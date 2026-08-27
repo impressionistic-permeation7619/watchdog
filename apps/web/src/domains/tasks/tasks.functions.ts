@@ -5,24 +5,16 @@ import {
   deleteTaskInputSchema,
   reorderTasksInputSchema,
   taskFiltersSchema,
-  taskIdInputSchema,
   updateTaskInputSchema,
   type TaskRecord,
 } from "@/domains/tasks/types";
-import { orpcFromContext, orpcNullIfNotFound } from "@/lib/orpc.server";
+import { orpcFromContext } from "@/lib/orpc.server";
 
 export const listTasksFn = createServerFn({ method: "GET" })
   .validator(taskFiltersSchema)
   .handler(
     async ({ data, context }): Promise<TaskRecord[]> =>
       orpcFromContext(context).tasks.list(data)
-  );
-
-export const getTaskFn = createServerFn({ method: "GET" })
-  .validator(taskIdInputSchema)
-  .handler(
-    async ({ data, context }): Promise<TaskRecord | null> =>
-      orpcNullIfNotFound(orpcFromContext(context).tasks.get(data))
   );
 
 export const createTaskFn = createServerFn({ method: "POST" })

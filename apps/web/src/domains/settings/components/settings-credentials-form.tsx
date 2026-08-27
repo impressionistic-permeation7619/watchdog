@@ -20,7 +20,7 @@ import { credentialsListQuery } from "@/domains/settings/queries";
 import { deleteCredentialFn } from "@/domains/settings/settings.functions";
 import { cn, errMessage } from "@/lib/utils";
 import { invalidateAfterCredentialMutation } from "@/shared/lib/query-invalidation";
-import { SETTINGS_CARD_SURFACE } from "@/shared/ui/form-section";
+import { ACCENT_CARD_SURFACE } from "@/shared/ui/form-section";
 import { LocalDateTime } from "@/shared/ui/local-date-time";
 import { Alert, AlertDescription } from "@/shared/ui/shadcn/alert";
 import { Button } from "@/shared/ui/shadcn/button";
@@ -111,7 +111,7 @@ function CredentialSlotGroup({
       <h3 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
         {title}
       </h3>
-      <Card className={cn(SETTINGS_CARD_SURFACE, "gap-0 p-0 py-0")}>
+      <Card className={cn(ACCENT_CARD_SURFACE, "gap-0 p-0 py-0")}>
         <CardContent className="p-0">
           {slots.map((slot, index) => (
             <div key={slot.name}>
@@ -164,7 +164,7 @@ export function SettingsCredentialsForm() {
       ) : null}
 
       {slots.length === 0 ? (
-        <Card className={cn(SETTINGS_CARD_SURFACE, "gap-0 p-0 py-0")}>
+        <Card className={cn(ACCENT_CARD_SURFACE, "gap-0 p-0 py-0")}>
           <CardContent className="text-muted-foreground flex flex-col items-center gap-2 px-4 py-10 text-center text-sm">
             <KeyRoundIcon className="size-5" />
             No Cap credential slots registered.

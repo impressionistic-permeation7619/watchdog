@@ -384,9 +384,3 @@ export const dossierIdentifierColumns: ColumnDef<IdentifierRecord>[] = [
     meta: { label: "Notes" },
   },
 ];
-
-export function createIdentifierColumns(
-  _meta: IdentifierTableMeta
-): ColumnDef<IdentifierRecord>[] {
-  return dossierIdentifierColumns;
-}

@@ -21,7 +21,7 @@ import { searchableSelectorsExtractor } from "./searchable-selectors";
 import type { HarvestExtractor } from "./types";
 import { uriSchemesExtractor } from "./uri-schemes";
 
-export type { HarvestCtx, HarvestExtractor } from "./types";
+export type { HarvestExtractor } from "./types";
 
 export const HARVEST_EXTRACTORS: HarvestExtractor[] = [
   quotesExtractor,

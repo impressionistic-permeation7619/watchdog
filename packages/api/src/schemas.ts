@@ -26,19 +26,10 @@ export const userOverrideSchema = z.literal(true).optional();
 
 export {
   activityItemSchema,
-  activityKindSchema,
   confidenceTierSchema,
   jsonObjectSchema,
-  listRecentActivityInputSchema,
   proposalStatusSchema,
-  searchCaseCaseHitSchema,
-  searchCaseEntityHitSchema,
-  searchCaseEvidenceHitSchema,
-  searchCaseIdentifierHitSchema,
-  searchCaseJobHitSchema,
-  searchCaseProposalHitSchema,
   searchCaseResultSchema,
-  searchCaseTaskHitSchema,
   taskSchema,
 } from "@watchdog/schemas";
 
@@ -239,7 +230,7 @@ export const jobSchema = z.object({
 
 export const jobListSchema = jobSchema.omit({ logs: true });
 
-export const identifierCollisionSchema = z.object({
+const identifierCollisionSchema = z.object({
   opId: z.uuid(),
   type: identifierTypeSchema,
   value: z.string(),

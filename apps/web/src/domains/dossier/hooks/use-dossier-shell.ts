@@ -6,8 +6,6 @@ import {
 } from "./use-dossier-shell-mutations";
 import { useDossierShellQueries } from "./use-dossier-shell-queries";
 
-export type { DossierTabCounts } from "./use-dossier-shell-queries";
-
 export function useDossierShell(caseId: string, entity: EntityRecord) {
   const queryState = useDossierShellQueries(caseId, entity);
   useDossierShellLiveInvalidation(caseId, entity, queryState.queryClient);

@@ -5,7 +5,7 @@ const config: KnipConfig = {
     interface: true,
     type: true,
   },
-  ignoreBinaries: ["check"],
+  ignoreBinaries: ["check", "desloppify"],
   ignore: ["_legacy-v1/**", "_legacy-v2/**"],
   ignoreIssues: {
     "apps/web/src/domains/**/types.ts": ["types"],
