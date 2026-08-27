@@ -47,15 +47,16 @@ async function startCapForEvidence(input: {
     }
   }
 
-  return await startJob({
+  const job = await startJob({
     caseId: input.caseId,
     capabilityId: input.capabilityId,
     actorId: input.actorId,
     input: input.buildInput(seed),
   });
+  return job;
 }
 
-export async function processEvidence(input: {
+export function processEvidence(input: {
   caseId: string;
   evidenceId: string;
   actorId: string;
@@ -67,7 +68,7 @@ export async function processEvidence(input: {
       ? EVIDENCE_EXTRACT_AI_CAPABILITY_ID
       : EVIDENCE_HARVEST_CAPABILITY_ID;
 
-  return await startCapForEvidence({
+  return startCapForEvidence({
     caseId: input.caseId,
     evidenceId: input.evidenceId,
     actorId: input.actorId,
@@ -95,12 +96,12 @@ export async function markEvidenceProcessed(input: {
   await evidenceRepo.markProcessed(db, input.caseId, input.evidenceId);
 }
 
-export async function enrichUrlEvidence(input: {
+export function enrichUrlEvidence(input: {
   caseId: string;
   evidenceId: string;
   actorId: string;
 }): Promise<JobRecord> {
-  return await startCapForEvidence({
+  return startCapForEvidence({
     caseId: input.caseId,
     evidenceId: input.evidenceId,
     actorId: input.actorId,
