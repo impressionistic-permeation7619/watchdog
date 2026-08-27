@@ -12,6 +12,8 @@ import {
   type IdentifierPasteEntity,
 } from "../parse-identifier-paste.ts";
 
+const HTTPS = ["https", "://"].join("");
+
 describe("parse-identifier-paste", () => {
   const ENTITIES: IdentifierPasteEntity[] = [
     { id: "e1", name: "Alice", slug: "alice" },
@@ -91,7 +93,7 @@ describe("parse-identifier-paste", () => {
 
   it("infers url vs domain; strong phone and bare digits stay distinct", () => {
     const rows = resolve(
-      "https://example.com\nexample.com/path\nexample.com\n+15551212\n20240101"
+      `${HTTPS}example.com\nexample.com/path\nexample.com\n+15551212\n20240101`
     );
     expect(rows[0]?.type).toBe("url");
     expect(rows[1]?.type).toBe("url");

@@ -58,8 +58,7 @@ async function markExistingInGraph(
         break;
       }
       default: {
-        const _exhaustive: never = item.op.resource;
-        void _exhaustive;
+        item.op.resource satisfies never;
       }
     }
   }

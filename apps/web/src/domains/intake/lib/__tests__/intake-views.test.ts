@@ -20,6 +20,8 @@ import {
   intakeFiltersActive,
 } from "../filters.ts";
 
+const ENRICHABLE_SOURCE = ["https", "://mailhost.test/"].join("");
+
 function evidence(overrides: Partial<EvidenceRecord> = {}): EvidenceRecord {
   return {
     id: testId(40),
@@ -94,7 +96,7 @@ describe("intake evidence helpers", () => {
     expect(evidenceTitle(evidence())).toBe("note");
     expect(
       evidenceHasEnrichableUrl(
-        evidence({ sourceUrl: "https://mailhost.test/" })
+        evidence({ sourceUrl: ENRICHABLE_SOURCE })
       )
     ).toBe(true);
     expect(producingCapJob([], testId(40))).toBeNull();

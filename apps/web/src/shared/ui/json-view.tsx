@@ -196,8 +196,7 @@ function JsonNode({
         break;
       }
       default: {
-        const _exhaustive: never = type;
-        void _exhaustive;
+        (type) satisfies never;
         valueEl = null;
         break;
       }

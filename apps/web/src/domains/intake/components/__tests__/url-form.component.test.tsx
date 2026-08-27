@@ -11,7 +11,7 @@ describe("UrlForm", () => {
 
     render(<UrlForm disabled={false} onSubmit={onSubmit} />);
 
-    await user.type(screen.getByPlaceholderText("Paste a URL or hostname"), "https://example.test");
+    await user.type(screen.getByPlaceholderText("Link or hostname"), "https://example.test");
     await user.type(screen.getByPlaceholderText("Source page"), "blog post");
     await user.click(screen.getByRole("button", { name: "Add link" }));
 

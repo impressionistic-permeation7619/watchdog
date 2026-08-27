@@ -62,8 +62,7 @@ export function fingerprintPatchOp(op: PatchOp): string | null {
       return `entity|${slug}`;
     }
     default: {
-      const _exhaustive: never = op.resource;
-      void _exhaustive;
+      op.resource satisfies never;
       return null;
     }
   }

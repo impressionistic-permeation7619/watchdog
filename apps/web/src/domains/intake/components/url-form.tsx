@@ -54,7 +54,7 @@ export function UrlForm({
             <Field>
               <FieldLabel>URL</FieldLabel>
               <Input
-                placeholder="Paste a URL or hostname"
+                placeholder="Link or hostname"
                 value={field.state.value}
                 onBlur={field.handleBlur}
                 onChange={(e) => {

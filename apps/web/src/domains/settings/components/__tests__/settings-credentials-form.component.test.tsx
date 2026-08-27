@@ -34,8 +34,7 @@ vi.mock("@tanstack/react-query", async (importOriginal) => {
       onError?: (error: unknown) => void;
     }) => ({
       mutate: (name: string) => {
-        void options
-          .mutationFn(name)
+        void options.mutationFn(name)
           .then(() => options.onSuccess?.())
           .catch((error) => options.onError?.(error));
         deleteMutateMock(name);
