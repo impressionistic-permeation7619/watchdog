@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeReadFile": [
+      {
+        "command": ".cursor/hooks/secrets-guard.sh",
+        "timeout": 10,
+        "failClosed": true
+      }
+    ],
+    "afterFileEdit": [
+      {
+        "command": ".cursor/hooks/run-node.sh .cursor/hooks/validate-on-edit.mjs",
+        "timeout": 30
+      }
+    ],
+    "stop": [
+      {
+        "command": ".cursor/hooks/run-node.sh .cursor/hooks/stop-gate.mjs",
+        "timeout": 60,
+        "loop_limit": 2
+      }
+    ]
+  }
+}
