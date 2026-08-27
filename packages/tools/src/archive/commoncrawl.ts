@@ -37,29 +37,41 @@ export function parseCommoncrawlCdxText(
   const trimmed = text.trim();
   if (trimmed === "") return [];
   if (trimmed.startsWith("[")) {
-    try {
-      const parsed: unknown = JSON.parse(trimmed);
-      if (!Array.isArray(parsed)) return [];
-      return parsed.flatMap((row) => {
-        if (isRecord(row)) return [row];
-        if (Array.isArray(row) && typeof row[2] === "string") {
-          return [
-            {
-              url: row[2],
-              timestamp: typeof row[1] === "string" ? row[1] : null,
-              mime: typeof row[3] === "string" ? row[3] : null,
-              status: typeof row[4] === "string" ? row[4] : null,
-            },
-          ];
-        }
-        return [];
-      });
-    } catch {
-      return [];
-    }
+    return parseCommoncrawlCdxArray(trimmed);
   }
+  return parseCommoncrawlCdxLines(trimmed);
+}
+
+function parseCommoncrawlCdxArrayRow(
+  row: unknown
+): Record<string, unknown>[] {
+  if (isRecord(row)) return [row];
+  if (Array.isArray(row) && typeof row[2] === "string") {
+    return [
+      {
+        url: row[2],
+        timestamp: typeof row[1] === "string" ? row[1] : null,
+        mime: typeof row[3] === "string" ? row[3] : null,
+        status: typeof row[4] === "string" ? row[4] : null,
+      },
+    ];
+  }
+  return [];
+}
+
+function parseCommoncrawlCdxArray(text: string): Record<string, unknown>[] {
+  try {
+    const parsed: unknown = JSON.parse(text);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.flatMap(parseCommoncrawlCdxArrayRow);
+  } catch {
+    return [];
+  }
+}
+
+function parseCommoncrawlCdxLines(text: string): Record<string, unknown>[] {
   const out: Record<string, unknown>[] = [];
-  for (const line of trimmed.split(/\r?\n/)) {
+  for (const line of text.split(/\r?\n/)) {
     const lineTrim = line.trim();
     if (!lineTrim) continue;
     try {
@@ -70,6 +82,96 @@ export function parseCommoncrawlCdxText(
     }
   }
   return out;
+}
+
+type CollinfoIndex = { id: string; cdxApi: string };
+
+function parseCollinfoIndexes(
+  coll: unknown,
+  indexCount: number
+): CollinfoIndex[] {
+  if (!Array.isArray(coll) || coll.length === 0) {
+    throw validationToolsError("Common Crawl collinfo empty");
+  }
+
+  const indexes: CollinfoIndex[] = [];
+  for (const row of coll) {
+    if (!isRecord(row)) continue;
+    const id = typeof row.id === "string" ? row.id : "";
+    const cdxApi = typeof row["cdx-api"] === "string" ? row["cdx-api"] : "";
+    if (!id || !cdxApi) continue;
+    indexes.push({ id, cdxApi });
+    if (indexes.length >= indexCount) break;
+  }
+
+  if (indexes.length === 0) {
+    throw validationToolsError("Common Crawl: no usable indexes");
+  }
+  return indexes;
+}
+
+function cdxRowToHit(
+  row: Record<string, unknown>,
+  indexId: string
+): CommoncrawlHit | null {
+  const pageUrl = typeof row.url === "string" ? row.url : "";
+  if (!pageUrl) return null;
+  return {
+    url: pageUrl,
+    timestamp: typeof row.timestamp === "string" ? row.timestamp : null,
+    status: typeof row.status === "string" ? row.status : null,
+    mime: typeof row.mime === "string" ? row.mime : null,
+    indexId,
+  };
+}
+
+function collectCdxHits(
+  cdxRows: Record<string, unknown>[],
+  indexId: string,
+  limit: number,
+  hits: CommoncrawlHit[],
+  urls: string[],
+  seenUrl: Set<string>
+): void {
+  for (const row of cdxRows) {
+    const hit = cdxRowToHit(row, indexId);
+    if (!hit) continue;
+    hits.push(hit);
+    if (!seenUrl.has(hit.url)) {
+      seenUrl.add(hit.url);
+      urls.push(hit.url);
+    }
+    if (hits.length >= limit) break;
+  }
+}
+
+function fetchCdxHitsForIndex(
+  index: CollinfoIndex,
+  host: string,
+  limit: number,
+  signal: AbortSignal,
+  ua: string
+): Promise<string> {
+  const url = new URL(index.cdxApi);
+  url.searchParams.set("url", `*.${host}/*`);
+  url.searchParams.set("output", "json");
+  url.searchParams.set("limit", String(Math.min(limit, 50)));
+
+  return fetch(url, {
+    method: "GET",
+    signal,
+    headers: { Accept: "application/json", "User-Agent": ua },
+  }).then(async (res) => {
+    if (res.status === 404) return "";
+    if (!res.ok) {
+      throw httpToolsError(
+        "Common Crawl CDX",
+        res.status,
+        `Common Crawl CDX ${res.status} (${index.id})`
+      );
+    }
+    return res.text();
+  });
 }
 
 type CommoncrawlLookupOptions = {
@@ -111,23 +213,7 @@ export async function fetchCommoncrawlLookup(
   }
 
   const coll: unknown = await collRes.json();
-  if (!Array.isArray(coll) || coll.length === 0) {
-    throw validationToolsError("Common Crawl collinfo empty");
-  }
-
-  const indexes: { id: string; cdxApi: string }[] = [];
-  for (const row of coll) {
-    if (!isRecord(row)) continue;
-    const id = typeof row.id === "string" ? row.id : "";
-    const cdxApi = typeof row["cdx-api"] === "string" ? row["cdx-api"] : "";
-    if (!id || !cdxApi) continue;
-    indexes.push({ id, cdxApi });
-    if (indexes.length >= indexCount) break;
-  }
-
-  if (indexes.length === 0) {
-    throw validationToolsError("Common Crawl: no usable indexes");
-  }
+  const indexes = parseCollinfoIndexes(coll, indexCount);
 
   const hits: CommoncrawlHit[] = [];
   const urls: string[] = [];
@@ -135,46 +221,19 @@ export async function fetchCommoncrawlLookup(
 
   for (const index of indexes) {
     if (hits.length >= limit) break;
-    const url = new URL(index.cdxApi);
-    url.searchParams.set("url", `*.${host}/*`);
-    url.searchParams.set("output", "json");
-    url.searchParams.set("limit", String(Math.min(limit - hits.length, 50)));
 
     // oxlint-disable-next-line no-await-in-loop -- per-index limit depends on hits already collected, must stay sequential
-    const res = await fetch(url, {
-      method: "GET",
+    const text = await fetchCdxHitsForIndex(
+      index,
+      host,
+      limit - hits.length,
       signal,
-      headers: { Accept: "application/json", "User-Agent": ua },
-    });
+      ua
+    );
+    if (text === "") continue;
 
-    if (res.status === 404) continue;
-    if (!res.ok) {
-      throw httpToolsError(
-        "Common Crawl CDX",
-        res.status,
-        `Common Crawl CDX ${res.status} (${index.id})`
-      );
-    }
-
-    // oxlint-disable-next-line no-await-in-loop -- same ordered fan-out as above
-    const text = await res.text();
     const cdxRows = parseCommoncrawlCdxText(text);
-    for (const row of cdxRows) {
-      const pageUrl = typeof row.url === "string" ? row.url : "";
-      if (!pageUrl) continue;
-      hits.push({
-        url: pageUrl,
-        timestamp: typeof row.timestamp === "string" ? row.timestamp : null,
-        status: typeof row.status === "string" ? row.status : null,
-        mime: typeof row.mime === "string" ? row.mime : null,
-        indexId: index.id,
-      });
-      if (!seenUrl.has(pageUrl)) {
-        seenUrl.add(pageUrl);
-        urls.push(pageUrl);
-      }
-      if (hits.length >= limit) break;
-    }
+    collectCdxHits(cdxRows, index.id, limit, hits, urls, seenUrl);
   }
 
   return commoncrawlLookupSnapshotSchema.parse({

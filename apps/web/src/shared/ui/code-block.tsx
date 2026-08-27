@@ -3,7 +3,7 @@
  * Uses github-dark / github-light matched to the current app theme.
  * Shiki runs once per (code, lang, theme) combo; singleton highlighter cached.
  */
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import type { createHighlighter } from "shiki";
 
 import { cn } from "@/lib/utils";
@@ -58,10 +58,7 @@ export function CodeBlock({
   maxHeight = "60vh",
 }: CodeBlockProps) {
   const [html, setHtml] = useState<string | null>(null);
-  const highlightedRef = useRef<HTMLDivElement>(null);
 
-  // Detect current theme directly from the document class — works without
-  // a context provider and stays in sync with ThemeToggle's class writes.
   const isDark =
     typeof document !== "undefined" &&
     document.documentElement.classList.contains("dark");
@@ -88,11 +85,6 @@ export function CodeBlock({
     };
   }, [code, mime, lang, shikiTheme]);
 
-  useEffect(() => {
-    if (highlightedRef.current === null || html === null) return;
-    highlightedRef.current.innerHTML = html;
-  }, [html]);
-
   if (html === null) {
     return (
       <pre
@@ -109,15 +101,14 @@ export function CodeBlock({
 
   return (
     <div
-      ref={highlightedRef}
       className={cn(
         "overflow-auto rounded-md text-[11px] leading-relaxed",
-        // Strip Shiki's inline background; keep token colors
         "[&_.shiki]:!bg-muted/40 [&_.shiki]:rounded-md [&_.shiki]:p-3",
         "[&_code]:font-mono [&_code]:text-[11px] [&_code]:break-words [&_code]:whitespace-pre-wrap",
         className
       )}
       style={{ maxHeight }}
+      dangerouslySetInnerHTML={{ __html: html }}
     />
   );
 }

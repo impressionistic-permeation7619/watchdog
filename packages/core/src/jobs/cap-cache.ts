@@ -8,7 +8,7 @@ function isPlainRecord(value: unknown): value is Record<string, unknown> {
 
 function sortedRecord(input: Record<string, unknown>): Record<string, unknown> {
   const sorted: Record<string, unknown> = {};
-  for (const key of Object.keys(input).sort()) {
+  for (const key of Object.keys(input).sort((a, b) => a.localeCompare(b))) {
     sorted[key] = input[key];
   }
   return sorted;

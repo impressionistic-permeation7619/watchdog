@@ -11,10 +11,14 @@ import {
   getActiveJobAbortSignal,
   unregisterActiveJobController,
 } from "./job-cancel-registry";
-import { createJobLog } from "./stages/helpers";
-import { interpretStage, logInterpretFailure } from "./stages/interpret";
+import { createJobLog, type JobLog } from "./stages/helpers";
+import { interpretStage, logInterpretFailure, type InterpretStageResult } from "./stages/interpret";
 import { landEvidence } from "./stages/land-evidence";
-import { preflight, type PreflightStopReason } from "./stages/preflight";
+import {
+  preflight,
+  type PreflightState,
+  type PreflightStopReason,
+} from "./stages/preflight";
 import { proposeStage } from "./stages/propose";
 import { suppressStage } from "./stages/suppress";
 
@@ -138,9 +142,76 @@ async function cleanupCollectedRun(
   });
 }
 
+type ProposePipelineResult = {
+  proposalId: string | null;
+  suppressedCount: number;
+  interpreted: InterpretStageResult;
+};
+
+async function proposeFromInterpret(
+  state: PreflightState,
+  interpreted: InterpretStageResult,
+  attachEvidenceIds: string[],
+  jobLog: JobLog,
+  proposalId: string | null,
+  suppressedCount: number
+): Promise<ProposePipelineResult> {
+  if (
+    interpreted.interpretError !== null ||
+    interpreted.patch.length === 0 ||
+    proposalId !== null
+  ) {
+    return { proposalId, suppressedCount, interpreted };
+  }
+
+  const { kept, suppressed } = await suppressStage(
+    state.job.caseId,
+    interpreted.patch,
+    jobLog
+  );
+  const proposed = await proposeStage({
+    caseId: state.job.caseId,
+    jobId: state.jobId,
+    kept,
+    suppressed,
+    resultSummary: interpreted.resultSummary,
+    attachEvidenceIds,
+  });
+  return {
+    proposalId: proposed.proposalId,
+    suppressedCount: proposed.suppressedCount,
+    interpreted: {
+      ...interpreted,
+      resultSummary: proposed.resultSummary,
+    },
+  };
+}
+
+function finalizeResultSummary(
+  interpreted: InterpretStageResult,
+  collected: CollectResult,
+  jobLog: JobLog
+): string | null {
+  let resultSummary = interpreted.resultSummary;
+  if (interpreted.interpretError !== null) {
+    resultSummary = logInterpretFailure(
+      jobLog,
+      interpreted.interpretError,
+      resultSummary
+    );
+  }
+  if (
+    collected.fromCache &&
+    (resultSummary === null || resultSummary === "")
+  ) {
+    return "Reused prior Cap artifacts";
+  }
+  return resultSummary;
+}
+
 async function runReadyJob(
   jobId: string,
-  state: Extract<Awaited<ReturnType<typeof preflight>>, { kind: "ready" }>["state"],
+  state: PreflightState,
   started: number
 ): Promise<JobRunOutcome> {
   const jobLog = createJobLog(state.job.logs ?? []);
@@ -169,46 +240,23 @@ async function runReadyJob(
       }
     );
 
-    if (
-      interpreted.interpretError === null &&
-      interpreted.patch.length > 0 &&
-      proposalId === null
-    ) {
-      const { kept, suppressed } = await suppressStage(
-        state.job.caseId,
-        interpreted.patch,
-        jobLog
-      );
-      const proposed = await proposeStage({
-        caseId: state.job.caseId,
-        jobId: state.jobId,
-        kept,
-        suppressed,
-        resultSummary: interpreted.resultSummary,
-        attachEvidenceIds,
-      });
-      proposalId = proposed.proposalId;
-      suppressedCount = proposed.suppressedCount;
-      interpreted = {
-        ...interpreted,
-        resultSummary: proposed.resultSummary,
-      };
-    }
+    const proposed = await proposeFromInterpret(
+      state,
+      interpreted,
+      attachEvidenceIds,
+      jobLog,
+      proposalId,
+      suppressedCount
+    );
+    proposalId = proposed.proposalId;
+    suppressedCount = proposed.suppressedCount;
+    interpreted = proposed.interpreted;
 
-    let resultSummary = interpreted.resultSummary;
-    if (interpreted.interpretError !== null) {
-      resultSummary = logInterpretFailure(
-        jobLog,
-        interpreted.interpretError,
-        resultSummary
-      );
-    }
-    if (
-      collected.fromCache &&
-      (resultSummary === null || resultSummary === "")
-    ) {
-      resultSummary = "Reused prior Cap artifacts";
-    }
+    const resultSummary = finalizeResultSummary(
+      interpreted,
+      collected,
+      jobLog
+    );
 
     const finishOutcome = await finish({
       state,

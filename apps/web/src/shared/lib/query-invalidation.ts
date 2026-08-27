@@ -11,7 +11,7 @@ import { entitiesKeys } from "@/domains/entities/queries";
 import { questionsKeys } from "@/domains/entities/questions/queries";
 import { proposalsKeys } from "@/domains/inbox/queries";
 import { evidenceKeys } from "@/domains/intake/queries";
-import { jobsKeys } from "@/domains/jobs/queries";
+import { jobsKeys } from "@/domains/jobs/jobs-keys";
 import { credentialsKeys } from "@/domains/settings/queries";
 import { tasksKeys } from "@/domains/tasks/queries";
 

@@ -35,26 +35,90 @@ export interface PlaybookRunResult {
   jobs: JobRecord[];
 }
 
+function loadPlaybook(playbookId: string) {
+  try {
+    return requirePlaybook(playbookId);
+  } catch (error) {
+    throw new DomainError("not_found", errorMessage(error));
+  }
+}
+
+async function assertSeedAnchorsInCase(
+  caseId: string,
+  seed: SeedValues
+): Promise<void> {
+  if (seed.entityId !== undefined && seed.entityId !== "") {
+    await assertEntityInCase(caseId, seed.entityId);
+  }
+  if (seed.evidenceId !== undefined && seed.evidenceId !== "") {
+    await assertEvidenceInCase(caseId, seed.evidenceId);
+  }
+}
+
+function credentialNamesFromDescriptor(
+  descriptor: ReturnType<typeof toPlaybookDescriptor>
+): Set<string> {
+  const credNames = new Set<string>();
+  for (const spec of descriptor.requires.credentials) {
+    if ("anyOf" in spec) for (const n of spec.anyOf) credNames.add(n);
+    else credNames.add(spec.name);
+  }
+  return credNames;
+}
+
+async function presentCredentialNames(
+  actorId: string,
+  credNames: Iterable<string>
+): Promise<Set<string>> {
+  const present = new Set<string>();
+  // Independent credential lookups — safe to check concurrently.
+  await Promise.all(
+    [...credNames].map(async (name) => {
+      if (await hasCredential(actorId, name)) present.add(name);
+    })
+  );
+  return present;
+}
+
+function thirdPartyCapabilityId(playbook: ReturnType<typeof requirePlaybook>) {
+  return playbookCapabilityIds(playbook).find(
+    (id) => (requireCapability(id).egress ?? "none") === "third_party"
+  );
+}
+
+function ensurePlaybookRunnable(
+  descriptor: ReturnType<typeof toPlaybookDescriptor>,
+  present: Set<string>,
+  allowThirdPartyEgress: boolean,
+  playbook: ReturnType<typeof requirePlaybook>
+): void {
+  const availability = checkPlaybookAvailability(descriptor.requires, {
+    hasCredential: (name) => present.has(name),
+    allowThirdPartyEgress,
+    thirdPartyCapabilityId: thirdPartyCapabilityId(playbook),
+  });
+  if (availability.ok) return;
+  if (availability.kind === "egress_blocked") {
+    throw new DomainError(
+      "forbidden",
+      `Case does not permit third-party egress — enable it in Case settings before running ${availability.capabilityId}`
+    );
+  }
+  throw new DomainError(
+    "forbidden",
+    `Missing credential — set one of ${availability.names.join(" | ")} in Settings before running this playbook`
+  );
+}
+
 /** Plan → insert run + step-0 Job → enqueue. */
 export async function runPlaybook(
   input: RunPlaybookInput
 ): Promise<PlaybookRunResult> {
   await assertCaseExists(input.caseId);
-  let playbook;
-  try {
-    playbook = requirePlaybook(input.playbookId);
-  } catch (error) {
-    const msg = errorMessage(error);
-    throw new DomainError("not_found", msg);
-  }
+  const playbook = loadPlaybook(input.playbookId);
   const { seed } = input;
 
-  if (seed.entityId !== undefined && seed.entityId !== "") {
-    await assertEntityInCase(input.caseId, seed.entityId);
-  }
-  if (seed.evidenceId !== undefined && seed.evidenceId !== "") {
-    await assertEvidenceInCase(input.caseId, seed.evidenceId);
-  }
+  await assertSeedAnchorsInCase(input.caseId, seed);
 
   const plan = planPlaybook(playbook, seed);
   if ("kind" in plan) {
@@ -62,43 +126,18 @@ export async function runPlaybook(
   }
 
   const descriptor = toPlaybookDescriptor(playbook);
-  const thirdPartyCapabilityId = playbookCapabilityIds(playbook).find(
-    (id) => (requireCapability(id).egress ?? "none") === "third_party"
-  );
-
-  const credNames = new Set<string>();
-  for (const spec of descriptor.requires.credentials) {
-    if ("anyOf" in spec) for (const n of spec.anyOf) credNames.add(n);
-    else credNames.add(spec.name);
-  }
-  const present = new Set<string>();
-  // Independent credential lookups — safe to check concurrently.
-  await Promise.all(
-    [...credNames].map(async (name) => {
-      if (await hasCredential(input.actorId, name)) present.add(name);
-    })
+  const present = await presentCredentialNames(
+    input.actorId,
+    credentialNamesFromDescriptor(descriptor)
   );
 
   const caseRow = await casesRepo.getById(db, input.caseId);
-  const allowThirdPartyEgress = caseRow?.allowThirdPartyEgress ?? false;
-
-  const availability = checkPlaybookAvailability(descriptor.requires, {
-    hasCredential: (name) => present.has(name),
-    allowThirdPartyEgress,
-    thirdPartyCapabilityId,
-  });
-  if (!availability.ok) {
-    if (availability.kind === "egress_blocked") {
-      throw new DomainError(
-        "forbidden",
-        `Case does not permit third-party egress — enable it in Case settings before running ${availability.capabilityId}`
-      );
-    }
-    throw new DomainError(
-      "forbidden",
-      `Missing credential — set one of ${availability.names.join(" | ")} in Settings before running this playbook`
-    );
-  }
+  ensurePlaybookRunnable(
+    descriptor,
+    present,
+    caseRow?.allowThirdPartyEgress ?? false,
+    playbook
+  );
 
   const seedJson = seedValuesToJson(seed);
 

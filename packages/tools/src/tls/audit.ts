@@ -31,6 +31,11 @@ export const tlsAuditSnapshotSchema = z.object({
 
 export type TlsAuditSnapshot = z.infer<typeof tlsAuditSnapshotSchema>;
 
+/** Audit probes must read cert metadata even when chain validation fails. */
+const TLS_AUDIT_INSECURE_CONNECT = {
+  rejectUnauthorized: false,
+} as const;
+
 function dnField(value: string | string[] | undefined): string | null {
   if (value === undefined) return null;
   return Array.isArray(value) ? (value[0] ?? null) : value;
@@ -79,7 +84,7 @@ export function fetchTlsAudit(
         host,
         port,
         servername,
-        rejectUnauthorized: false,
+        ...TLS_AUDIT_INSECURE_CONNECT,
       },
       () => {
         const peer = socket.getPeerCertificate(true);

@@ -284,6 +284,37 @@ function resolveStepInput(
   );
 }
 
+function addProducesToAvailability(
+  def: PlaybookStepDef,
+  available: Set<string>
+): void {
+  const cap = requireCapability(def.capabilityId);
+  for (const p of cap.produces ?? []) available.add(ioKey(p));
+}
+
+function validateStepAtPlanTime(
+  def: PlaybookStepDef,
+  candidate: Record<string, unknown>,
+  stepIndex: number
+): PlannedStep | PlanError | undefined {
+  if (def.fanOut !== undefined) {
+    return stepIndex === 0
+      ? { capabilityId: def.capabilityId, input: {}, playbookStep: 0 }
+      : undefined;
+  }
+
+  const parsed = resolveStepInput(def, candidate);
+  if (parsed === "deferred") {
+    return stepIndex === 0
+      ? { capabilityId: def.capabilityId, input: {}, playbookStep: 0 }
+      : undefined;
+  }
+  if (isPlanError(parsed)) return parsed;
+  return stepIndex === 0
+    ? { capabilityId: def.capabilityId, input: parsed, playbookStep: 0 }
+    : undefined;
+}
+
 /** Pure — no DB / pg-boss. Validates the whole recipe; emits step 0 only. */
 export function planPlaybook(
   playbook: PlaybookDef,
@@ -314,29 +345,13 @@ export function planPlaybook(
     const consumeErr = unsatisfiedConsumeError(def, available);
     if (consumeErr) return consumeErr;
 
-    if (def.fanOut === undefined) {
-      const parsed = resolveStepInput(def, candidate);
-      if (parsed === "deferred") {
-        if (i === 0) {
-          firstStep = {
-            capabilityId: def.capabilityId,
-            input: {},
-            playbookStep: 0,
-          };
-        }
-      } else if (isPlanError(parsed)) {
-        return parsed;
-      } else if (i === 0) {
-        firstStep = {
-          capabilityId: def.capabilityId,
-          input: parsed,
-          playbookStep: 0,
-        };
-      }
+    const stepResult = validateStepAtPlanTime(def, candidate, i);
+    if (stepResult !== undefined) {
+      if ("kind" in stepResult) return stepResult;
+      firstStep = stepResult;
     }
 
-    const cap = requireCapability(def.capabilityId);
-    for (const p of cap.produces ?? []) available.add(ioKey(p));
+    addProducesToAvailability(def, available);
   }
 
   if (!firstStep) {

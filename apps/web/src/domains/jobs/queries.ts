@@ -9,6 +9,7 @@ import {
   listPlaybooksFn,
 } from "@/domains/jobs/jobs.functions";
 import type { GetArtifactContentInput } from "@/domains/jobs/types";
+import { jobsKeys } from "@/domains/jobs/jobs-keys";
 import { invalidateAfterJobMutation } from "@/shared/lib/query-invalidation";
 import {
   GC_DEFAULT,
@@ -19,19 +20,7 @@ import {
   STALE_STABLE,
 } from "@/shared/lib/query-stale";
 
-export const jobsKeys = {
-  all: (caseId: string) => ["jobs", caseId] as const,
-  detail: (caseId: string, jobId: string) =>
-    ["jobs", caseId, "detail", jobId] as const,
-  jobArtifact: (
-    caseId: string,
-    jobId: string,
-    sha256: string,
-    mime: string
-  ) => ["artifact", "job", caseId, jobId, sha256, mime] as const,
-  evidenceArtifact: (caseId: string, evidenceId: string, mime: string) =>
-    ["artifact", "evidence", caseId, evidenceId, mime] as const,
-};
+export { jobsKeys } from "@/domains/jobs/jobs-keys";
 
 const capabilitiesKeys = {
   all: ["capabilities"] as const,

@@ -17,6 +17,11 @@ export function isJsonObject(value: unknown): value is JsonObject {
  * construction (it throws `SyntaxError` on anything outside that grammar).
  */
 export function parseJsonValue(text: string): JsonValue {
-  // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- JSON.parse only ever returns valid JSON or throws
-  return JSON.parse(text) as JsonValue;
+  try {
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- JSON.parse only ever returns valid JSON or throws
+    return JSON.parse(text) as JsonValue;
+  } catch (error: unknown) {
+    if (error instanceof SyntaxError) throw error;
+    throw new SyntaxError("Invalid JSON input", { cause: error });
+  }
 }

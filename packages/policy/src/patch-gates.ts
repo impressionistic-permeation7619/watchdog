@@ -46,85 +46,96 @@ export function requireEnum<T extends string>(
   throw new Error(`Invalid ${label}: ${value}`);
 }
 
-function assertOpShape(op: PatchOp): void {
-  switch (op.resource) {
-    case "claim": {
-      if (op.op !== "create") throw new Error("claim only supports create");
-      requireString(op.data, "entityId");
-      requireString(op.data, "text");
-      if (typeof op.data.class === "string") {
-        requireEnum(op.data.class, CLAIM_CLASSES, "claim class");
-      }
-      return;
-    }
-    case "event": {
-      if (op.op !== "create") throw new Error("event only supports create");
-      requireString(op.data, "entityId");
-      requireString(op.data, "when");
-      requireString(op.data, "what");
-      return;
-    }
-    case "question": {
-      if (op.op !== "create") throw new Error("question only supports create");
-      requireString(op.data, "entityId");
-      requireString(op.data, "text");
-      return;
-    }
-    case "entity": {
-      if (op.op === "create" || op.op === "upsert") {
-        requireEnum(
-          requireString(op.data, "kind"),
-          ENTITY_KINDS,
-          "entity kind"
-        );
-        requireString(op.data, "name");
-        requireString(op.data, "slug");
-        return;
-      }
-      if (op.op === "update") return;
-      throw new Error(`entity does not support op: ${JSON.stringify(op.op)}`);
-    }
-    case "identifier": {
-      if (op.op !== "create" && op.op !== "upsert") {
-        throw new Error("identifier supports create/upsert");
-      }
-      requireString(op.data, "entityId");
-      requireEnum(
-        requireString(op.data, "type"),
-        IDENTIFIER_TYPES,
-        "identifier type"
-      );
-      requireString(op.data, "value");
-      if (typeof op.data.status === "string") {
-        requireEnum(op.data.status, IDENTIFIER_STATUSES, "identifier status");
-      }
-      return;
-    }
-    case "edge": {
-      if (op.op !== "create" && op.op !== "upsert") {
-        throw new Error("edge supports create/upsert");
-      }
-      requireString(op.data, "fromId");
-      requireString(op.data, "toId");
-      const predicate = requireEnum(
-        requireString(op.data, "predicate"),
-        EDGE_PREDICATES,
-        "edge predicate"
-      );
-      const notes = typeof op.data.notes === "string" ? op.data.notes : null;
-      if (
-        predicate === "related_to" &&
-        (notes === null || notes.trim() === "")
-      ) {
-        throw new Error("related_to requires notes");
-      }
-      return;
-    }
-    default: {
-      const _exhaustive: never = op.resource;
-      throw new Error(`Unhandled resource: ${JSON.stringify(_exhaustive)}`);
-    }
+function assertClaimOpShape(op: PatchOp): void {
+  if (op.resource !== "claim" || op.op !== "create") {
+    throw new Error("claim only supports create");
   }
+  requireString(op.data, "entityId");
+  requireString(op.data, "text");
+  if (typeof op.data.class === "string") {
+    requireEnum(op.data.class, CLAIM_CLASSES, "claim class");
+  }
+}
+
+function assertEventOpShape(op: PatchOp): void {
+  if (op.resource !== "event" || op.op !== "create") {
+    throw new Error("event only supports create");
+  }
+  requireString(op.data, "entityId");
+  requireString(op.data, "when");
+  requireString(op.data, "what");
+}
+
+function assertQuestionOpShape(op: PatchOp): void {
+  if (op.resource !== "question" || op.op !== "create") {
+    throw new Error("question only supports create");
+  }
+  requireString(op.data, "entityId");
+  requireString(op.data, "text");
+}
+
+function assertEntityOpShape(op: PatchOp): void {
+  if (op.resource !== "entity") return;
+  if (op.op === "create" || op.op === "upsert") {
+    requireEnum(
+      requireString(op.data, "kind"),
+      ENTITY_KINDS,
+      "entity kind"
+    );
+    requireString(op.data, "name");
+    requireString(op.data, "slug");
+    return;
+  }
+  if (op.op === "update") return;
+  throw new Error(`entity does not support op: ${JSON.stringify(op.op)}`);
+}
+
+function assertIdentifierOpShape(op: PatchOp): void {
+  if (op.resource !== "identifier") return;
+  if (op.op !== "create" && op.op !== "upsert") {
+    throw new Error("identifier supports create/upsert");
+  }
+  requireString(op.data, "entityId");
+  requireEnum(
+    requireString(op.data, "type"),
+    IDENTIFIER_TYPES,
+    "identifier type"
+  );
+  requireString(op.data, "value");
+  if (typeof op.data.status === "string") {
+    requireEnum(op.data.status, IDENTIFIER_STATUSES, "identifier status");
+  }
+}
+
+function assertEdgeOpShape(op: PatchOp): void {
+  if (op.resource !== "edge") return;
+  if (op.op !== "create" && op.op !== "upsert") {
+    throw new Error("edge supports create/upsert");
+  }
+  requireString(op.data, "fromId");
+  requireString(op.data, "toId");
+  const predicate = requireEnum(
+    requireString(op.data, "predicate"),
+    EDGE_PREDICATES,
+    "edge predicate"
+  );
+  const notes = typeof op.data.notes === "string" ? op.data.notes : null;
+  if (predicate === "related_to" && (notes === null || notes.trim() === "")) {
+    throw new Error("related_to requires notes");
+  }
+}
+
+const OP_SHAPE_ASSERTERS: Record<PatchOp["resource"], (op: PatchOp) => void> = {
+  claim: assertClaimOpShape,
+  event: assertEventOpShape,
+  question: assertQuestionOpShape,
+  entity: assertEntityOpShape,
+  identifier: assertIdentifierOpShape,
+  edge: assertEdgeOpShape,
+};
+
+function assertOpShape(op: PatchOp): void {
+  OP_SHAPE_ASSERTERS[op.resource](op);
 }
 
 /**
@@ -156,5 +167,7 @@ export function assertPatchGates(
     }
   }
 
-  assertPatchShape(patch);
+  for (const op of patch) {
+    assertOpShape(op);
+  }
 }
